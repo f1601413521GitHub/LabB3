@@ -50,11 +50,18 @@
     <Compile Include="DAO\RiskEvaluationDAO.cs" />
     <Compile Include="DAO\RiskRankDAO.cs" />
     <Compile Include="DAO\RiskRankDetailDAO.cs" />
+    <Compile Include="DO\QuestionAnswerDefineDO.cs" />
+    <Compile Include="DO\QuestionDefineDO.cs" />
+    <Compile Include="DO\QuestionnaireDO.cs" />
+    <Compile Include="DO\QuestionnaireAnswerDetailDO.cs" />
+    <Compile Include="DO\QuestionnaireAnswerDO.cs" />
+    <Compile Include="DO\RiskEvaluationDO.cs" />
+    <Compile Include="DO\RiskRankDetailDO.cs" />
+    <Compile Include="DO\RiskRankDO.cs" />
     <Compile Include="Helper\DbHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="DO\" />
     <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

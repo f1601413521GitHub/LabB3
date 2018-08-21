@@ -9,7 +9,7 @@ using ThinkPower.LabB3.DataAccess.Helper;
 
 namespace ThinkPower.LabB3.DataAccess.DAO
 {
-    
+
     /// <summary>
     /// 領域物件基底類別
     /// </summary>
@@ -18,7 +18,27 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// SQL資料庫連線物件
         /// </summary>
-        public SqlConnection DbConnection { get; set; }
+        public SqlConnection DbConnection
+        {
+            get
+            {
+                if (_dbConnection == null)
+                {
+                    _dbConnection = GetConnection();
+                }
+
+                return _dbConnection;
+            }
+            set
+            {
+                if ((value.GetType() == typeof(SqlConnection)) &&
+                    (value != null))
+                {
+                    _dbConnection = value;
+                }
+            }
+        }
+        private SqlConnection _dbConnection;
 
         /// <summary>
         /// 取得資料筆數
@@ -31,8 +51,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <returns></returns>
         protected SqlConnection GetConnection()
         {
-            //TODO GetConnection
-            return DbHelper.GetConnection(ConfigurationManager.AppSettings[""]);
+            return DbHelper.GetConnection(ConfigurationManager.AppSettings["labap"]);
         }
     }
 }
