@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
@@ -15,6 +16,11 @@ namespace ThinkPower.LabB3.DataAccess.DAO
     /// </summary>
     public abstract class BaseDAO
     {
+        /// <summary>
+        /// NLog Object
+        /// </summary>
+        protected Logger logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// SQL資料庫連線物件
         /// </summary>
