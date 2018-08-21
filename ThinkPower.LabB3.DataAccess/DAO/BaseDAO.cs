@@ -51,7 +51,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <returns></returns>
         protected SqlConnection GetConnection()
         {
-            return DbHelper.GetConnection(ConfigurationManager.AppSettings["labap"]);
+            return DbHelper.GetConnection(ConfigurationManager.ConnectionStrings["LabB3"].ConnectionString);
         }
     }
 }
