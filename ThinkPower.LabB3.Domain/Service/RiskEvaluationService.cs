@@ -1,9 +1,12 @@
-﻿using System;
+﻿using NLog;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using ThinkPower.LabB3.Domain.DTO;
+using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
 using ThinkPower.LabB3.Domain.Service.Interface;
 
@@ -15,13 +18,29 @@ namespace ThinkPower.LabB3.Domain.Service
     public class RiskEvaluationService : IRiskEvaluation
     {
         /// <summary>
-        /// 問卷服務
+        /// NLog Object
+        /// </summary>
+        private Logger logger = LogManager.GetCurrentClassLogger();
+
+        /// <summary>
+        /// 問卷服務 隱藏欄位
         /// </summary>
         private QuestionnaireService _questService;
 
-        public RiskEvaluationService()
+        /// <summary>
+        /// 問卷服務
+        /// </summary>
+        private QuestionnaireService QuestService
         {
-            _questService = new QuestionnaireService();
+            get
+            {
+                if (_questService == null)
+                {
+                    _questService = new QuestionnaireService();
+                }
+
+                return _questService;
+            }
         }
 
         /// <summary>
@@ -48,20 +67,53 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 取得風險評估問卷資料
         /// </summary>
         /// <param name="questId">問卷編號</param>
-        /// <returns></returns>
+        /// <returns>風險評估問卷資料</returns>
         public RiskEvaQuestionnaireEntity GetRiskQuestionnaire(string questId)
         {
-            RiskEvaQuestionnaireEntity riskEvaQuest;
+            RiskEvaQuestionnaireEntity riskEvaQuest = null;
 
-            if (!String.IsNullOrEmpty(questId))
+            if (String.IsNullOrEmpty(questId))
             {
-                var result = _questService.GetActiveQuestionaire(questId);
-
-                riskEvaQuest = new RiskEvaQuestionnaireEntity();
+                throw new ArgumentNullException("questId");
             }
-            else
+
+            try
             {
-                riskEvaQuest = new RiskEvaQuestionnaireEntity();
+                QuestionnaireEntity activeQuest = QuestService.GetActiveQuestionnaire(questId);
+
+                if (activeQuest == null)
+                {
+                    throw new InvalidOperationException("questEntity is invalid");
+                }
+
+                QuestionnaireEntity defineQuest = QuestService.GetQuestionnaire(activeQuest.Uid.ToString());
+
+                riskEvaQuest = new RiskEvaQuestionnaireEntity()
+                {
+                    Uid = activeQuest.Uid,
+                    QuestId = activeQuest.QuestId,
+                    Version = activeQuest.Version,
+                    Kind = activeQuest.Kind,
+                    Name = activeQuest.Name,
+                    Memo = activeQuest.Memo,
+                    Ondate = activeQuest.Ondate,
+                    Offdate = activeQuest.Offdate,
+                    NeedScore = activeQuest.NeedScore,
+                    QuestScore = activeQuest.QuestScore,
+                    ScoreKind = activeQuest.ScoreKind,
+                    HeadBackgroundImg = activeQuest.HeadBackgroundImg,
+                    HeadDescription = activeQuest.HeadDescription,
+                    FooterDescription = activeQuest.FooterDescription,
+                    CreateUserId = activeQuest.CreateUserId,
+                    CreateTime = activeQuest.CreateTime,
+                    ModifyUserId = activeQuest.ModifyUserId,
+                    ModifyTime = activeQuest.ModifyTime,
+                };
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                ExceptionDispatchInfo.Capture(e).Throw();
             }
 
             return riskEvaQuest;

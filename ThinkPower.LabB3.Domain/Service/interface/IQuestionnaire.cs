@@ -24,7 +24,7 @@ namespace ThinkPower.LabB3.Domain.Service.Interface
         /// </summary>
         /// <param name="id">問卷編號</param>
         /// <returns></returns>
-        QuestionnaireEntity GetActiveQuestionaire(string id);
+        QuestionnaireEntity GetActiveQuestionnaire(string id);
 
         /// <summary>
         /// 取得問卷資料

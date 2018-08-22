@@ -36,47 +36,46 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 取得有效的問卷資料
         /// </summary>
         /// <param name="id">問卷編號</param>
-        /// <returns></returns>
-        public QuestionnaireEntity GetActiveQuestionaire(string id)
+        /// <returns>有效的問卷資料</returns>
+        public QuestionnaireEntity GetActiveQuestionnaire(string id)
         {
             QuestionnaireEntity questEntity = null;
 
+            if (String.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException("id");
+            }
+
             try
             {
-                if (!String.IsNullOrEmpty(id))
-                {
-                    QuestionnaireDAO questDAO = new QuestionnaireDAO();
-                    QuestionnaireDO questDO = questDAO.Get(id);
+                QuestionnaireDO questDO = new QuestionnaireDAO().Get(id);
 
-                    if (questDO != null)
-                    {
-                        questEntity = new QuestionnaireEntity()
-                        {
-                            Uid = questDO.Uid,
-                            QuestId = questDO.QuestId,
-                            Version = questDO.Version,
-                            Kind = questDO.Kind,
-                            Name = questDO.Name,
-                            Memo = questDO.Memo,
-                            Ondate = questDO.Ondate,
-                            Offdate = questDO.Offdate,
-                            NeedScore = questDO.NeedScore,
-                            QuestScore = questDO.QuestScore,
-                            ScoreKind = questDO.ScoreKind,
-                            HeadBackgroundImg = questDO.HeadBackgroundImg,
-                            HeadDescription = questDO.HeadDescription,
-                            FooterDescription = questDO.FooterDescription,
-                            CreateUserId = questDO.CreateUserId,
-                            CreateTime = questDO.CreateTime,
-                            ModifyUserId = questDO.ModifyUserId,
-                            ModifyTime = questDO.ModifyTime,
-                        };
-                    }
-                }
-                else
+                if (questDO == null)
                 {
-                    questEntity = new QuestionnaireEntity();
+                    throw new InvalidOperationException("questDO is invalid");
                 }
+
+                questEntity = new QuestionnaireEntity()
+                {
+                    Uid = questDO.Uid,
+                    QuestId = questDO.QuestId,
+                    Version = questDO.Version,
+                    Kind = questDO.Kind,
+                    Name = questDO.Name,
+                    Memo = questDO.Memo,
+                    Ondate = questDO.Ondate,
+                    Offdate = questDO.Offdate,
+                    NeedScore = questDO.NeedScore,
+                    QuestScore = questDO.QuestScore,
+                    ScoreKind = questDO.ScoreKind,
+                    HeadBackgroundImg = questDO.HeadBackgroundImg,
+                    HeadDescription = questDO.HeadDescription,
+                    FooterDescription = questDO.FooterDescription,
+                    CreateUserId = questDO.CreateUserId,
+                    CreateTime = questDO.CreateTime,
+                    ModifyUserId = questDO.ModifyUserId,
+                    ModifyTime = questDO.ModifyTime,
+                };
             }
             catch (Exception e)
             {
@@ -91,10 +90,45 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 取得問卷資料
         /// </summary>
         /// <param name="uid">問卷識別碼</param>
-        /// <returns></returns>
+        /// <returns>問卷資料</returns>
         public QuestionnaireEntity GetQuestionnaire(string uid)
         {
-            throw new NotImplementedException();
+            QuestionnaireEntity questInfo = null;
+
+            if (String.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentNullException("uid");
+            }
+
+            try
+            {
+                List<QuestionDefineDO> questDefines = new QuestionDefineDAO().Get(uid);
+
+                if ((questDefines == null) ||
+                    (questDefines.Count == 0))
+                {
+                    throw new InvalidOperationException("questDefines is invalid");
+                }
+
+                QuestionAnswerDefineDO questAnsDefine = new QuestionAnswerDefineDAO().Get(uid);
+
+                if (questAnsDefine == null)
+                {
+                    throw new InvalidOperationException("questAnsDefine is invalid");
+                }
+
+                questInfo = new QuestionnaireEntity()
+                {
+
+                };
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return questInfo;
         }
     }
 }
