@@ -22,13 +22,19 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         protected Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
+        /// SQL資料庫連線物件 隱藏欄位
+        /// </summary>
+        private SqlConnection _dbConnection;
+
+        /// <summary>
         /// SQL資料庫連線物件
         /// </summary>
         public SqlConnection DbConnection
         {
             get
             {
-                if (_dbConnection == null)
+                if ((_dbConnection == null) ||
+                    String.IsNullOrEmpty(_dbConnection.ConnectionString))
                 {
                     _dbConnection = GetConnection();
                 }
@@ -37,14 +43,13 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             }
             set
             {
-                if ((value.GetType() == typeof(SqlConnection)) &&
-                    (value != null))
+                if ((value == null) ||
+                    (value.GetType() == typeof(SqlConnection)))
                 {
                     _dbConnection = value;
                 }
             }
         }
-        private SqlConnection _dbConnection;
 
         /// <summary>
         /// 取得資料筆數

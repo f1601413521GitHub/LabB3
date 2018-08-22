@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
@@ -18,12 +19,24 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <returns></returns>
         public override int Count()
         {
+            int count;
+
             using (SqlConnection connection = DbConnection)
             {
                 SqlCommand command = new SqlCommand("SELECT Count(1) FROM RiskEvaluation", connection);
                 connection.Open();
-                return (int)command.ExecuteScalar();
+
+                count = (int)command.ExecuteScalar();
+
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
+
+            return count;
         }
     }
 }

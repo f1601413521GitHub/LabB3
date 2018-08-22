@@ -18,7 +18,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得資料筆數
         /// </summary>
-        /// <returns></returns>
+        /// <returns>資料筆數</returns>
         public override int Count()
         {
             int count;
@@ -29,6 +29,13 @@ namespace ThinkPower.LabB3.DataAccess.DAO
                 connection.Open();
 
                 count = (int)command.ExecuteScalar();
+
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
             return count;
@@ -38,84 +45,58 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// 取得有效的問卷資料
         /// </summary>
         /// <param name="id">問卷編號</param>
-        /// <returns></returns>
+        /// <returns>有效的問卷資料</returns>
         public QuestionnaireDO Get(string id)
         {
-            QuestionnaireDO result = null;
+            QuestionnaireDO questDO = null;
+
+            if (String.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException("id");
+            }
 
             try
             {
-                if (!String.IsNullOrEmpty(id))
-                {
-                    using (SqlConnection connection = DbConnection)
-                    {
-                        string query = @"SELECT TOP 1 
-[Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
-[Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,[FooterDescription] ,
-[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
+                string query = @"
+SELECT TOP 1 
+    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
+    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
+    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
 FROM Questionnaire 
-WHERE 1=1 
-AND QuestId = @QuestId 
-AND Ondate < GETDATE() 
-AND((Offdate > GETDATE()) OR (Offdate is null)) 
-ORDER BY Version DESC";
+WHERE QuestId = @QuestId 
+    AND Ondate < @DateTimeNow 
+    AND ((Offdate > @DateTimeNow) OR (Offdate is null)) 
+ORDER BY Version DESC;";
 
-                        using (SqlCommand command = new SqlCommand(query, connection))
-                        {
-                            DataTable dt = new DataTable();
-                            command.Parameters.AddWithValue("@QuestId", id);
-                            connection.Open();
+                using (SqlConnection connection = DbConnection)
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
 
-                            using (SqlDataAdapter da = new SqlDataAdapter(command))
-                            {
-                                da.Fill(dt);
-                            }
+                    command.Parameters.Add(new SqlParameter("@QuestId", SqlDbType.VarChar) { Value = id });
+                    command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
+                    {
+                        //Value = DateTime.Parse("2018-06-01 00:00:01"),
+                        Value = DateTime.Now.Date,
+                    });
 
-                            foreach (DataRow dr in dt.Rows)
-                            {
-                                result = new QuestionnaireDO()
-                                {
-                                    Uid = Guid.TryParse(dr.Field<string>("Uid"), out Guid tempUid) ?
-                                    tempUid :
-                                    Guid.Empty,
+                    connection.Open();
 
-                                    QuestId = dr.Field<string>("QuestId"),
-                                    Version = dr.Field<string>("Version"),
-                                    Kind = dr.Field<string>("Kind"),
-                                    Name = dr.Field<string>("Name"),
-                                    Memo = dr.Field<string>("Memo"),
+                    DataTable dt = new DataTable();
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    adapter.Fill(dt);
 
-                                    Ondate = DateTime.TryParse(dr.Field<string>("Ondate"), out DateTime tempOndate) ?
-                                    (DateTime?)tempOndate :
-                                    null,
+                    if (dt.Rows.Count == 1)
+                    {
+                        questDO = GetQuestionnaireDO(dt.Rows[0]);
+                    }
 
-                                    Offdate = DateTime.TryParse(dr.Field<string>("Offdate"), out DateTime tempOffdate) ?
-                                    (DateTime?)tempOffdate :
-                                    null,
+                    adapter = null;
+                    dt = null;
+                    command = null;
 
-                                    NeedScore = dr.Field<string>("NeedScore"),
-
-                                    QuestScore = Int32.TryParse(dr.Field<string>("QuestScore"), out int tempQuestScore) ?
-                                    (int?)tempQuestScore :
-                                    null,
-
-                                    ScoreKind = dr.Field<string>("ScoreKind"),
-                                    HeadBackgroundImg = dr.Field<string>("HeadBackgroundImg"),
-                                    HeadDescription = dr.Field<string>("HeadDescription"),
-                                    FooterDescription = dr.Field<string>("FooterDescription"),
-                                    CreateUserId = dr.Field<string>("CreateUserId"),
-
-                                    CreateTime = DateTime.TryParse(dr.Field<string>("CreateTime"), out DateTime tempCreateTime) ?
-                                    (DateTime?)tempCreateTime :
-                                    null,
-                                    ModifyUserId = dr.Field<string>("ModifyUserId"),
-
-                                    ModifyTime = DateTime.TryParse(dr.Field<string>("ModifyTime"), out DateTime tempModifyTime) ?
-                                    (DateTime?)tempModifyTime :
-                                    null,
-                                };
-                            }
-                        }
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
                     }
                 }
             }
@@ -125,7 +106,41 @@ ORDER BY Version DESC";
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return result;
+            return questDO;
+        }
+
+        /// <summary>
+        /// 取得問卷資料物件類別
+        /// </summary>
+        /// <param name="dr">資料列</param>
+        /// <returns>問卷資料物件類別</returns>
+        private QuestionnaireDO GetQuestionnaireDO(DataRow dr)
+        {
+            return new QuestionnaireDO()
+            {
+                //Uid = Guid.TryParse(dr.Field<string>("Uid"), out Guid tempUid) ?
+                //    tempUid :
+                //    throw new InvalidOperationException("Uid is invalid"),
+
+                Uid = dr.Field<Guid>("Uid"),
+                QuestId = dr.Field<string>("QuestId"),
+                Version = dr.Field<string>("Version"),
+                Kind = dr.Field<string>("Kind"),
+                Name = dr.Field<string>("Name"),
+                Memo = dr.Field<string>("Memo"),
+                Ondate = dr.Field<DateTime?>("Ondate"),
+                Offdate = dr.Field<DateTime?>("Offdate"),
+                NeedScore = dr.Field<string>("NeedScore"),
+                QuestScore = dr.Field<int?>("QuestScore"),
+                ScoreKind = dr.Field<string>("ScoreKind"),
+                HeadBackgroundImg = dr.Field<string>("HeadBackgroundImg"),
+                HeadDescription = dr.Field<string>("HeadDescription"),
+                FooterDescription = dr.Field<string>("FooterDescription"),
+                CreateUserId = dr.Field<string>("CreateUserId"),
+                CreateTime = dr.Field<DateTime?>("CreateTime"),
+                ModifyUserId = dr.Field<string>("ModifyUserId"),
+                ModifyTime = dr.Field<DateTime?>("ModifyTime"),
+            };
         }
     }
 }
