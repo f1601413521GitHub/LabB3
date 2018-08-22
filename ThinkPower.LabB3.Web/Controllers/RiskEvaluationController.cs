@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Web;
 using System.Web.Mvc;
 using ThinkPower.LabB3.Domain.Entity.Risk;
@@ -21,13 +22,24 @@ namespace ThinkPower.LabB3.Web.Controllers
         private static Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// 投資風險評估服務
+        /// 投資風險評估服務 隱藏欄位
         /// </summary>
         private RiskEvaluationService _riskService;
 
-        public RiskEvaluationController()
+        /// <summary>
+        /// 投資風險評估服務
+        /// </summary>
+        private RiskEvaluationService RiskService
         {
-            _riskService = new RiskEvaluationService();
+            get
+            {
+                if (_riskService == null)
+                {
+                    _riskService = new RiskEvaluationService();
+                }
+
+                return _riskService;
+            }
         }
 
         /// <summary>
@@ -58,26 +70,50 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// 進行投資風險評估問卷填答
         /// </summary>
         /// <param name="actionModel">來源資料</param>
-        /// <returns></returns>
-        [HttpGet]
+        /// <returns>投資風險評估問卷</returns>
+        [HttpPost]
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
             //TODO EvaQuest 進行投資風險評估問卷填答
-            RiskEvaQuestionnaireEntity result = new RiskEvaQuestionnaireEntity();
+            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
+            HttpStatusCode? statusCode = null;
+
+            if (actionModel == null)
+            {
+                //throw new ArgumentNullException("actionModel");
+                statusCode = statusCode ?? HttpStatusCode.NotFound;
+            }
+            else if (String.IsNullOrEmpty(actionModel.questId))
+            {
+                //throw new ArgumentNullException("questId");
+                statusCode = statusCode ?? HttpStatusCode.NotFound;
+            }
 
             try
             {
-                if (actionModel != null)
+                if (statusCode == null)
                 {
-                    result = _riskService.GetRiskQuestionnaire(actionModel.questId);
+                    riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
                 }
             }
             catch (Exception e)
             {
                 logger.Error(e);
+                statusCode = statusCode ?? HttpStatusCode.InternalServerError;
             }
 
-            return View(result);
+            if (riskEvaQuestEntity == null)
+            {
+                statusCode = statusCode ?? HttpStatusCode.NotFound;
+            }
+
+            if (statusCode != null)
+            {
+                //return new HttpStatusCodeResult((int)statusCode);
+                return Content($"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
+            }
+
+            return View(riskEvaQuestEntity);
         }
     }
 }

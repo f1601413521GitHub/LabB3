@@ -10,6 +10,6 @@
         /// 問卷1:FNDRE001
         /// 問卷2:FNDRE002
         /// </summary>
-        public string questId { get; internal set; }
+        public string questId { get; set; }
     }
 }
