@@ -50,75 +50,89 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                QuestionnaireDO questDO = new QuestionnaireDAO().GetActiveQuestionniare(id);
+                QuestionnaireDO questionnaireDO =
+                    new QuestionnaireDAO().GetActiveQuestionniare(id);
 
-                if (questDO == null)
+                if (questionnaireDO == null)
                 {
-                    throw new InvalidOperationException("questDO is invalid");
+                    throw new InvalidOperationException("questDO not found");
                 }
 
-                RiskEvaluationDO riskEvaDO = new RiskEvaluationDAO().GetLatestRiskEvaluation(questDO.Uid.ToString());
+                QuestionnaireAnswerDO questAnswerDO =
+                    new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(questionnaireDO.Uid);
 
-                IEnumerable<DateTime> riskEvaCuttime = GetRiskEvaCuttime();
-                DateTime timeNow = DateTime.Parse(DateTime.Now.ToString("g"));// g: 6/15/2008 9:15 PM
-
-                int? index = null;
-                foreach (DateTime riskEvaTime in riskEvaCuttime)
+                if (questAnswerDO == null)
                 {
-                    if ((index == null) &&
-                        (timeNow < riskEvaTime))
+                    throw new InvalidOperationException("questAnswerDO not found");
+                }
+
+                RiskEvaluationDO riskEvaDO =
+                    new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswerDO.QuestAnswerId);
+
+                bool riskEvaluationInCuttimeRange = false;
+
+                if (riskEvaDO != null)
+                {
+                    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                    if ((riskEvaDO.EvaluationDate < cuttimeRange.Max()) &&
+                        (riskEvaDO.EvaluationDate > cuttimeRange.Min()))
                     {
-                        //index = riskEvaCuttime.TakeWhile(x=>x != riskEvaTime).IndexOf(riskEvaTime);
+                        riskEvaluationInCuttimeRange = true;
                     }
                 }
 
-
-                IEnumerable<QuestionDefineDO> questDefines = new QuestionDefineDAO().GetQuesyionDefineCollection(questDO.Uid.ToString());
-
-                if ((questDefines == null) ||
-                    (questDefines.Count() == 0))
+                if (!riskEvaluationInCuttimeRange)
                 {
-                    throw new InvalidOperationException("questDefines is invalid");
+                    IEnumerable<QuestionDefineDO> questDefineList = 
+                        new QuestionDefineDAO().GetQuestionDefineList(questionnaireDO.Uid);
+
+                    if ((questDefineList == null) ||
+                        (questDefineList.Count() == 0))
+                    {
+                        throw new InvalidOperationException("questDefines not found");
+                    }
+
+                    QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
+                    List<QuestionAnswerDefineDO> answerDefineList = new List<QuestionAnswerDefineDO>();
+
+                    foreach (QuestionDefineDO questDefine in questDefineList)
+                    {
+                        answerDefineList.AddRange(answerDefineDAO.
+                            GetQuestionAnswerDefineList(questDefine.Uid));
+                    }
+
+                    if ((answerDefineList == null) ||
+                        (answerDefineList.Count == 0))
+                    {
+                        throw new InvalidOperationException("answerDefineList not found");
+                    }
+
+                    questEntity = new QuestionnaireEntity()
+                    {
+                        Uid = questionnaireDO.Uid,
+                        QuestId = questionnaireDO.QuestId,
+                        Version = questionnaireDO.Version,
+                        Kind = questionnaireDO.Kind,
+                        Name = questionnaireDO.Name,
+                        Memo = questionnaireDO.Memo,
+                        Ondate = questionnaireDO.Ondate,
+                        Offdate = questionnaireDO.Offdate,
+                        NeedScore = questionnaireDO.NeedScore,
+                        QuestScore = questionnaireDO.QuestScore,
+                        ScoreKind = questionnaireDO.ScoreKind,
+                        HeadBackgroundImg = questionnaireDO.HeadBackgroundImg,
+                        HeadDescription = questionnaireDO.HeadDescription,
+                        FooterDescription = questionnaireDO.FooterDescription,
+                        CreateUserId = questionnaireDO.CreateUserId,
+                        CreateTime = questionnaireDO.CreateTime,
+                        ModifyUserId = questionnaireDO.ModifyUserId,
+                        ModifyTime = questionnaireDO.ModifyTime,
+
+                        QuestDefineEntitys = ConvertQuestDefineEntity(questDefineList),
+                        AnswerDefineEntitys = ConvertAnswerDefineEntity(answerDefineList),
+                    };
                 }
-
-                QuestionAnswerDefineDAO questAnsDefineDAO = new QuestionAnswerDefineDAO();
-                List<QuestionAnswerDefineDO> questAnsDefines = new List<QuestionAnswerDefineDO>();
-
-                foreach (QuestionDefineDO questDefine in questDefines)
-                {
-                    questAnsDefines.AddRange(questAnsDefineDAO.GetQuestionAnswerDefineCollection(questDefine.Uid.ToString()));
-                }
-
-                if ((questAnsDefines == null) ||
-                    (questAnsDefines.Count == 0))
-                {
-                    throw new InvalidOperationException("questAnsDefines is invalid");
-                }
-
-                questEntity = new QuestionnaireEntity()
-                {
-                    Uid = questDO.Uid,
-                    QuestId = questDO.QuestId,
-                    Version = questDO.Version,
-                    Kind = questDO.Kind,
-                    Name = questDO.Name,
-                    Memo = questDO.Memo,
-                    Ondate = questDO.Ondate,
-                    Offdate = questDO.Offdate,
-                    NeedScore = questDO.NeedScore,
-                    QuestScore = questDO.QuestScore,
-                    ScoreKind = questDO.ScoreKind,
-                    HeadBackgroundImg = questDO.HeadBackgroundImg,
-                    HeadDescription = questDO.HeadDescription,
-                    FooterDescription = questDO.FooterDescription,
-                    CreateUserId = questDO.CreateUserId,
-                    CreateTime = questDO.CreateTime,
-                    ModifyUserId = questDO.ModifyUserId,
-                    ModifyTime = questDO.ModifyTime,
-
-                    QuestDefineEntitys = ConvertQuestDefineEntity(questDefines),
-                    AnswerDefineEntitys = ConvertAnswerDefineEntity(questAnsDefines),
-                };
             }
             catch (Exception e)
             {
@@ -130,38 +144,61 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 取得 投資風險評估切點時間
+        /// 取得投資風險評估切點時間範圍
         /// </summary>
-        /// <returns>投資風險評估切點時間</returns>
+        /// <returns>投資風險評估切點時間範圍</returns>
         private IEnumerable<DateTime> GetRiskEvaCuttime()
         {
-            string[] riskEvaCuttime =
-                !String.IsNullOrEmpty(ConfigurationManager.AppSettings["risk.evaluation.cuttime"]) ?
-                ConfigurationManager.AppSettings["risk.evaluation.cuttime"].Split(',') :
-                throw new ConfigurationErrorsException("risk.evaluation.cuttime is invalid");
+            List<DateTime> cuttimeRange = null;
 
-            List<DateTime> collection = new List<DateTime>();
+            string riskEvaCuttime = ConfigurationManager.AppSettings["risk.evaluation.cuttime"];
 
-            foreach (string cuttime in riskEvaCuttime)
+            string[] cuttimeArray = !String.IsNullOrEmpty(riskEvaCuttime) ?
+                riskEvaCuttime.Split(',') :
+                null;
+
+            if (cuttimeArray != null)
             {
-                collection.Add(DateTime.TryParse(cuttime, out DateTime tempCuttime) ?
-                        tempCuttime :
-                        throw new InvalidOperationException("cuttime is invalid")
-                    );
+                List<DateTime> cuttimes = new List<DateTime>();
+
+                foreach (string cuttime in cuttimeArray)
+                {
+                    if (!String.IsNullOrEmpty(cuttime) &&
+                        (DateTime.TryParse(cuttime, out DateTime tempCuttime)))
+                    {
+                        cuttimes.Add(tempCuttime);
+                    }
+                }
+
+                if (cuttimes.Count > 0)
+                {
+                    DateTime timeNow = DateTime.Now;
+                    DateTime cuttimeMax = cuttimes.Max();
+                    DateTime cuttimeMin = cuttimes.Min();
+
+                    cuttimes.Add(new DateTime(cuttimeMax.Year, cuttimeMax.Month,
+                        cuttimeMax.Day, cuttimeMax.Hour, cuttimeMax.Minute, 0).AddDays(-1));
+
+                    cuttimes.Add(new DateTime(cuttimeMin.Year, cuttimeMin.Month,
+                        cuttimeMin.Day, cuttimeMin.Hour, cuttimeMin.Minute, 0).AddDays(1));
+
+                    cuttimeRange.Add(cuttimes.Where(x => x < timeNow).Max());
+                    cuttimeRange.Add(cuttimes.Where(x => x > timeNow).Min());
+                }
             }
 
-            return collection.OrderBy(x => x.Hour).ThenBy(x => x.Minute);
+            return cuttimeRange;
         }
 
         /// <summary>
-        /// 取得 問卷答案定義類別
+        /// 轉換問卷答案定義資料物件成為問卷答案定義類別
         /// </summary>
-        /// <param name="questAnsDefines">問卷答案項目資料物件類別</param>
+        /// <param name="answerDefineList">問卷答案定義資料物件</param>
         /// <returns>問卷答案定義類別</returns>
         private IEnumerable<AnswerDefineEntity> ConvertAnswerDefineEntity(
-            IEnumerable<QuestionAnswerDefineDO> questAnsDefines)
+            IEnumerable<QuestionAnswerDefineDO> answerDefineList)
         {
-            return questAnsDefines.Select(x => new AnswerDefineEntity
+            return answerDefineList.Select(x => new AnswerDefineEntity
             {
                 Uid = x.Uid,
                 QuestionUid = x.QuestionUid,
@@ -180,13 +217,14 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 取得 問卷題目定義類別
+        /// 轉換問卷題目定義資料成為問卷題目定義實體
         /// </summary>
-        /// <param name="questDefines">問卷題目資料物件類別</param>
-        /// <returns>問卷題目定義類別</returns>
-        private IEnumerable<QuestDefineEntity> ConvertQuestDefineEntity(IEnumerable<QuestionDefineDO> questDefines)
+        /// <param name="questDefineList">問卷題目定義資料</param>
+        /// <returns>問卷題目定義實體</returns>
+        private IEnumerable<QuestDefineEntity> ConvertQuestDefineEntity(
+            IEnumerable<QuestionDefineDO> questDefineList)
         {
-            return questDefines.Select(x => new QuestDefineEntity
+            return questDefineList.Select(x => new QuestDefineEntity
             {
                 Uid = x.Uid,
                 QuestUid = x.QuestUid,

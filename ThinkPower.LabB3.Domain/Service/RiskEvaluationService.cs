@@ -98,15 +98,13 @@ namespace ThinkPower.LabB3.Domain.Service
             {
                 QuestionnaireEntity activeQuest = QuestService.GetActiveQuestionnaire(questId);
 
-                if (activeQuest == null)
+                if (activeQuest != null)
                 {
-                    throw new InvalidOperationException("questEntity is invalid");
+                    riskEvaQuest = new RiskEvaQuestionnaireEntity()
+                    {
+                        QuestionnaireEntity = activeQuest,
+                    };
                 }
-
-                riskEvaQuest = new RiskEvaQuestionnaireEntity()
-                {
-                    Questionnaire = activeQuest,
-                };
             }
             catch (Exception e)
             {

@@ -78,12 +78,12 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         public string FooterDescription { get; set; }
 
         /// <summary>
-        /// 問卷題目定義類別 集合
+        /// 問卷題目定義集合
         /// </summary>
         public IEnumerable<QuestDefineEntity> QuestDefineEntitys { get; set; }
 
         /// <summary>
-        /// 問卷答案定義類別 集合
+        /// 問卷答案定義集合
         /// </summary>
         public IEnumerable<AnswerDefineEntity> AnswerDefineEntitys { get; set; }
     }

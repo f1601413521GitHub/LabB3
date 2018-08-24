@@ -12,7 +12,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Risk
     /// </summary>
     public class RiskEvaQuestionnaireEntity : BaseEntity
     {
-        public QuestionnaireEntity Questionnaire { get; set; }
+        /// <summary>
+        /// 問卷類別
+        /// </summary>
+        public QuestionnaireEntity QuestionnaireEntity { get; set; }
 
         #region History
 
