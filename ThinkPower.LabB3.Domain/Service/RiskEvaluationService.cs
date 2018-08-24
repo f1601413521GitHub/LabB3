@@ -60,7 +60,24 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public RiskEvaluationEntity Get(string uid)
         {
-            throw new NotImplementedException();
+            RiskEvaluationEntity riskEvaEntity = null;
+
+            if (String.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentNullException("uid");
+            }
+
+            try
+            {
+                //TODO
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return riskEvaEntity;
         }
 
         /// <summary>
@@ -86,28 +103,9 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("questEntity is invalid");
                 }
 
-                QuestionnaireEntity defineQuest = QuestService.GetQuestionnaire(activeQuest.Uid.ToString());
-
                 riskEvaQuest = new RiskEvaQuestionnaireEntity()
                 {
-                    Uid = activeQuest.Uid,
-                    QuestId = activeQuest.QuestId,
-                    Version = activeQuest.Version,
-                    Kind = activeQuest.Kind,
-                    Name = activeQuest.Name,
-                    Memo = activeQuest.Memo,
-                    Ondate = activeQuest.Ondate,
-                    Offdate = activeQuest.Offdate,
-                    NeedScore = activeQuest.NeedScore,
-                    QuestScore = activeQuest.QuestScore,
-                    ScoreKind = activeQuest.ScoreKind,
-                    HeadBackgroundImg = activeQuest.HeadBackgroundImg,
-                    HeadDescription = activeQuest.HeadDescription,
-                    FooterDescription = activeQuest.FooterDescription,
-                    CreateUserId = activeQuest.CreateUserId,
-                    CreateTime = activeQuest.CreateTime,
-                    ModifyUserId = activeQuest.ModifyUserId,
-                    ModifyTime = activeQuest.ModifyTime,
+                    Questionnaire = activeQuest,
                 };
             }
             catch (Exception e)

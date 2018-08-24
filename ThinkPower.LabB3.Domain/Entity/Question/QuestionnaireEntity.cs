@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ThinkPower.LabB3.Domain.DTO;
 
 namespace ThinkPower.LabB3.Domain.Entity.Question
 {
@@ -75,5 +76,15 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// 問卷頁尾描敍內容
         /// </summary>
         public string FooterDescription { get; set; }
+
+        /// <summary>
+        /// 問卷題目定義類別 集合
+        /// </summary>
+        public IEnumerable<QuestDefineEntity> QuestDefineEntitys { get; set; }
+
+        /// <summary>
+        /// 問卷答案定義類別 集合
+        /// </summary>
+        public IEnumerable<AnswerDefineEntity> AnswerDefineEntitys { get; set; }
     }
 }
