@@ -260,3 +260,5 @@ paket-files/
 __pycache__/
 *.pyc
 /ThinkPower.LabB3.DataAccessTests
+/ThinkPower.LabB3.DomainTests
+/ThinkPower.LabB3.Web/Views/RiskEvaluation/EvaQuest - bak1.cshtml

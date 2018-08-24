@@ -1,0 +1,14 @@
+﻿
+@{
+    ViewBag.Title = "EvaQuest";
+}
+
+<h2>EvaQuest</h2>
+
+<div class="container">
+    @using (Html.BeginForm("EvaQuest", "RiskEvaluation", FormMethod.Post))
+    {
+        <input type="text" name="questId" value="FNDRE002" />
+        <input type="submit" id="submitEvaQuest" value="Save" class="btn btn-default" />
+    }
+</div>

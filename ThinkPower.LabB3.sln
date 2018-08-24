@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThinkPower.LabB3.Domain", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThinkPower.LabB3.DataAccessTests", "ThinkPower.LabB3.DataAccessTests\ThinkPower.LabB3.DataAccessTests.csproj", "{30068DBC-A209-473B-82D0-8DFEB4CAD118}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ThinkPower.LabB3.DomainTests", "ThinkPower.LabB3.DomainTests\ThinkPower.LabB3.DomainTests.csproj", "{1124E904-24CE-4F87-98A6-F1D39FB6A5C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{30068DBC-A209-473B-82D0-8DFEB4CAD118}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{30068DBC-A209-473B-82D0-8DFEB4CAD118}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{30068DBC-A209-473B-82D0-8DFEB4CAD118}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1124E904-24CE-4F87-98A6-F1D39FB6A5C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1124E904-24CE-4F87-98A6-F1D39FB6A5C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1124E904-24CE-4F87-98A6-F1D39FB6A5C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1124E904-24CE-4F87-98A6-F1D39FB6A5C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

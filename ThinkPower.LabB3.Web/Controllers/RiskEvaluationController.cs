@@ -1,4 +1,5 @@
-﻿using NLog;
+﻿using Newtonsoft.Json;
+using NLog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,7 +75,6 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpPost]
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
-            //TODO EvaQuest 進行投資風險評估問卷填答
             RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
             HttpStatusCode? statusCode = null;
 
@@ -85,7 +85,6 @@ namespace ThinkPower.LabB3.Web.Controllers
             }
             else if (String.IsNullOrEmpty(actionModel.questId))
             {
-                //throw new ArgumentNullException("questId");
                 statusCode = statusCode ?? HttpStatusCode.NotFound;
             }
 
@@ -94,6 +93,11 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if (statusCode == null)
                 {
                     riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
+
+                    if (riskEvaQuestEntity == null)
+                    {
+                        statusCode = statusCode ?? HttpStatusCode.NotFound;
+                    }
                 }
             }
             catch (Exception e)
@@ -102,15 +106,11 @@ namespace ThinkPower.LabB3.Web.Controllers
                 statusCode = statusCode ?? HttpStatusCode.InternalServerError;
             }
 
-            if (riskEvaQuestEntity == null)
-            {
-                statusCode = statusCode ?? HttpStatusCode.NotFound;
-            }
-
             if (statusCode != null)
             {
                 //return new HttpStatusCodeResult((int)statusCode);
                 return Content($"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
+                //return Content($"您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
             return View(riskEvaQuestEntity);
