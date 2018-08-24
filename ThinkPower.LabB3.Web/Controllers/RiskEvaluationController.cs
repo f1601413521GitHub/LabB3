@@ -9,6 +9,7 @@ using System.Web.Mvc;
 using ThinkPower.LabB3.Domain.Entity.Risk;
 using ThinkPower.LabB3.Domain.Service;
 using ThinkPower.LabB3.Web.ActionModels;
+using ThinkPower.LabB3.Web.ViewModels;
 
 namespace ThinkPower.LabB3.Web.Controllers
 {
@@ -75,15 +76,16 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpPost]
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
-            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
             HttpStatusCode? statusCode = null;
+            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
+            EvaQuestViewModel evaQuestVM = null;
 
             if (actionModel == null)
             {
                 //throw new ArgumentNullException("actionModel");
                 statusCode = statusCode ?? HttpStatusCode.NotFound;
             }
-            else if (String.IsNullOrEmpty(actionModel.questId))
+            if (String.IsNullOrEmpty(actionModel.questId))
             {
                 statusCode = statusCode ?? HttpStatusCode.NotFound;
             }
@@ -93,11 +95,14 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if (statusCode == null)
                 {
                     riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
+                }
 
-                    if (riskEvaQuestEntity == null)
+                if (riskEvaQuestEntity != null)
+                {
+                    evaQuestVM = new EvaQuestViewModel()
                     {
-                        statusCode = statusCode ?? HttpStatusCode.NotFound;
-                    }
+                        RiskEvaQuestionnaire = riskEvaQuestEntity
+                    };
                 }
             }
             catch (Exception e)
@@ -108,12 +113,15 @@ namespace ThinkPower.LabB3.Web.Controllers
 
             if (statusCode != null)
             {
-                //return new HttpStatusCodeResult((int)statusCode);
-                return Content($"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
-                //return Content($"您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
+                //TODO ViewModel Error 機制
+                evaQuestVM.ErrorMessage = $"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。";
+            }
+            else if (riskEvaQuestEntity == null)
+            {
+                evaQuestVM.ErrorMessage = $"您己有生效的投資風險評估紀錄，無法重新進行風險評估。";
             }
 
-            return View(riskEvaQuestEntity);
+            return View(evaQuestVM);
         }
     }
 }
