@@ -46,11 +46,11 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// </summary>
         /// <param name="uid">問卷識別碼</param>
         /// <returns>問卷題目資料</returns>
-        public List<QuestionDefineDO> GetQuesyionDefineCollection(string uid)
+        public IEnumerable<QuestionDefineDO> GetQuestionDefineList(Guid uid)
         {
-            List<QuestionDefineDO> questDefines = null;
+            List<QuestionDefineDO> questDefineList = null;
 
-            if (String.IsNullOrEmpty(uid))
+            if (uid == Guid.Empty)
             {
                 throw new ArgumentNullException("uid");
             }
@@ -58,7 +58,8 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             try
             {
                 string query = @"
-SELECT [Uid] ,[QuestUid] ,[QuestionId] ,[QuestionContent] ,[NeedAnswer] ,
+SELECT 
+    [Uid] ,[QuestUid] ,[QuestionId] ,[QuestionContent] ,[NeedAnswer] ,
     [AllowNaCondition] ,[AnswerType] ,[MinMultipleAnswers] ,[MaxMultipleAnswers] ,
     [SingleAnswerCondition] ,[CountScoreType] ,[Memo] ,[OrderSn] ,[CreateUserId] ,
     [CreateTime] ,[ModifyUserId] ,[ModifyTime]
@@ -72,9 +73,7 @@ ORDER BY OrderSn ASC;";
 
                     command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
                     {
-                        Value = Guid.TryParse(uid, out Guid tempUid) ?
-                            tempUid :
-                            throw new InvalidOperationException("Uid is invalid"),
+                        Value = uid,
                     });
 
                     connection.Open();
@@ -83,16 +82,14 @@ ORDER BY OrderSn ASC;";
                     SqlDataAdapter adapter = new SqlDataAdapter(command);
                     adapter.Fill(dt);
 
-                    if (dt.Rows.Count == 0)
+                    if (dt.Rows.Count > 0)
                     {
-                        throw new InvalidOperationException("dt.Rows is invalid");
-                    }
+                        questDefineList = new List<QuestionDefineDO>();
 
-                    questDefines = new List<QuestionDefineDO>();
-
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        questDefines.Add(GetQuesyionDefineDO(dr));
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            questDefineList.Add(GetQuestionDefineDO(dr));
+                        }
                     }
 
                     adapter = null;
@@ -111,35 +108,35 @@ ORDER BY OrderSn ASC;";
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return questDefines;
+            return questDefineList;
         }
 
         /// <summary>
-        /// 取得問卷題目資料物件類別
+        /// 轉換問卷題目資料成為問卷題目資料物件
         /// </summary>
-        /// <param name="dr">資料列</param>
-        /// <returns>問卷題目資料物件類別</returns>
-        private QuestionDefineDO GetQuesyionDefineDO(DataRow dr)
+        /// <param name="questDefine">問卷題目資料</param>
+        /// <returns>問卷題目資料物件</returns>
+        private QuestionDefineDO GetQuestionDefineDO(DataRow questDefine)
         {
             return new QuestionDefineDO()
             {
-                Uid = dr.Field<Guid>("Uid"),
-                QuestUid = dr.Field<Guid>("QuestUid"),
-                QuestionId = dr.Field<string>("QuestionId"),
-                QuestionContent = dr.Field<string>("QuestionContent"),
-                NeedAnswer = dr.Field<string>("NeedAnswer"),
-                AllowNaCondition = dr.Field<string>("AllowNaCondition"),
-                AnswerType = dr.Field<string>("AnswerType"),
-                MinMultipleAnswers = dr.Field<int?>("MinMultipleAnswers"),
-                MaxMultipleAnswers = dr.Field<int?>("MaxMultipleAnswers"),
-                SingleAnswerCondition = dr.Field<string>("SingleAnswerCondition"),
-                CountScoreType = dr.Field<string>("CountScoreType"),
-                Memo = dr.Field<string>("Memo"),
-                OrderSn = dr.Field<int?>("OrderSn"),
-                CreateUserId = dr.Field<string>("CreateUserId"),
-                CreateTime = dr.Field<DateTime?>("CreateTime"),
-                ModifyUserId = dr.Field<string>("ModifyUserId"),
-                ModifyTime = dr.Field<DateTime?>("ModifyTime"),
+                Uid = questDefine.Field<Guid>("Uid"),
+                QuestUid = questDefine.Field<Guid>("QuestUid"),
+                QuestionId = questDefine.Field<string>("QuestionId"),
+                QuestionContent = questDefine.Field<string>("QuestionContent"),
+                NeedAnswer = questDefine.Field<string>("NeedAnswer"),
+                AllowNaCondition = questDefine.Field<string>("AllowNaCondition"),
+                AnswerType = questDefine.Field<string>("AnswerType"),
+                MinMultipleAnswers = questDefine.Field<int?>("MinMultipleAnswers"),
+                MaxMultipleAnswers = questDefine.Field<int?>("MaxMultipleAnswers"),
+                SingleAnswerCondition = questDefine.Field<string>("SingleAnswerCondition"),
+                CountScoreType = questDefine.Field<string>("CountScoreType"),
+                Memo = questDefine.Field<string>("Memo"),
+                OrderSn = questDefine.Field<int?>("OrderSn"),
+                CreateUserId = questDefine.Field<string>("CreateUserId"),
+                CreateTime = questDefine.Field<DateTime?>("CreateTime"),
+                ModifyUserId = questDefine.Field<string>("ModifyUserId"),
+                ModifyTime = questDefine.Field<DateTime?>("ModifyTime"),
             };
         }
     }

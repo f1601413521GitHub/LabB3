@@ -75,7 +75,6 @@ ORDER BY Version DESC;";
                     command.Parameters.Add(new SqlParameter("@QuestId", SqlDbType.VarChar) { Value = id });
                     command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
                     {
-                        //Value = DateTime.Parse("2018-06-01 00:00:01"),
                         Value = DateTime.Now.Date,
                     });
 
@@ -110,36 +109,32 @@ ORDER BY Version DESC;";
         }
 
         /// <summary>
-        /// 取得問卷資料物件類別
+        /// 轉換問卷資料成為問卷資料物件
         /// </summary>
-        /// <param name="dr">資料列</param>
-        /// <returns>問卷資料物件類別</returns>
-        private QuestionnaireDO ConvertQuestionnaireDO(DataRow dr)
+        /// <param name="questionnaire">問卷資料</param>
+        /// <returns>問卷資料物件</returns>
+        private QuestionnaireDO ConvertQuestionnaireDO(DataRow questionnaire)
         {
             return new QuestionnaireDO()
             {
-                //Uid = Guid.TryParse(dr.Field<string>("Uid"), out Guid tempUid) ?
-                //    tempUid :
-                //    throw new InvalidOperationException("Uid is invalid"),
-
-                Uid = dr.Field<Guid>("Uid"),
-                QuestId = dr.Field<string>("QuestId"),
-                Version = dr.Field<string>("Version"),
-                Kind = dr.Field<string>("Kind"),
-                Name = dr.Field<string>("Name"),
-                Memo = dr.Field<string>("Memo"),
-                Ondate = dr.Field<DateTime?>("Ondate"),
-                Offdate = dr.Field<DateTime?>("Offdate"),
-                NeedScore = dr.Field<string>("NeedScore"),
-                QuestScore = dr.Field<int?>("QuestScore"),
-                ScoreKind = dr.Field<string>("ScoreKind"),
-                HeadBackgroundImg = dr.Field<string>("HeadBackgroundImg"),
-                HeadDescription = dr.Field<string>("HeadDescription"),
-                FooterDescription = dr.Field<string>("FooterDescription"),
-                CreateUserId = dr.Field<string>("CreateUserId"),
-                CreateTime = dr.Field<DateTime?>("CreateTime"),
-                ModifyUserId = dr.Field<string>("ModifyUserId"),
-                ModifyTime = dr.Field<DateTime?>("ModifyTime"),
+                Uid = questionnaire.Field<Guid>("Uid"),
+                QuestId = questionnaire.Field<string>("QuestId"),
+                Version = questionnaire.Field<string>("Version"),
+                Kind = questionnaire.Field<string>("Kind"),
+                Name = questionnaire.Field<string>("Name"),
+                Memo = questionnaire.Field<string>("Memo"),
+                Ondate = questionnaire.Field<DateTime?>("Ondate"),
+                Offdate = questionnaire.Field<DateTime?>("Offdate"),
+                NeedScore = questionnaire.Field<string>("NeedScore"),
+                QuestScore = questionnaire.Field<int?>("QuestScore"),
+                ScoreKind = questionnaire.Field<string>("ScoreKind"),
+                HeadBackgroundImg = questionnaire.Field<string>("HeadBackgroundImg"),
+                HeadDescription = questionnaire.Field<string>("HeadDescription"),
+                FooterDescription = questionnaire.Field<string>("FooterDescription"),
+                CreateUserId = questionnaire.Field<string>("CreateUserId"),
+                CreateTime = questionnaire.Field<DateTime?>("CreateTime"),
+                ModifyUserId = questionnaire.Field<string>("ModifyUserId"),
+                ModifyTime = questionnaire.Field<DateTime?>("ModifyTime"),
             };
         }
     }

@@ -43,59 +43,40 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         }
 
         /// <summary>
-        /// 取得最新的 投資風險評估結果資料物件類別
+        /// 取得最新的投資風險評估結果
         /// </summary>
-        /// <param name="uid">問卷主檔 紀錄識別碼</param>
-        /// <returns>投資風險評估結果資料物件類別</returns>
-        public RiskEvaluationDO GetLatestRiskEvaluation(string uid)
+        /// <param name="questAnswerId">問卷答題編號</param>
+        /// <returns>最新的投資風險評估結果</returns>
+        public RiskEvaluationDO GetLatestRiskEvaluation(string questAnswerId)
         {
             RiskEvaluationDO riskEvaDO = null;
 
-            if (String.IsNullOrEmpty(uid))
+            if (String.IsNullOrEmpty(questAnswerId))
             {
-                throw new ArgumentNullException("uid");
+                throw new ArgumentNullException("questAnswerId");
             }
 
             try
             {
                 string query = @"
-WITH Quest AS
-(
-    SELECT Uid
-    FROM Questionnaire A
-    WHERE A.Uid = @Uid
-),
-QuestAns AS
-(
-    SELECT B.QuestUid,B.QuestAnswerId FROM Quest A
-    JOIN QuestionnaireAnswer B 
-    ON A.Uid = B.QuestUid
-),
-RiskEva AS
-(
-    SELECT TOP 1 
-        B.[Uid],B.[RiskEvaId],B.[QuestAnswerId],B.[CliId],B.[RiskResult],
-        B.[RiskScore],B.[RiskAttribute],B.[EvaluationDate],B.[BusinessDate],
-        B.[IsUsed],B.[CreateUserId],B.[CreateTime],B.[ModifyUserId],B.[ModifyTime] 
-    FROM QuestAns A
-    JOIN  [dbo].[RiskEvaluation] B 
-    ON A.QuestAnswerId = B.QuestAnswerId
-    WHERE B.IsUsed = 'Y'
-    ORDER BY B.EvaluationDate DESC
-)
-
-SELECT * FROM RiskEva
+SELECT TOP 1
+    [Uid],[RiskEvaId],[QuestAnswerId],[CliId],[RiskResult],
+    [RiskScore],[RiskAttribute],[EvaluationDate],[BusinessDate],
+    [IsUsed],[CreateUserId],[CreateTime],[ModifyUserId],[ModifyTime]
+FROM [dbo].[RiskEvaluation]
+WHERE [QuestAnswerId] = @QuestAnswerId
+AND [RiskEvaId] = 'FNDINV'
+AND [IsUsed] = 'Y'
+ORDER BY EvaluationDate DESC;
 GO";
 
                 using (SqlConnection connection = DbConnection)
                 {
                     SqlCommand command = new SqlCommand(query, connection);
 
-                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.UniqueIdentifier)
+                    command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar)
                     {
-                        Value = Guid.TryParse(uid, out Guid tempUid) ?
-                            tempUid :
-                            throw new InvalidOperationException("Uid is invalid"),
+                        Value = questAnswerId,
                     });
 
                     connection.Open();
@@ -129,28 +110,28 @@ GO";
         }
 
         /// <summary>
-        /// 取得 投資風險評估結果資料物件類別
+        /// 轉換投資風險評估結果成為投資風險評估結果資料物件
         /// </summary>
-        /// <param name="dr">資料列</param>
-        /// <returns>投資風險評估結果資料物件類別</returns>
-        private RiskEvaluationDO ConvertRiskEvaluationDO(DataRow dr)
+        /// <param name="riskEvaluation">投資風險評估結果</param>
+        /// <returns>投資風險評估結果資料物件</returns>
+        private RiskEvaluationDO ConvertRiskEvaluationDO(DataRow riskEvaluation)
         {
             return new RiskEvaluationDO()
             {
-                Uid = dr.Field<Guid>("Uid"),
-                RiskEvaId = dr.Field<string>("RiskEvaId"),
-                QuestAnswerId = dr.Field<string>("QuestAnswerId"),
-                CliId = dr.Field<string>("CliId"),
-                RiskResult = dr.Field<string>("RiskResult"),
-                RiskScore = dr.Field<int?>("RiskScore"),
-                RiskAttribute = dr.Field<string>("RiskAttribute"),
-                EvaluationDate = dr.Field<DateTime?>("EvaluationDate"),
-                BusinessDate = dr.Field<DateTime?>("BusinessDate"),
-                IsUsed = dr.Field<string>("IsUsed"),
-                CreateUserId = dr.Field<string>("CreateUserId"),
-                CreateTime = dr.Field<DateTime?>("CreateTime"),
-                ModifyUserId = dr.Field<string>("ModifyUserId"),
-                ModifyTime = dr.Field<DateTime?>("ModifyTime"),
+                Uid = riskEvaluation.Field<Guid>("Uid"),
+                RiskEvaId = riskEvaluation.Field<string>("RiskEvaId"),
+                QuestAnswerId = riskEvaluation.Field<string>("QuestAnswerId"),
+                CliId = riskEvaluation.Field<string>("CliId"),
+                RiskResult = riskEvaluation.Field<string>("RiskResult"),
+                RiskScore = riskEvaluation.Field<int?>("RiskScore"),
+                RiskAttribute = riskEvaluation.Field<string>("RiskAttribute"),
+                EvaluationDate = riskEvaluation.Field<DateTime?>("EvaluationDate"),
+                BusinessDate = riskEvaluation.Field<DateTime?>("BusinessDate"),
+                IsUsed = riskEvaluation.Field<string>("IsUsed"),
+                CreateUserId = riskEvaluation.Field<string>("CreateUserId"),
+                CreateTime = riskEvaluation.Field<DateTime?>("CreateTime"),
+                ModifyUserId = riskEvaluation.Field<string>("ModifyUserId"),
+                ModifyTime = riskEvaluation.Field<DateTime?>("ModifyTime"),
             };
         }
     }

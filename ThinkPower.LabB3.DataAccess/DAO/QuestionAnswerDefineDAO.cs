@@ -42,15 +42,15 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         }
 
         /// <summary>
-        /// 取得問卷答案項目
+        /// 取得問卷答案定義資料
         /// </summary>
         /// <param name="uid">問卷識別碼</param>
-        /// <returns>問卷答案項目</returns>
-        public List<QuestionAnswerDefineDO> GetQuestionAnswerDefineCollection(string uid)
+        /// <returns>問卷答案定義資料</returns>
+        public IEnumerable<QuestionAnswerDefineDO> GetQuestionAnswerDefineList(Guid uid)
         {
-            List<QuestionAnswerDefineDO> questAnsDefines = null;
+            List<QuestionAnswerDefineDO> answerDefineDOList = null;
 
-            if (String.IsNullOrEmpty(uid))
+            if (uid == Guid.Empty)
             {
                 throw new ArgumentNullException("uid");
             }
@@ -69,12 +69,11 @@ ORDER BY OrderSn ASC;";
                 {
                     SqlCommand command = new SqlCommand(query, connection);
 
-                    command.Parameters.Add(new SqlParameter("@QuestionUid", SqlDbType.UniqueIdentifier)
-                    {
-                        Value = Guid.TryParse(uid, out Guid tempQuestionUid) ?
-                            tempQuestionUid :
-                            throw new InvalidOperationException("Uid is invalid"),
-                    });
+                    command.Parameters.Add(new SqlParameter("@QuestionUid",
+                        SqlDbType.UniqueIdentifier)
+                        {
+                            Value = uid,
+                        });
 
                     connection.Open();
 
@@ -82,16 +81,14 @@ ORDER BY OrderSn ASC;";
                     SqlDataAdapter adapter = new SqlDataAdapter(command);
                     adapter.Fill(dt);
 
-                    if (dt.Rows.Count == 0)
+                    if (dt.Rows.Count > 0)
                     {
-                        throw new InvalidOperationException("dt.Rows is invalid");
-                    }
+                        answerDefineDOList = new List<QuestionAnswerDefineDO>();
 
-                    questAnsDefines = new List<QuestionAnswerDefineDO>();
-
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        questAnsDefines.Add(GetQuestionAnswerDefineDO(dr));
+                        foreach (DataRow dr in dt.Rows)
+                        {
+                            answerDefineDOList.Add(ConvertQuestionAnswerDefine(dr));
+                        }
                     }
 
                     adapter = null;
@@ -110,31 +107,32 @@ ORDER BY OrderSn ASC;";
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return questAnsDefines;
+            return answerDefineDOList;
         }
 
         /// <summary>
-        /// 取得 問卷答案項目資料物件類別
+        /// 轉換問卷答案定義資料為問卷答案定義資料物件
         /// </summary>
-        /// <param name="dr">資料列</param>
-        /// <returns>問卷答案項目資料物件類別</returns>
-        private QuestionAnswerDefineDO GetQuestionAnswerDefineDO(DataRow dr)
+        /// <param name="questionAnswerDefine">問卷答案定義資料</param>
+        /// <returns>問卷答案定義資料物件</returns>
+        private QuestionAnswerDefineDO ConvertQuestionAnswerDefine(
+            DataRow questionAnswerDefine)
         {
             return new QuestionAnswerDefineDO()
             {
-                Uid = dr.Field<Guid>("Uid"),
-                QuestionUid = dr.Field<Guid>("QuestionUid"),
-                AnswerCode = dr.Field<string>("AnswerCode"),
-                AnswerContent = dr.Field<string>("AnswerContent"),
-                Memo = dr.Field<string>("Memo"),
-                HaveOtherAnswer = dr.Field<string>("HaveOtherAnswer"),
-                NeedOtherAnswer = dr.Field<string>("NeedOtherAnswer"),
-                Score = dr.Field<int?>("Score"),
-                OrderSn = dr.Field<int?>("OrderSn"),
-                CreateUserId = dr.Field<string>("CreateUserId"),
-                CreateTime = dr.Field<DateTime?>("CreateTime"),
-                ModifyUserId = dr.Field<string>("ModifyUserId"),
-                ModifyTime = dr.Field<DateTime?>("ModifyTime")
+                Uid = questionAnswerDefine.Field<Guid>("Uid"),
+                QuestionUid = questionAnswerDefine.Field<Guid>("QuestionUid"),
+                AnswerCode = questionAnswerDefine.Field<string>("AnswerCode"),
+                AnswerContent = questionAnswerDefine.Field<string>("AnswerContent"),
+                Memo = questionAnswerDefine.Field<string>("Memo"),
+                HaveOtherAnswer = questionAnswerDefine.Field<string>("HaveOtherAnswer"),
+                NeedOtherAnswer = questionAnswerDefine.Field<string>("NeedOtherAnswer"),
+                Score = questionAnswerDefine.Field<int?>("Score"),
+                OrderSn = questionAnswerDefine.Field<int?>("OrderSn"),
+                CreateUserId = questionAnswerDefine.Field<string>("CreateUserId"),
+                CreateTime = questionAnswerDefine.Field<DateTime?>("CreateTime"),
+                ModifyUserId = questionAnswerDefine.Field<string>("ModifyUserId"),
+                ModifyTime = questionAnswerDefine.Field<DateTime?>("ModifyTime")
             };
         }
     }
