@@ -46,7 +46,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// </summary>
         /// <param name="uid">問卷識別碼</param>
         /// <returns>問卷題目資料</returns>
-        public List<QuestionDefineDO> Get(string uid)
+        public List<QuestionDefineDO> GetQuesyionDefineCollection(string uid)
         {
             List<QuestionDefineDO> questDefines = null;
 
@@ -90,9 +90,18 @@ ORDER BY OrderSn ASC;";
 
                     questDefines = new List<QuestionDefineDO>();
 
-                    foreach (DataRow row in dt.Rows)
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        questDefines.Add(GetQuesyionDefineDO(row));
+                        questDefines.Add(GetQuesyionDefineDO(dr));
+                    }
+
+                    adapter = null;
+                    dt = null;
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
                     }
                 }
             }

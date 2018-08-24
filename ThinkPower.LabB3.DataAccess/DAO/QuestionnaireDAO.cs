@@ -46,7 +46,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// </summary>
         /// <param name="id">問卷編號</param>
         /// <returns>有效的問卷資料</returns>
-        public QuestionnaireDO Get(string id)
+        public QuestionnaireDO GetActiveQuestionniare(string id)
         {
             QuestionnaireDO questDO = null;
 
@@ -87,7 +87,7 @@ ORDER BY Version DESC;";
 
                     if (dt.Rows.Count == 1)
                     {
-                        questDO = GetQuestionnaireDO(dt.Rows[0]);
+                        questDO = ConvertQuestionnaireDO(dt.Rows[0]);
                     }
 
                     adapter = null;
@@ -114,7 +114,7 @@ ORDER BY Version DESC;";
         /// </summary>
         /// <param name="dr">資料列</param>
         /// <returns>問卷資料物件類別</returns>
-        private QuestionnaireDO GetQuestionnaireDO(DataRow dr)
+        private QuestionnaireDO ConvertQuestionnaireDO(DataRow dr)
         {
             return new QuestionnaireDO()
             {
