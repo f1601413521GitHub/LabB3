@@ -2,39 +2,154 @@
 
 @{
     ViewBag.Title = "EvaQuest";
+    var riskEvaQuest = Model.RiskEvaQuestionnaire ?? null;
+    var questEntity = (riskEvaQuest != null) ? riskEvaQuest.QuestionnaireEntity : null;
+    var questDefineEntitys = (questEntity != null) ? questEntity.QuestDefineEntitys : null;
+    var answerDefineEntitys = (questEntity != null) ? questEntity.AnswerDefineEntitys : null;
+    var questDefineCount = 0;
+    var answerDefineCount = 0;
 }
 
-<h2>EvaQuest</h2>
 
-@using (Html.BeginForm())
+@section css{
+    <link href="~/Content/ThinkPowerStyle.css" rel="stylesheet" />
+}
+
+
+@if (!String.IsNullOrEmpty(Model.ErrorMessage))
 {
-    @Html.AntiForgeryToken()
+    <!-- Button trigger modal -->
+    <button id="errorButton" type="button" class="btn btn-primary hide" data-toggle="modal" data-target="#errorModal"></button>
 
-    <div class="form-horizontal">
-        <h4>EvaQuestViewModel</h4>
-        <hr />
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-        <div class="form-group">
-            @Html.LabelFor(model => model.ErrorMessage, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.EditorFor(model => model.ErrorMessage, new { htmlAttributes = new { @class = "form-control" } })
-                @Html.ValidationMessageFor(model => model.ErrorMessage, "", new { @class = "text-danger" })
-            </div>
-        </div>
-
-        @foreach (var questDefine in Model.RiskEvaQuestionnaire.QuestionnaireEntity.QuestDefineEntitys)
-        {
-
-        }
-
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <input type="submit" value="Save" class="btn btn-default" />
+    <!-- Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1" role="dialog" aria-labelledby="errorModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorModalLabel">@Html.DisplayNameFor(x => x.ErrorMessage)</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@Html.DisplayFor(x => x.ErrorMessage)</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
             </div>
         </div>
     </div>
 }
 
-<div>
-    @Html.ActionLink("Back to List", "Index")
-</div>
+
+@using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post))
+{
+    if ((riskEvaQuest != null) &&
+        (questEntity != null))
+    {
+        <div class="container">
+
+            <div class="row">
+                <div class="col-md-6 tp-font tp-font-bold tp-color">
+                    @Html.DisplayFor(x => questEntity.Name)
+                </div>
+
+                <div class="col-md-6">
+                    <img class="tp-img-size-head" src="@questEntity.HeadBackgroundImg" alt="Alternate Text" />
+                </div>
+            </div>
+
+            <div class="row tp-block-body">
+
+                <div class="col-md-12">
+                    @(new HtmlString(questEntity.HeadDescription))
+                    <div class="hide">
+                        @Html.EditorFor(x => questEntity.Uid)
+                    </div>
+                </div>
+
+                @foreach (var questDefine in questDefineEntitys)
+                {
+                    questDefineCount++;
+                    <div class="row">
+
+                        <div class="col-md-12">
+                            <div class="hide">
+                                @Html.EditorFor(x => questDefine.Uid, null, $"questDefine_Uid_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.NeedAnswer, null, $"questDefine_NeedAnswer_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.AllowNaCondition, null, $"questDefine_AllowNaCondition_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.MinMultipleAnswers, null, $"questDefine_MinMultipleAnswers_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.MaxMultipleAnswers, null, $"questDefine_MaxMultipleAnswers_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.SingleAnswerCondition, null, $"questDefine_SingleAnswerCondition_{questDefineCount}")
+                                @Html.EditorFor(x => questDefine.CountScoreType, null, $"questDefine_CountScoreType_{questDefineCount}")
+                            </div>
+                            <div class="tp-block-body-sub">
+                                @(questDefineCount).
+                                @Html.DisplayFor(x => questDefine.QuestionContent)
+
+                                <div class="col-md-12">
+                                    @foreach (var answerDefine in answerDefineEntitys.Where(x => x.QuestionUid == questDefine.Uid))
+                                    {
+                                        answerDefineCount++;
+                                    <div class="col-md-6">
+                                        @if (answerDefineCount == 1)
+                                        {
+                                            <div class="hide">
+                                                @Html.EditorFor(x => answerDefine.Uid, null, $"answerDefine.Uid_{questDefineCount}")
+                                            </div>
+                                        }
+                                        @if (questDefine.AnswerType == "S")
+                                        {
+                                            @Html.RadioButton($"answerDefine_Answer_{@questDefineCount}", answerDefine.AnswerCode, false)
+                                            @*<input type="radio" id="answerDefine_Answer_@questDefineCount" name="answerDefine_Answer_@questDefineCount" value="@answerDefine.AnswerCode" />*@
+                                        }
+                                        else if (questDefine.AnswerType == "M")
+                                        {
+                                            @*@Html.CheckBox($"answerDefine_Answer_{@questDefineCount}", new { value = answerDefine.AnswerCode } )*@
+                                            <input type="checkbox" id="answerDefine_Answer_@questDefineCount" name="answerDefine_Answer_@questDefineCount" value="@answerDefine.AnswerCode" />
+                                        }
+                                        else if (questDefine.AnswerType == "F")
+                                        {
+                                            <input type="text" id="answerDefine_Answer_@questDefineCount" name="answerDefine_Answer_@questDefineCount" value="" />
+                                        }
+                                        @Html.DisplayFor(x => answerDefine.AnswerContent)
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    @(new HtmlString(questEntity.FooterDescription))
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-10">
+            <input type="submit" value="Save" class="btn btn-default" />
+        </div>
+    </div>
+}
+
+
+@section scripts{
+    <script>
+        $(document).ready(function () {
+
+            showErrorMessage();
+        });
+
+        function showErrorMessage() {
+
+            $('#errorModal').on('show.bs.modal', function (event) { });
+
+            if ($('#errorButton').length) {
+                $('#errorButton').click();
+            };
+        };
+    </script>
+}

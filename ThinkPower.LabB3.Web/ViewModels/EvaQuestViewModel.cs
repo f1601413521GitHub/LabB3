@@ -1,4 +1,5 @@
-﻿using ThinkPower.LabB3.Domain.Entity.Risk;
+﻿using System.ComponentModel.DataAnnotations;
+using ThinkPower.LabB3.Domain.Entity.Risk;
 
 namespace ThinkPower.LabB3.Web.ViewModels
 {
@@ -15,6 +16,7 @@ namespace ThinkPower.LabB3.Web.ViewModels
         /// <summary>
         /// 錯誤訊息
         /// </summary>
+        [Display(Name = "錯誤訊息")]
         public string ErrorMessage { get; set; }
     }
 }

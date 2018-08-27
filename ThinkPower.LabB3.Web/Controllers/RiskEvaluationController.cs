@@ -61,11 +61,19 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// </summary>
         /// <param name="answer">投資風險評估問卷填答資料</param>
         /// <returns></returns>
-        [HttpGet]
+        [HttpPost]
         public ActionResult EvaluationRank(FormCollection answer)
         {
             //TODO EvaluationRank 執行評估投資風險等級
-            return View();
+            Dictionary<string, string> values = new Dictionary<string, string>();
+            foreach (var item in answer.AllKeys)
+            {
+                if (item != null)
+                {
+                    values.Add(item, answer[item]);
+                }
+            }
+            return RedirectToAction("EvaQuest", "Home");
         }
 
         /// <summary>
@@ -96,14 +104,6 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
                 }
-
-                if (riskEvaQuestEntity != null)
-                {
-                    evaQuestVM = new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaire = riskEvaQuestEntity
-                    };
-                }
             }
             catch (Exception e)
             {
@@ -111,14 +111,22 @@ namespace ThinkPower.LabB3.Web.Controllers
                 statusCode = statusCode ?? HttpStatusCode.InternalServerError;
             }
 
+            evaQuestVM = new EvaQuestViewModel();
+
             if (statusCode != null)
             {
                 //TODO ViewModel Error 機制
+                //ModelState.AddModelError("systemError", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
                 evaQuestVM.ErrorMessage = $"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。";
             }
             else if (riskEvaQuestEntity == null)
             {
+                //ModelState.AddModelError("existEvaQuest", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
                 evaQuestVM.ErrorMessage = $"您己有生效的投資風險評估紀錄，無法重新進行風險評估。";
+            }
+            else
+            {
+                evaQuestVM.RiskEvaQuestionnaire = (riskEvaQuestEntity ?? null);
             }
 
             return View(evaQuestVM);
