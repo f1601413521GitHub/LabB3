@@ -55,7 +55,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 if (questionnaireDO == null)
                 {
-                    throw new InvalidOperationException("questDO not found");
+                    throw new InvalidOperationException("questionnaireDO not found");
                 }
 
                 QuestionnaireAnswerDO questAnswerDO =
@@ -75,7 +75,8 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
 
-                    if ((riskEvaDO.EvaluationDate < cuttimeRange.Max()) &&
+                    if ((cuttimeRange != null) &&
+                        (riskEvaDO.EvaluationDate < cuttimeRange.Max()) &&
                         (riskEvaDO.EvaluationDate > cuttimeRange.Min()))
                     {
                         riskEvaluationInCuttimeRange = true;
@@ -84,7 +85,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 if (!riskEvaluationInCuttimeRange)
                 {
-                    IEnumerable<QuestionDefineDO> questDefineList = 
+                    IEnumerable<QuestionDefineDO> questDefineList =
                         new QuestionDefineDAO().GetQuestionDefineList(questionnaireDO.Uid);
 
                     if ((questDefineList == null) ||
@@ -182,8 +183,11 @@ namespace ThinkPower.LabB3.Domain.Service
                     cuttimes.Add(new DateTime(cuttimeMin.Year, cuttimeMin.Month,
                         cuttimeMin.Day, cuttimeMin.Hour, cuttimeMin.Minute, 0).AddDays(1));
 
-                    cuttimeRange.Add(cuttimes.Where(x => x < timeNow).Max());
-                    cuttimeRange.Add(cuttimes.Where(x => x > timeNow).Min());
+                    cuttimeRange = new List<DateTime>()
+                    {
+                        cuttimes.Where(x => x < timeNow).Max(),
+                        cuttimes.Where(x => x > timeNow).Min()
+                    };
                 }
             }
 
