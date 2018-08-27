@@ -18,7 +18,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得資料筆數
         /// </summary>
-        /// <returns></returns>
+        /// <returns>資料筆數</returns>
         public override int Count()
         {
             int count;
@@ -63,8 +63,7 @@ SELECT TOP 1
     [QuestScore],[ActualScore],[TesteeSource],[CreateUserId],
     [CreateTime],[ModifyUserId],[ModifyTime]
 FROM QuestionnaireAnswer
-WHERE QuestUid =@QuestUid;
-GO";
+WHERE QuestUid =@QuestUid";
 
                 using (SqlConnection connection = DbConnection)
                 {

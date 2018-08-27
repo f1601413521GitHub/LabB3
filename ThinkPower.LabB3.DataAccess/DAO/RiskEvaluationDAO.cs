@@ -19,7 +19,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得資料筆數
         /// </summary>
-        /// <returns></returns>
+        /// <returns>資料筆數</returns>
         public override int Count()
         {
             int count;
@@ -67,8 +67,7 @@ FROM [dbo].[RiskEvaluation]
 WHERE [QuestAnswerId] = @QuestAnswerId
 AND [RiskEvaId] = 'FNDINV'
 AND [IsUsed] = 'Y'
-ORDER BY EvaluationDate DESC;
-GO";
+ORDER BY EvaluationDate DESC";
 
                 using (SqlConnection connection = DbConnection)
                 {

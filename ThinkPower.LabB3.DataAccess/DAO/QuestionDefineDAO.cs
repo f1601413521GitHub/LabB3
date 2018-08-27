@@ -18,7 +18,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得資料筆數
         /// </summary>
-        /// <returns></returns>
+        /// <returns>資料筆數</returns>
         public override int Count()
         {
             int count;
@@ -65,7 +65,7 @@ SELECT
     [CreateTime] ,[ModifyUserId] ,[ModifyTime]
 FROM QuestionDefine 
 WHERE QuestUid = @QuestUid 
-ORDER BY OrderSn ASC;";
+ORDER BY OrderSn ASC";
 
                 using (SqlConnection connection = DbConnection)
                 {

@@ -66,7 +66,7 @@ FROM Questionnaire
 WHERE QuestId = @QuestId 
     AND Ondate < @DateTimeNow 
     AND ((Offdate > @DateTimeNow) OR (Offdate is null)) 
-ORDER BY Version DESC;";
+ORDER BY Version DESC";
 
                 using (SqlConnection connection = DbConnection)
                 {
