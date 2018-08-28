@@ -50,148 +50,74 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                QuestionnaireDO questionnaireDO =
-                    new QuestionnaireDAO().GetActiveQuestionniare(id);
+                QuestionnaireDO quest = new QuestionnaireDAO().GetActiveQuestionniare(id);
 
-                if (questionnaireDO == null)
+                if (quest == null)
                 {
-                    throw new InvalidOperationException("questionnaireDO not found");
+                    throw new InvalidOperationException($"quest not found, id={id}");
                 }
 
-                QuestionnaireAnswerDO questAnswerDO =
-                    new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(questionnaireDO.Uid);
+                IEnumerable<QuestionDefineDO> questDefineList =
+                    new QuestionDefineDAO().GetQuestionDefineList(quest.Uid);
 
-                if (questAnswerDO == null)
+                if ((questDefineList == null) ||
+                    (questDefineList.Count() == 0))
                 {
-                    throw new InvalidOperationException("questAnswerDO not found");
+                    throw new InvalidOperationException(
+                        $"questDefineList not found,questUid={quest.Uid}");
                 }
 
-                RiskEvaluationDO riskEvaDO =
-                    new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswerDO.QuestAnswerId);
+                QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
+                List<QuestionAnswerDefineDO> answerDefineList = new List<QuestionAnswerDefineDO>();
+                IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
 
-                bool riskEvaluationInCuttimeRange = false;
-
-                if (riskEvaDO != null)
+                foreach (QuestionDefineDO questDefine in questDefineList)
                 {
-                    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+                    tempAnswerDefineList = answerDefineDAO.
+                        GetQuestionAnswerDefineList(questDefine.Uid);
 
-                    if ((cuttimeRange != null) &&
-                        (riskEvaDO.EvaluationDate < cuttimeRange.Max()) &&
-                        (riskEvaDO.EvaluationDate > cuttimeRange.Min()))
+                    if ((tempAnswerDefineList == null) ||
+                        (tempAnswerDefineList.Count() == 0))
                     {
-                        riskEvaluationInCuttimeRange = true;
+                        throw new InvalidOperationException(
+                            $"answerDefineList not found,questDefineUid={questDefine.Uid}");
                     }
+
+                    answerDefineList.AddRange(tempAnswerDefineList);
+                    tempAnswerDefineList = null;
                 }
 
-                if (!riskEvaluationInCuttimeRange)
+                questEntity = new QuestionnaireEntity()
                 {
-                    IEnumerable<QuestionDefineDO> questDefineList =
-                        new QuestionDefineDAO().GetQuestionDefineList(questionnaireDO.Uid);
+                    Uid = quest.Uid,
+                    QuestId = quest.QuestId,
+                    Version = quest.Version,
+                    Kind = quest.Kind,
+                    Name = quest.Name,
+                    Memo = quest.Memo,
+                    Ondate = quest.Ondate,
+                    Offdate = quest.Offdate,
+                    NeedScore = quest.NeedScore,
+                    QuestScore = quest.QuestScore,
+                    ScoreKind = quest.ScoreKind,
+                    HeadBackgroundImg = quest.HeadBackgroundImg,
+                    HeadDescription = quest.HeadDescription,
+                    FooterDescription = quest.FooterDescription,
+                    CreateUserId = quest.CreateUserId,
+                    CreateTime = quest.CreateTime,
+                    ModifyUserId = quest.ModifyUserId,
+                    ModifyTime = quest.ModifyTime,
 
-                    if ((questDefineList == null) ||
-                        (questDefineList.Count() == 0))
-                    {
-                        throw new InvalidOperationException("questDefines not found");
-                    }
-
-                    QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
-                    List<QuestionAnswerDefineDO> answerDefineList = new List<QuestionAnswerDefineDO>();
-
-                    foreach (QuestionDefineDO questDefine in questDefineList)
-                    {
-                        answerDefineList.AddRange(answerDefineDAO.
-                            GetQuestionAnswerDefineList(questDefine.Uid));
-                    }
-
-                    if ((answerDefineList == null) ||
-                        (answerDefineList.Count == 0))
-                    {
-                        throw new InvalidOperationException("answerDefineList not found");
-                    }
-
-                    questEntity = new QuestionnaireEntity()
-                    {
-                        Uid = questionnaireDO.Uid,
-                        QuestId = questionnaireDO.QuestId,
-                        Version = questionnaireDO.Version,
-                        Kind = questionnaireDO.Kind,
-                        Name = questionnaireDO.Name,
-                        Memo = questionnaireDO.Memo,
-                        Ondate = questionnaireDO.Ondate,
-                        Offdate = questionnaireDO.Offdate,
-                        NeedScore = questionnaireDO.NeedScore,
-                        QuestScore = questionnaireDO.QuestScore,
-                        ScoreKind = questionnaireDO.ScoreKind,
-                        HeadBackgroundImg = questionnaireDO.HeadBackgroundImg,
-                        HeadDescription = questionnaireDO.HeadDescription,
-                        FooterDescription = questionnaireDO.FooterDescription,
-                        CreateUserId = questionnaireDO.CreateUserId,
-                        CreateTime = questionnaireDO.CreateTime,
-                        ModifyUserId = questionnaireDO.ModifyUserId,
-                        ModifyTime = questionnaireDO.ModifyTime,
-
-                        QuestDefineEntitys = ConvertQuestDefineEntity(questDefineList),
-                        AnswerDefineEntitys = ConvertAnswerDefineEntity(answerDefineList),
-                    };
-                }
+                    QuestDefineEntities = ConvertQuestDefineEntity(questDefineList),
+                    AnswerDefineEntities = ConvertAnswerDefineEntity(answerDefineList),
+                };
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
             return questEntity;
-        }
-
-        /// <summary>
-        /// 取得投資風險評估切點時間範圍
-        /// </summary>
-        /// <returns>投資風險評估切點時間範圍</returns>
-        private IEnumerable<DateTime> GetRiskEvaCuttime()
-        {
-            List<DateTime> cuttimeRange = null;
-
-            string riskEvaCuttime = ConfigurationManager.AppSettings["risk.evaluation.cuttime"];
-
-            string[] cuttimeArray = !String.IsNullOrEmpty(riskEvaCuttime) ?
-                riskEvaCuttime.Split(',') :
-                null;
-
-            if (cuttimeArray != null)
-            {
-                List<DateTime> cuttimes = new List<DateTime>();
-
-                foreach (string cuttime in cuttimeArray)
-                {
-                    if (!String.IsNullOrEmpty(cuttime) &&
-                        (DateTime.TryParse(cuttime, out DateTime tempCuttime)))
-                    {
-                        cuttimes.Add(tempCuttime);
-                    }
-                }
-
-                if (cuttimes.Count > 0)
-                {
-                    DateTime timeNow = DateTime.Now;
-                    DateTime cuttimeMax = cuttimes.Max();
-                    DateTime cuttimeMin = cuttimes.Min();
-
-                    cuttimes.Add(new DateTime(cuttimeMax.Year, cuttimeMax.Month,
-                        cuttimeMax.Day, cuttimeMax.Hour, cuttimeMax.Minute, 0).AddDays(-1));
-
-                    cuttimes.Add(new DateTime(cuttimeMin.Year, cuttimeMin.Month,
-                        cuttimeMin.Day, cuttimeMin.Hour, cuttimeMin.Minute, 0).AddDays(1));
-
-                    cuttimeRange = new List<DateTime>()
-                    {
-                        cuttimes.Where(x => x < timeNow).Max(),
-                        cuttimes.Where(x => x > timeNow).Min()
-                    };
-                }
-            }
-
-            return cuttimeRange;
         }
 
         /// <summary>
@@ -270,7 +196,6 @@ namespace ThinkPower.LabB3.Domain.Service
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 

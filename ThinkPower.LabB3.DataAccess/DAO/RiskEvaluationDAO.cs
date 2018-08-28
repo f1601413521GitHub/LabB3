@@ -101,7 +101,6 @@ ORDER BY EvaluationDate DESC";
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 

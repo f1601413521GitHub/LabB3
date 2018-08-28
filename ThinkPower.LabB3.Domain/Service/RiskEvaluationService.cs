@@ -1,10 +1,13 @@
 ﻿using NLog;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
+using ThinkPower.LabB3.DataAccess.DAO;
+using ThinkPower.LabB3.DataAccess.DO;
 using ThinkPower.LabB3.Domain.DTO;
 using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
@@ -73,7 +76,6 @@ namespace ThinkPower.LabB3.Domain.Service
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
@@ -98,17 +100,44 @@ namespace ThinkPower.LabB3.Domain.Service
             {
                 QuestionnaireEntity activeQuest = QuestService.GetActiveQuestionnaire(questId);
 
-                if (activeQuest != null)
+                QuestionnaireAnswerDO questAnswer =
+                    new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(activeQuest.Uid);
+
+                if (questAnswer == null)
                 {
-                    riskEvaQuest = new RiskEvaQuestionnaireEntity()
-                    {
-                        QuestionnaireEntity = activeQuest,
-                    };
+                    throw new InvalidOperationException(
+                        $"questAnswer not found,activeQuestUid={activeQuest.Uid}");
                 }
+
+                RiskEvaluationDO riskEvaluation =
+                    new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
+
+                bool riskEvaluationInCuttimeRange = false;
+
+                if (riskEvaluation != null)
+                {
+                    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                    if (cuttimeRange == null)
+                    {
+                        throw new InvalidOperationException("cuttimeRange not found");
+                    }
+
+                    if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                        (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
+                    {
+                        riskEvaluationInCuttimeRange = true;
+                    }
+                }
+
+                riskEvaQuest = new RiskEvaQuestionnaireEntity()
+                {
+                    QuestionnaireEntity = activeQuest,
+                    CanUseRiskEvaluation = !riskEvaluationInCuttimeRange,
+                };
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
@@ -142,6 +171,52 @@ namespace ThinkPower.LabB3.Domain.Service
         public void SaveRiskRank(string riskResultId)
         {
             throw new NotImplementedException();
+        }
+
+
+
+        /// <summary>
+        /// 取得投資風險評估切點時間範圍
+        /// </summary>
+        /// <returns>投資風險評估切點時間範圍</returns>
+        private IEnumerable<DateTime> GetRiskEvaCuttime()
+        {
+            List<DateTime> cuttimeRange = null;
+
+            string riskEvaCuttime = ConfigurationManager.AppSettings["risk.evaluation.cuttime"];
+
+            string[] cuttimeArray = !String.IsNullOrEmpty(riskEvaCuttime) ?
+                riskEvaCuttime.Split(',') :
+                null;
+
+            if (cuttimeArray != null)
+            {
+                List<DateTime> cuttimes = new List<DateTime>();
+
+                foreach (string cuttime in cuttimeArray)
+                {
+                    if (!String.IsNullOrEmpty(cuttime) &&
+                        (DateTime.TryParse(cuttime, out DateTime tempCuttime)))
+                    {
+                        cuttimes.Add(tempCuttime);
+                    }
+                }
+
+                if (cuttimes.Count > 0)
+                {
+                    DateTime timeNow = DateTime.Now;
+                    cuttimes.Add(cuttimes.Max().AddDays(-1));
+                    cuttimes.Add(cuttimes.Min().AddDays(1));
+
+                    cuttimeRange = new List<DateTime>()
+                    {
+                        cuttimes.Where(x => x < timeNow).Max(),
+                        cuttimes.Where(x => x > timeNow).Min()
+                    };
+                }
+            }
+
+            return cuttimeRange;
         }
     }
 }

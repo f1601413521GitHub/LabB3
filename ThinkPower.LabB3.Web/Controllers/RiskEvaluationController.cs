@@ -88,14 +88,11 @@ namespace ThinkPower.LabB3.Web.Controllers
             RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
             EvaQuestViewModel evaQuestVM = null;
 
-            if (actionModel == null)
+            if ((actionModel == null) ||
+                String.IsNullOrEmpty(actionModel.questId))
             {
                 //throw new ArgumentNullException("actionModel");
-                statusCode = statusCode ?? HttpStatusCode.NotFound;
-            }
-            if (String.IsNullOrEmpty(actionModel.questId))
-            {
-                statusCode = statusCode ?? HttpStatusCode.NotFound;
+                statusCode = HttpStatusCode.NotFound;
             }
 
             try
@@ -103,30 +100,30 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if (statusCode == null)
                 {
                     riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
+
+                    evaQuestVM = new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = riskEvaQuestEntity,
+                    };
                 }
             }
             catch (Exception e)
             {
+                //TODO 提供詳細的錯誤資訊
                 logger.Error(e);
-                statusCode = statusCode ?? HttpStatusCode.InternalServerError;
+                statusCode = HttpStatusCode.InternalServerError;
             }
-
-            evaQuestVM = new EvaQuestViewModel();
 
             if (statusCode != null)
             {
                 //TODO ViewModel Error 機制
-                //ModelState.AddModelError("systemError", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
-                evaQuestVM.ErrorMessage = $"系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。";
+                ModelState.AddModelError("",
+                    "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
             }
-            else if (riskEvaQuestEntity == null)
+            else if (!evaQuestVM.RiskEvaQuestionnaire.CanUseRiskEvaluation)
             {
-                //ModelState.AddModelError("existEvaQuest", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
-                evaQuestVM.ErrorMessage = $"您己有生效的投資風險評估紀錄，無法重新進行風險評估。";
-            }
-            else
-            {
-                evaQuestVM.RiskEvaQuestionnaire = (riskEvaQuestEntity ?? null);
+                ModelState.AddModelError("",
+                    "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
             return View(evaQuestVM);

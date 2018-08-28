@@ -1,46 +1,88 @@
-﻿.tp-img-size-head {
-    width: 100%;
-    height: 80px;
-}
+﻿/*#region Global */
 
-.tp-block-size-head {
-    height: 80px;
-}
-
-.tp-block-bottom {
-    float: none;
-    display: table-cell;
-    vertical-align: bottom;
-}
-
-.tp-block-body {
-    background-color: #D5E6F8;
-}
-
-.tp-block-body-sub {
-    padding-top: 8px;
-    padding-left: 15px;
-}
-
-.tp-font {
+body {
     font-family: Helvetica, Microsoft JhengHei;
     font-size: 16px;
 }
 
-.tp-font-bold {
-    font-weight: bold;
-}
-
-.tp-color {
-    color: #010180;
-}
-
-
-.tp-homepage-head {
-    background-color: #548DD4;
-}
-
-.tp-homepage-font-color,
-.tp-homepage-link-color {
+input[type=submit] {
+    background-color: #2C95F1;
+    border: 2px solid #4A7EBB;
     color: white;
 }
+
+/*#endregion */
+
+/*#region EvaQuest */
+
+.question {
+    background-color: #D5E6F8;
+}
+
+    .question div {
+        margin-top: 2px;
+    }
+
+/*#region head */
+
+.question-head {
+}
+
+.question-head-title {
+    /*float: none;
+    display: table-cell;
+    vertical-align: bottom;*/
+}
+
+    .question-head-title > span {
+        font-weight: bold;
+        color: #010180;
+    }
+
+.question-head-img {
+}
+
+    .question-head-img > img {
+        width: 100%;
+        height: 80px;
+    }
+
+.question-head-descript {
+}
+
+    .question-head-descript > span {
+        /*margin-top: 80px,;*/
+    }
+
+/*#endregion */
+
+/*#region body */
+
+.question-body {
+}
+
+.question-subject-answer-code {
+    display: inline-block;
+}
+
+.question-subject-answer-descript {
+    display: inline-block;
+}
+
+/*#endregion */
+
+/*#region footer */
+
+.question-footer {
+}
+
+.question-footer-submit {
+}
+
+    .question-footer-submit > input {
+        margin-bottom: 9px;
+    }
+
+/*#endregion */
+
+/*#endregion */

@@ -12,11 +12,5 @@ namespace ThinkPower.LabB3.Web.ViewModels
         /// 投資風險評估問卷
         /// </summary>
         public RiskEvaQuestionnaireEntity RiskEvaQuestionnaire { get; set; }
-
-        /// <summary>
-        /// 錯誤訊息
-        /// </summary>
-        [Display(Name = "錯誤訊息")]
-        public string ErrorMessage { get; set; }
     }
 }

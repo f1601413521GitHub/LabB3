@@ -97,7 +97,6 @@ WHERE QuestUid =@QuestUid";
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 

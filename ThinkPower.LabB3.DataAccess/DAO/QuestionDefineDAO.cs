@@ -104,7 +104,6 @@ ORDER BY OrderSn ASC";
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
