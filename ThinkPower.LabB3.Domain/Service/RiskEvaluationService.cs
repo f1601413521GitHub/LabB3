@@ -205,8 +205,11 @@ namespace ThinkPower.LabB3.Domain.Service
                 if (cuttimes.Count > 0)
                 {
                     DateTime timeNow = DateTime.Now;
-                    cuttimes.Add(cuttimes.Max().AddDays(-1));
-                    cuttimes.Add(cuttimes.Min().AddDays(1));
+                    DateTime cuttimesMax = cuttimes.Max();
+                    DateTime cuttimesMin = cuttimes.Min();
+
+                    cuttimes.Add(cuttimesMax.AddDays(-1));
+                    cuttimes.Add(cuttimesMin.AddDays(1));
 
                     cuttimeRange = new List<DateTime>()
                     {

@@ -20,7 +20,7 @@ input[type=submit] {
 }
 
     .question div {
-        margin-top: 2px;
+        /*margin-top: 1px;*/
     }
 
 /*#region head */
@@ -61,11 +61,41 @@ input[type=submit] {
 .question-body {
 }
 
-.question-subject-answer-code {
+.question-subject {
+}
+
+.question-subject-head {
     display: inline-block;
 }
 
-.question-subject-answer-descript {
+.question-subject-head-no {
+    display: inline-block;
+}
+
+.question-subject-head-descript {
+    display: inline-block;
+}
+
+.question-subject-body {
+    display: inline-block;
+}
+
+.question-subject-footer {
+    display: inline-block;
+}
+
+.question-subject-footer-tip > span {
+    color: red;
+}
+
+.question-answer {
+}
+
+.question-answer-code {
+    display: inline-block;
+}
+
+.question-answer-descript {
     display: inline-block;
 }
 

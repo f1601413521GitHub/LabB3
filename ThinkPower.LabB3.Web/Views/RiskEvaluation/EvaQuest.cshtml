@@ -10,7 +10,7 @@
     var answerDefineEntities = (questEntity != null) ? questEntity.AnswerDefineEntities : null;
 }
 
-@using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post))
+@using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { @class = "EvaQuestForm" }))
 {
     <div class="container">
 
@@ -18,7 +18,25 @@
 
         @if (questEntity != null)
         {
-            <div class="question row">
+            <div class="question row"
+                 data-Uid="@questEntity.Uid"
+                 data-QuestId="@questEntity.QuestId"
+                 data-Version="@questEntity.Version"
+                 data-Kind="@questEntity.Kind"
+                 data-Name="@questEntity.Name"
+                 data-Memo="@questEntity.Memo"
+                 data-Ondate="@questEntity.Ondate"
+                 data-Offdate="@questEntity.Offdate"
+                 data-NeedScore="@questEntity.NeedScore"
+                 data-QuestScore="@questEntity.QuestScore"
+                 data-ScoreKind="@questEntity.ScoreKind"
+                 data-HeadBackgroundImg="@questEntity.HeadBackgroundImg"
+                 data-HeadDescription="@questEntity.HeadDescription"
+                 data-FooterDescription="@questEntity.FooterDescription"
+                 data-CreateUserId="@questEntity.CreateUserId"
+                 data-CreateTime="@questEntity.CreateTime"
+                 data-ModifyUserId="@questEntity.ModifyUserId"
+                 data-ModifyTime="@questEntity.ModifyTime">
 
                 <div class="question-head col-md-12">
 
@@ -49,7 +67,7 @@
                             questDefineCount++;
 
                             <!--forloop-->
-                            <div class="question-subject row"
+                            <div class="question-subject col-md-12"
                                  data-Uid="@questDefine.Uid"
                                  data-QuestUid="@questDefine.QuestUid"
                                  data-QuestionId="@questDefine.QuestionId"
@@ -68,14 +86,21 @@
                                  data-ModifyUserId="@questDefine.ModifyUserId"
                                  data-ModifyTime="@questDefine.ModifyTime">
 
-                                <div class="question-subject-title col-md-12">
-                                    <span>@questDefineCount.</span>
-                                    <span>
-                                        @Html.DisplayFor(x => questDefine.QuestionContent)
-                                    </span>
+                                <div class="question-subject-head col-md-12">
+
+                                    <div class="question-subject-head-no">
+                                        <span>@questDefineCount.</span>
+                                    </div>
+
+                                    <div class="question-subject-head-descript">
+                                        <span>
+                                            @Html.DisplayFor(x => questDefine.QuestionContent)
+                                        </span>
+                                    </div>
+
                                 </div>
 
-                                <div class="question-subject-answer col-md-12">
+                                <div class="question-subject-body col-md-12">
 
                                     @{
                                         var answerDefineCount = 0;
@@ -85,7 +110,7 @@
                                             answerDefineCount++;
 
                                             <!--forloop-->
-                                            <div class="question-subject-answer-content col-md-6"
+                                            <div class="question-answer col-md-6"
                                                  data-Uid="@answerDefine.Uid"
                                                  data-QuestionUid="@answerDefine.QuestionUid"
                                                  data-AnswerCode="@answerDefine.AnswerCode"
@@ -100,24 +125,41 @@
                                                  data-ModifyUserId="@answerDefine.ModifyUserId"
                                                  data-ModifyTime="@answerDefine.ModifyTime">
 
-                                                <div class="question-subject-answer-code">
+                                                <div class="question-answer-code">
 
                                                     @if (questDefine.AnswerType == "S")
                                                     {
-                                                        @Html.RadioButton("AnswerCode", answerDefine.AnswerCode, new { @class = "" })
+                                                        @Html.RadioButton($"AnswerCode_{questDefineCount}", answerDefine.AnswerCode,
+                                                       new
+                                                       {
+                                                           @class = "",
+                                                           data_AnswerCode = answerDefine.AnswerCode,
+                                                           data_QuestionId = questDefine.QuestionId
+                                                       })
                                                     }
                                                     else if (questDefine.AnswerType == "M")
                                                     {
-                                                        @Html.CheckBox("AnswerCode", new { @class = "" })
+                                                        @Html.CheckBox($"AnswerCode_{questDefineCount}",
+                                                       new {
+                                                           @class = "",
+                                                           data_AnswerCode = answerDefine.AnswerCode,
+                                                           data_QuestionId = questDefine.QuestionId
+                                                       })
                                                     }
                                                     else if (questDefine.AnswerType == "F")
                                                     {
-                                                        @Html.TextBox("AnswerCode", null, new { @class = "" })
+                                                        @Html.TextBox($"AnswerCode_{questDefineCount}", null,
+                                                       new
+                                                       {
+                                                           @class = "",
+                                                           data_AnswerCode = answerDefine.AnswerCode,
+                                                           data_QuestionId = questDefine.QuestionId
+                                                       })
                                                     }
 
                                                 </div>
 
-                                                <div class="question-subject-answer-descript">
+                                                <div class="question-answer-descript">
                                                     <span>
                                                         @Html.DisplayFor(x => answerDefine.AnswerContent)
                                                     </span>
@@ -127,6 +169,14 @@
 
                                         }
                                     }
+
+                                </div>
+
+                                <div class="question-subject-footer col-md-12">
+
+                                    <div class="question-subject-footer-tip col-md-12">
+                                        <span></span>
+                                    </div>
 
                                 </div>
 
@@ -145,7 +195,11 @@
                     </div>
 
                     <div class="question-footer-submit col-md-10 col-md-offset-5">
-                        <input type="submit" value="確定" />
+                        <input type="button" value="確定" />
+                    </div>
+
+                    <div class="question-footer-test col-md-10 col-md-offset-5">
+                        <input type="button" value="測試" />
                     </div>
 
                 </div>
