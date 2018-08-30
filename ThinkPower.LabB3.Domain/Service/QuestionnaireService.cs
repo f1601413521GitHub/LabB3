@@ -67,23 +67,28 @@ namespace ThinkPower.LabB3.Domain.Service
                         $"questDefineList not found,questUid={quest.Uid}");
                 }
 
+                List<QuestDefineEntity> questDefineEntities =
+                    ConvertQuestDefineEntity(questDefineList).ToList();
+
                 QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
-                List<QuestionAnswerDefineDO> answerDefineList = new List<QuestionAnswerDefineDO>();
                 IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
 
-                foreach (QuestionDefineDO questDefine in questDefineList)
+
+                foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
                 {
                     tempAnswerDefineList = answerDefineDAO.
-                        GetQuestionAnswerDefineList(questDefine.Uid);
+                        GetQuestionAnswerDefineList(questDefineEntity.Uid);
 
                     if ((tempAnswerDefineList == null) ||
                         (tempAnswerDefineList.Count() == 0))
                     {
                         throw new InvalidOperationException(
-                            $"answerDefineList not found,questDefineUid={questDefine.Uid}");
+                            $"answerDefineList not found, questDefineEntityUid={questDefineEntity.Uid}");
                     }
 
-                    answerDefineList.AddRange(tempAnswerDefineList);
+                    questDefineEntity.AnswerDefineEntities =
+                        ConvertAnswerDefineEntity(tempAnswerDefineList);
+
                     tempAnswerDefineList = null;
                 }
 
@@ -108,8 +113,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     ModifyUserId = quest.ModifyUserId,
                     ModifyTime = quest.ModifyTime,
 
-                    QuestDefineEntities = ConvertQuestDefineEntity(questDefineList),
-                    AnswerDefineEntities = ConvertAnswerDefineEntity(answerDefineList),
+                    QuestDefineEntities = questDefineEntities,
                 };
             }
             catch (Exception e)

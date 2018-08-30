@@ -1,63 +1,46 @@
-﻿/*#region Global */
-
+﻿/*Global*/
 body {
     font-family: Helvetica, Microsoft JhengHei;
     font-size: 16px;
 }
 
-input[type=submit] {
+input[type=button], input[type=submit] {
     background-color: #2C95F1;
     border: 2px solid #4A7EBB;
     color: white;
 }
 
-/*#endregion */
 
-/*#region EvaQuest */
 
+
+
+/*EvaQuest*/
 .question {
     background-color: #D5E6F8;
 }
 
     .question div {
-        /*margin-top: 1px;*/
+        margin-top: 1px;
     }
 
-/*#region head */
-
+/*head*/
 .question-head {
 }
 
 .question-head-title {
-    /*float: none;
-    display: table-cell;
-    vertical-align: bottom;*/
+    font-weight: bold;
+    color: #010180;
 }
-
-    .question-head-title > span {
-        font-weight: bold;
-        color: #010180;
-    }
 
 .question-head-img {
+    height: 80px;
+    z-index: 1;
 }
-
-    .question-head-img > img {
-        width: 100%;
-        height: 80px;
-    }
 
 .question-head-descript {
 }
 
-    .question-head-descript > span {
-        /*margin-top: 80px,;*/
-    }
-
-/*#endregion */
-
-/*#region body */
-
+/*body*/
 .question-body {
 }
 
@@ -99,10 +82,7 @@ input[type=submit] {
     display: inline-block;
 }
 
-/*#endregion */
-
-/*#region footer */
-
+/*footer*/
 .question-footer {
 }
 
@@ -112,7 +92,3 @@ input[type=submit] {
     .question-footer-submit > input {
         margin-bottom: 9px;
     }
-
-/*#endregion */
-
-/*#endregion */

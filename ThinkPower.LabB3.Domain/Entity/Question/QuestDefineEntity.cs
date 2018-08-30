@@ -70,5 +70,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// 題目排序序號 
         /// </summary> 
         public Nullable<int> OrderSn { get; set; }
+
+        /// <summary>
+        /// 問卷答案定義集合
+        /// </summary>
+        public IEnumerable<AnswerDefineEntity> AnswerDefineEntities { get; set; }
     }
 }

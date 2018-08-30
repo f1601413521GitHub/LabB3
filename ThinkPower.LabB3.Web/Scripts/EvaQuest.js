@@ -1,41 +1,139 @@
 ﻿$(document).ready(function () {
 
-    Registration();
-
+    removeTip();
+    binding();
 });
 
-function Registration() {
+function binding() {
 
-    $('.question-footer-submit').find('input').on('click', function () {
-        $('.EvaQuestForm').submit();
+    console.log('binding');
+    $('#done').on('click', function () {
+        $('#evaQuestForm').submit();
     });
 
-    $('.question-footer-test').find('input').on('click', function () {
-        ValidateForm();
-    });
-}
-
-function RemoveTip() {
-
-    $('.question-subject-footer-tip span').each(function () {
-        $(this).html('');
+    $('#test').on('click', function () {
+        validate();
     });
 }
 
-function ValidateForm() {
+function removeTip() {
 
-    RemoveTip();
+    console.log('removeTip');
+    $('[id*=footer]').each(function () {
+        $(this).find('span').html('');
+        $(this).hide();
+    });
+}
 
-    const $question = {
-        element: $('.question'),
-        datas: $('.question').data(),
-    };
+function getQuestionList() {
 
-    //var allSubjectArray = [];
+    console.log('getQuestionList');
+    return $('[id*=quest]').map(function () {
+        return {
+            element: this,
+            datas: $(this).data(),
+            answerList: $(this).find('[id*=answer-]').map(function () {
+                return {
+                    element: this,
+                    datas: $(this).data(),
+                    //answerCode: $(this).find('[id*=answerCode]'),
+                };
+            }),
+        };
+    });
+}
+
+function validateRule(questionList) {
+
+    console.log('validateRule');
+    questionList.each(function () {
+
+        let question = this;
+        if (question.datas.needAnswer == "Y") {
+
+            if (question.datas.allowNaCondition) {
+
+                let validateResult = [];
+                $(question.datas.allowNaCondition.Conditions).each(function () {
+
+                    let condition = {
+                        object: this,
+                        answerCodeList: [],
+                    };
+
+                    condition.quetion = questionList.filter(function () {
+                        return (this.datas.questionId == condition.object.QuestionId);
+                    }).get()[0];
+
+                    $(condition.quetion.answerList).each(function () {
+
+                        let answer = this;
+                        let answerCode;
+
+                        if ((condition.quetion.datas.answerType == 'S') ||
+                            (condition.quetion.datas.answerType == 'M')) {
+
+                            if ($(answer.element).find('[id*=answerCode]').is(':checked')) {
+                                answerCode = answer.datas.answerCode;
+                            }
+
+                        } else if (condition.quetion.datas.answerType == 'F') {
+
+                            answerCode = $(answer.element).find('[id*=answerCode]').val();
+                        }
+
+                        if (answerCode) {
+                            condition.answerCodeList.push(answerCode.toString());
+                        }
+                    });
+                    
+                    let result = compareArrayHasCommonValue(condition.object.AnswerCode, condition.answerCodeList);
+                    validateResult.push(result);
+
+                    console.log({
+                        conditionAnswerCode: condition.object.AnswerCode.join(),
+                        conditionAnswerList: condition.answerCodeList.join(),
+                        id: condition.object.QuestionId,
+                        compareArrayHasCommonValue: result,
+                    });
+                });
+                //validateResult = [];
+
+                if ($.inArray(true, validateResult) == -1) {
+                    let footer = $(question.element).find('[id*=footer]');
+                    footer.show();
+                    footer.find('span').html("此題必須填答!");
+                }
+
+            } else {
+
+            }
+        }
+    });
+}
+
+function validate() {
+
+    console.log('validate');
+    removeTip();
+
     var $subject;
     var $answer;
 
-    $('.question-subject').each(function () {
+    var questionList = getQuestionList();
+    //console.log(questionList);
+
+    validateRule(questionList);
+}
+
+
+
+function history() {
+
+
+    console.log(questionList);
+
+    $('[id*=quest]').each(function () {
 
         $subject = {
             element: $(this),
@@ -45,24 +143,6 @@ function ValidateForm() {
             answeranswerValidateTip: null,
         };
 
-        //QuestionDefine：
-        //QuestionId                 題目編號
-        //QuestionContent            題目內容描述
-        //NeedAnswer                 是否必答
-        //AllowNaCondition           可不做答條件
-        //AnswerType                 答題型態
-        //MinMultipleAnswers         複選最少答項數
-        //MaxMultipleAnswers         複選最多答項數
-        //SingleAnswerCondition      複選限制單一做答條件
-        //CountScoreType             計分種類
-
-        //QuestionAnswerDefine：
-        //AnswerCode         答案代碼
-        //AnswerContent      答案內容描敍
-        //Memo               備註說明
-        //HaveOtherAnswer    是否答題有輸入說明  Y:是 N:否
-        //NeedOtherAnswer    答題說明是否為必填  Y:是 N:否
-        //Score              計分分數 
 
         $subject.element.find('.question-answer').each(function () {
 
@@ -95,7 +175,7 @@ function ValidateForm() {
 
         debugger;
         //allSubjectArray.push($subject);
-        console.log([$subject.datas.questionid,$subject.datas.needanswer]);
+        console.log([$subject.datas.questionid, $subject.datas.needanswer]);
         if ($subject.datas.needanswer == 'Y') {
             if ($subject.datas.allownacondition) {
 
@@ -150,13 +230,13 @@ function ValidateForm() {
                         getAnswerCode: $ruleInfo.values,
                     });
 
-                    ruleValidate.push(CompareArray($ruleInfo.values, $conditions.AnswerCode));
+                    ruleValidate.push(compareArrayHasCommonValue($ruleInfo.values, $conditions.AnswerCode));
                 });
 
                 //{"Conditions":[{"QuestionId":"Q003","AnswerCode":["6"]},{"QuestionId":"Q005","AnswerCode":["1","3","5"]}]}
                 //當題目編號Q003填答答案代碼【包含】6時，【或】題目編號Q005填答答案代碼包含1【及】3【及】5時符合。
 
-                if ($.inArray(false, ruleValidate) >=0) {
+                if ($.inArray(false, ruleValidate) >= 0) {
                     $subject.answerValidateTip = "此題必須填答!";
                 }
 
@@ -233,18 +313,23 @@ function ValidateForm() {
     });
 }
 
-function CheckValueExist(value) {
-    return value;
-}
-
-function CheckValue() {
+function checkValue() {
     var values = ['', 0, NaN, undefined, null, 1, ' '];
     $(values).each(function (idx, val) {
         console.log(idx, val, val ? true : false);
     });
 }
 
-function CompareArray(array1, array2) {
-    return ($(array1).not(array2).length == 0) &&
-        ($(array2).not(array1).length == 0);
+function compareArrayHasCommonValue(a, b) {
+    let array1 = $(a).toArray();
+    let array2 = $(b).toArray();
+
+    let result = false;
+    $.each(array1, function (index, value) {
+
+        if ($.inArray(value, array2) > -1) {
+            result = true;
+        }
+    });
+    return result;
 }
