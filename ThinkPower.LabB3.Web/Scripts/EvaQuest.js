@@ -1,12 +1,25 @@
 ﻿$(document).ready(function () {
 
+    showLog(true, 'ready', null, null);
+
     removeTip();
     binding();
 });
 
+function removeTip() {
+
+    showLog(true, 'removeTip', null, null);
+
+    $('[id*=footer]').each(function () {
+        $(this).find('span').html('');
+        $(this).hide();
+    });
+}
+
 function binding() {
 
-    console.log('binding');
+    showLog(true, 'binding', null, null);
+
     $('#done').on('click', function () {
         $('#evaQuestForm').submit();
     });
@@ -16,320 +29,494 @@ function binding() {
     });
 }
 
-function removeTip() {
+function validate() {
 
-    console.log('removeTip');
-    $('[id*=footer]').each(function () {
-        $(this).find('span').html('');
-        $(this).hide();
-    });
+    showLog(true, 'validate', null, null);
+
+    removeTip();
+
+    let questionList = getQuestionList();
+    validateRule(questionList);
 }
 
 function getQuestionList() {
 
-    console.log('getQuestionList');
-    return $('[id*=quest]').map(function () {
+    let questionList = $('[id*=question]').map(function () {
+
+        let question = this;
         return {
-            element: this,
-            datas: $(this).data(),
-            answerList: $(this).find('[id*=answer-]').map(function () {
+
+            element: question,
+            datas: $(question).data(),
+            answerList: $(question).find('[id*=answer-]').map(function () {
+
+                let answer = this;
                 return {
-                    element: this,
-                    datas: $(this).data(),
-                    //answerCode: $(this).find('[id*=answerCode]'),
+                    element: answer,
+                    datas: $(answer).data(),
+                    answerCode: $(answer).find('[id*=answerCode]'),
+                    otherAnswer: $(answer).find('[id*=otherAnswer]'),
                 };
             }),
+            footer: $(question).find('[id*=footer]'),
         };
     });
+
+    showLog(true, 'getQuestionList', null, { questionList: questionList });
+
+    return questionList;
 }
 
 function validateRule(questionList) {
 
-    console.log('validateRule');
+    let validateFailCount = 0;
     questionList.each(function () {
 
         let question = this;
-        if (question.datas.needAnswer == "Y") {
+        let message;
 
-            if (question.datas.allowNaCondition) {
+        showLog(true, question.datas.questionId, {
+            questionId: question.datas.questionId,
+            question: question
+        }, null);
 
-                let validateResult = [];
-                $(question.datas.allowNaCondition.Conditions).each(function () {
+        if (!validateNeedAnswer(question, questionList)) {
+            message = "此題必須填答!";
+        }
+        else if (!validateMinMultipleAnswers(question)) {
+            message = "此題至少須勾選" + question.datas.minMultipleAnswers + "個項目!";
+        }
+        else if (!validateMaxMultipleAnswers(question)) {
+            message = "此題至多僅能勾選" + question.datas.maxMultipleAnswers + "個項目!";
+        }
+        else if (!validateSingleAnswerCondition(question, questionList)) {
+            message = "此題僅能勾選1個項目!";
+        }
+        else if (!validateOtherAnswer(question)) {
+            message = "請輸入其他說明文字!";
+        }
 
-                    let condition = {
-                        object: this,
-                        answerCodeList: [],
-                    };
-
-                    condition.quetion = questionList.filter(function () {
-                        return (this.datas.questionId == condition.object.QuestionId);
-                    }).get()[0];
-
-                    $(condition.quetion.answerList).each(function () {
-
-                        let answer = this;
-                        let answerCode;
-
-                        if ((condition.quetion.datas.answerType == 'S') ||
-                            (condition.quetion.datas.answerType == 'M')) {
-
-                            if ($(answer.element).find('[id*=answerCode]').is(':checked')) {
-                                answerCode = answer.datas.answerCode;
-                            }
-
-                        } else if (condition.quetion.datas.answerType == 'F') {
-
-                            answerCode = $(answer.element).find('[id*=answerCode]').val();
-                        }
-
-                        if (answerCode) {
-                            condition.answerCodeList.push(answerCode.toString());
-                        }
-                    });
-                    
-                    let result = compareArrayHasCommonValue(condition.object.AnswerCode, condition.answerCodeList);
-                    validateResult.push(result);
-
-                    console.log({
-                        conditionAnswerCode: condition.object.AnswerCode.join(),
-                        conditionAnswerList: condition.answerCodeList.join(),
-                        id: condition.object.QuestionId,
-                        compareArrayHasCommonValue: result,
-                    });
-                });
-                //validateResult = [];
-
-                if ($.inArray(true, validateResult) == -1) {
-                    let footer = $(question.element).find('[id*=footer]');
-                    footer.show();
-                    footer.find('span').html("此題必須填答!");
-                }
-
-            } else {
-
-            }
+        if (message) {
+            validateFailCount++;
+            showTip(question.footer, message);
         }
     });
+    
+    if (validateFailCount == 0) {
+
+        let totalScore = getScore(questionList);
+        if (totalScore == 0) {
+            let msg = '您的問卷己填答完畢，謝謝您的參與';
+        }
+    }
 }
 
-function validate() {
+function validateNeedAnswer(question, questionList) {
 
-    console.log('validate');
-    removeTip();
+    let validate = false;
+    if (question.datas.needAnswer == "Y") {
 
-    var $subject;
-    var $answer;
+        let allowNaCondition = false;
+        if (question.datas.allowNaCondition) {
 
-    var questionList = getQuestionList();
-    //console.log(questionList);
+            let conditionValidateResultList = [];
+            $(question.datas.allowNaCondition.Conditions).each(function () {
 
-    validateRule(questionList);
+                let condition = {
+                    object: this,
+                    answerCodeList: [],
+                };
+
+                condition.quetion = questionList.filter(function () {
+                    return (this.datas.questionId == condition.object.QuestionId);
+                }).get()[0];
+
+                condition.answerCodeList = getAnswerCodeList(condition.quetion);
+
+                showLog(true, 'allowNaCondition', {
+                    condition: condition,
+                    questionId: question.datas.questionId,
+                }, null);
+
+                let result = compareSameArray(condition.object.AnswerCode, condition.answerCodeList);
+                conditionValidateResultList.push(result);
+
+            });
+
+            if ($.inArray(true, conditionValidateResultList) > -1) {
+
+                allowNaCondition = true;
+            }
+        }
+
+        if ((allowNaCondition) ||
+            (getAnswerCodeList(question).length > 0)) {
+            validate = true;
+        }
+    }
+    else {
+        validate = true;
+    }
+
+    showLog(true, 'validateNeedAnswer', null, { validate: validate });
+
+    return validate;
 }
 
+function validateMinMultipleAnswers(question) {
 
+    let validate = false;
+    if (question.datas.answertype == 'M' &&
+        question.datas.minMultipleAnswers) {
 
-function history() {
+        let answerCodeList = getAnswerCodeList(question);
+        if (answerCodeList >= question.datas.minMultipleAnswers) {
+            validate = true;
+        }
+    } else {
+        validate = true;
+    }
 
+    showLog(true, 'validateMinMultipleAnswers', null, { validate: validate });
 
-    console.log(questionList);
+    return validate;
+}
 
-    $('[id*=quest]').each(function () {
+function validateMaxMultipleAnswers(question) {
 
-        $subject = {
-            element: $(this),
-            datas: $(this).data(),
-            answerList: [],
-            answerValidate: null,
-            answeranswerValidateTip: null,
-        };
+    let validate = false;
+    if (question.datas.answertype == 'M' &&
+        question.datas.maxMultipleAnswers) {
 
+        let answerCodeList = getAnswerCodeList(question);
+        if (answerCodeList <= question.datas.maxMultipleAnswers) {
+            validate = true;
+        }
+    } else {
+        validate = true;
+    }
 
-        $subject.element.find('.question-answer').each(function () {
+    showLog(true, 'validateMaxMultipleAnswers', null, { validate: validate });
 
-            $answer = {
-                element: $(this),
-                datas: $(this).data(),
-                value: null,
+    return validate;
+}
+
+function validateSingleAnswerCondition(question, questionList) {
+
+    let validate = false;
+    if (question.datas.singleAnswerCondition) {
+
+        let conditionValidateResultList = [];
+        $(question.datas.singleAnswerCondition.Conditions).each(function () {
+
+            let condition = {
+                object: this,
+                answerCodeList: [],
             };
 
-            if ($subject.datas.answertype == 'S') {
+            condition.quetion = questionList.filter(function () {
+                return (this.datas.questionId == condition.object.QuestionId);
+            }).get()[0];
 
-                $answer.value = $answer.element.find('.question-answer-code').find(':checked')
-                    .map(function () { return $(this).data('answercode'); }).get();
+            condition.answerCodeList = getAnswerCodeList(condition.quetion);
 
-            } else if ($subject.datas.answertype == 'M') {
+            showLog(true, 'singleAnswerCondition', {
+                condition: condition,
+                questionId: question.datas.questionId,
+            }, null);
 
-                $answer.value = $answer.element.find('.question-answer-code').find(':checked')
-                    .map(function () { return $(this).data('answercode'); }).get();
+            let result = compareSingleAnswerCondition(condition.object.AnswerCode, condition.answerCodeList);
+            conditionValidateResultList.push(result);
 
-            } else if ($subject.datas.answertype == 'F') {
-
-                $answer.value = $answer.element.find('.question-answer-code').find('input')
-                    .map(function () { return $(this).val(); }).get();
-            }
-
-            $subject.answerList.push($answer);
-
-            $answer = null;
         });
 
-        debugger;
-        //allSubjectArray.push($subject);
-        console.log([$subject.datas.questionid, $subject.datas.needanswer]);
-        if ($subject.datas.needanswer == 'Y') {
-            if ($subject.datas.allownacondition) {
-
-                //console.log({
-                //    allSubjectArray: allSubjectArray,
-                //    AllowNaCondition: $subject.datas.allownacondition,
-                //    QuestionId: $subject.datas.questionid,
-                //});
-                debugger;
-                var ruleValidate = [];
-
-                $($subject.datas.allownacondition.Conditions).each(function () {
-
-                    var $conditions = this;
-                    var question = $(".question-subject[data-questionid='" +
-                        this.QuestionId + "']");
-                    var questionDatas = question.data();
-
-                    var $ruleInfo = {
-                        element: question,
-                        datas: questionDatas,
-                        values: null,
-                    };
-
-                    if ($ruleInfo.datas.answertype == 'S') {
-
-                        $ruleInfo.values = $ruleInfo.element
-                            .find('.question-answer-code').find(':checked')
-                            .map(function () { return $(this).data('answercode').toString(); })
-                            .get();
-
-                    } else if ($ruleInfo.datas.answertype == 'M') {
-
-                        $ruleInfo.values = $ruleInfo.element
-                            .find('.question-answer-code').find(':checked')
-                            .map(function () { return $(this).data('answercode').toString(); })
-                            .get();
-
-                    } else if ($ruleInfo.datas.answertype == 'F') {
-
-                        $ruleInfo.values = $ruleInfo.element
-                            .find('.question-answer-code').find('input')
-                            .map(function () { return $(this).val().toString(); })
-                            .get();
-                    }
-
-                    console.log({
-                        nowQuestId: $subject.datas.questionid,
-                        rule: $conditions,
-                        ruleQuestionId: $conditions.QuestionId,
-                        ruleAnswerCode: $conditions.AnswerCode,
-                        getAnswerCode: $ruleInfo.values,
-                    });
-
-                    ruleValidate.push(compareArrayHasCommonValue($ruleInfo.values, $conditions.AnswerCode));
-                });
-
-                //{"Conditions":[{"QuestionId":"Q003","AnswerCode":["6"]},{"QuestionId":"Q005","AnswerCode":["1","3","5"]}]}
-                //當題目編號Q003填答答案代碼【包含】6時，【或】題目編號Q005填答答案代碼包含1【及】3【及】5時符合。
-
-                if ($.inArray(false, ruleValidate) >= 0) {
-                    $subject.answerValidateTip = "此題必須填答!";
-                }
-
-            } else {
-
-                $subject.answerValidate = $subject.answerList
-                    .map(function (answer) { return answer.value; })
-                    .map(function (value) {
-                        return value.toString().trim().length > 0;
-                    });
-
-                if ($.inArray(true, $subject.answerValidate) == -1) {
-                    $subject.answerValidateTip = "此題必須填答!";
-                }
-            }
+        if ($.inArray(false, conditionValidateResultList) == -1) {
+            validate = true;
         }
+    }
+    else {
+        validate = true;
+    }
 
-        //$subject.datas.minmultipleanswers = 2;
-        //$subject.datas.maxmultipleanswers = 3;
+    showLog(true, 'validateSingleAnswerCondition', null, { validate: validate });
 
-        console.log({
-            answerList: $subject.answerList,
-            answerValidate: $subject.answerValidate,
-            min: $subject.datas.minmultipleanswers,
-            max: $subject.datas.maxmultipleanswers,
-            valueExistCount: $subject.answerValidate ?
-                $subject.answerValidate.filter(function (exist) { return exist == true; }).length :
-                -99,
-        });
-
-        if (!$subject.answerValidateTip &&
-            $subject.datas.answertype == 'M' &&
-            $subject.datas.minmultipleanswers &&
-            $subject.answerValidate) {
-
-            var valueExistCount = $subject.answerValidate
-                .filter(function (exist) { return exist == true; }).length;
-
-            if (valueExistCount < $subject.datas.minmultipleanswers) {
-                $subject.answerValidateTip = '此題至少須勾選' +
-                    $subject.datas.minmultipleanswers + '個項目!';
-            }
-
-        }
-
-        if (!$subject.answerValidateTip &&
-            $subject.datas.answertype == 'M' &&
-            $subject.datas.maxmultipleanswers &&
-            $subject.answerValidate) {
-
-            var valueExistCount = $subject.answerValidate
-                .filter(function (exist) { return exist == true; }).length;
-
-            if (valueExistCount > $subject.datas.maxmultipleanswers) {
-                $subject.answerValidateTip = '此題至多僅能勾選' +
-                    $subject.datas.maxmultipleanswers + '個項目!';
-            }
-        }
-
-        if (!$subject.answerValidateTip &&
-            $subject.datas.singleanswercondition) {
-            //TODO
-            if (true) {
-                $subject.answerValidateTip = "此題僅能勾選1個項目!";
-            }
-        }
-
-        if ($subject.answerValidateTip) {
-            $subject.element.find('.question-subject-footer-tip span').html($subject.answerValidateTip);
-        }
-        ///
-
-        $subject = null;
-    });
+    return validate;
 }
 
-function checkValue() {
+function validateOtherAnswer(question) {
+
+    let validate = false;
+
+    let hasOtherAnswerCondition = 0;
+    $(question.answerList).each(function (index, answer) {
+
+        if (question.datas.answerType == "F") {
+
+            hasOtherAnswerCondition++;
+            if (answer.otherAnswer.val().trim()) {
+                validate = true;
+            }
+        }
+        else if ((answer.datas.haveOtherAnswer == "Y") &&
+            (answer.datas.needOtherAnswer == "Y") &&
+            answer.answerCode.is(':checked')) {
+
+            hasOtherAnswerCondition++;
+            if (answer.otherAnswer.val().trim()) {
+                validate = true;
+            }
+        }
+    });
+
+    if (hasOtherAnswerCondition == 0) {
+        validate = true;
+    }
+
+    showLog(true, 'validateOtherAnswerResult', { question: question }, { validate: validate });
+
+    return validate;
+}
+
+function getAnswerCodeList(quetion) {
+
+    let answerCodeList = [];
+
+    $(quetion.answerList).each(function () {
+
+        let answer = this;
+        let answerCode;
+
+        if ((quetion.datas.answerType == 'S') ||
+            (quetion.datas.answerType == 'M')) {
+
+            if (answer.answerCode.is(':checked')) {
+                answerCode = answer.datas.answerCode;
+            }
+
+        } else if (quetion.datas.answerType == 'F') {
+
+            if (answer.answerCode.val().trim()) {
+                answerCode = answer.answerCode.val().trim();
+            }
+        }
+
+        if (answerCode) {
+            answerCodeList.push(answerCode.toString());
+        }
+    });
+
+    showLog(true, 'getAnswerCodeList', null, { answerCodeList: answerCodeList });
+
+    return answerCodeList;
+}
+
+
+function getAnswerScoreList(quetion) {
+
+    let answerScoreList = [];
+
+    $(quetion.answerList).each(function () {
+
+        let answer = this;
+        let answerScore;
+
+        if ((quetion.datas.answerType == 'S') ||
+            (quetion.datas.answerType == 'M')) {
+
+            if (answer.answerCode.is(':checked')) {
+                answerScore = answer.datas.score;
+            }
+
+        } else if (quetion.datas.answerType == 'F') {
+
+            if (answer.answerCode.val().trim()) {
+                answerScore = answer.datas.score;
+            }
+        }
+
+        if (answerScore) {
+            answerScoreList.push(parseInt(answerScore));
+        }
+    });
+
+    showLog(true, 'getAnswerScoreList', null, { answerScoreList: answerScoreList });
+
+    return answerScoreList;
+}
+
+function showTip(footer, msg) {
+
+    footer.show();
+    footer.find('span').html(msg);
+}
+
+function showLog(show, method, information, result) {
+
+    if (show) {
+        let log = {
+            show: show,
+            method: method,
+            information: information,
+            result: result,
+        };
+        console.log(log);
+    }
+}
+
+function getScore(questionList) {
+
+    let totalScore = 0;
+    let questEntity = {
+        element: $('[id*=questEntity]'),
+    };
+
+    questEntity.datas = questEntity.element.data();
+
+    let scoreList = [];
+    if (questEntity.datas.needScore == "Y") {
+
+        questionList.each(function () {
+
+            let question = this;
+            let answerScoreList = getAnswerScoreList(question);
+            let answerScore;
+
+            showLog(true, 'Math', null, {
+                sum: sum(answerScoreList),
+                max: Math.max.apply(Math, answerScoreList),
+                min: Math.min.apply(Math, answerScoreList),
+                avg: avg(sum(answerScoreList), answerScoreList.length),
+            });
+
+            if (question.datas.countScoreType == 1) {
+                answerScore = sum(answerScoreList);
+            }
+            else if (question.datas.countScoreType == 2) {
+                answerScore = Math.max.apply(Math, answerScoreList);
+            }
+            else if (question.datas.countScoreType == 3) {
+                answerScore = Math.min.apply(Math, answerScoreList);
+            }
+            else if (question.datas.countScoreType == 4) {
+                answerScore = avg(sum(answerScoreList), answerScoreList.length);
+            }
+
+            scoreList.push(answerScore);
+        });
+        showLog(true, 'scoreList', null, scoreList);
+
+        if (questEntity.datas.scoreKind == 1) {
+            totalScore = sum(scoreList);
+        }
+        showLog(true, 'questScore', null, questEntity.datas.questScore);
+
+        if (totalScore > questEntity.datas.questScore) {
+            totalScore = questEntity.datas.questScore;
+        }
+        showLog(true, 'totalScore', null, scoreList);
+    }
+
+    showLog(true, 'getScore', { questEntity, questEntity }, { totalScore: totalScore });
+
+    return totalScore;
+}
+
+function sum(values) {
+
+    let number = 0;
+    $.each(values, function () {
+        number += parseInt(this);
+    });
+    return number;
+}
+
+function avg(sum, length) {
+    return (length > 0) ? (sum / length) : 0;
+}
+
+
+
+function compareSameArray(conditionAnswerCodeList, answerCodeList) {
+
+    let validate = false;
+    let answerCodeInArray = [];
+    $.each(conditionAnswerCodeList, function (index, answerCode) {
+
+        if ($.inArray(answerCode, answerCodeList) > -1) {
+            answerCodeInArray.push(true);
+        }
+    });
+
+    if ((answerCodeInArray.length > 0) &&
+        (answerCodeInArray.length == answerCodeList.length)) {
+        validate = true;
+    }
+
+    showLog(true, compareSameArray, {
+        conditionAnswerCodeList: conditionAnswerCodeList,
+        answerCodeList: answerCodeList,
+    }, { validate: validate });
+
+    return validate;
+}
+
+function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
+
+    let validate = false;
+
+    if (answerCodeList.length == 1) {
+        validate = true;
+    } else {
+
+        let singleAnswerCode = conditionAnswerCodeList[0];
+        let answerCodeInArray = false;
+
+        if ($.inArray(singleAnswerCode, answerCodeList) > -1) {
+            answerCodeInArray = true;
+        }
+
+        if (!answerCodeInArray) {
+            validate = true;
+        }
+    }
+
+    showLog(true, 'compareSingleAnswerCondition', {
+        conditionAnswerCodeList: conditionAnswerCodeList,
+        answerCodeList: answerCodeList,
+    }, { validate: validate });
+
+    return validate;
+}
+
+
+
+
+
+function compareArrayHasCommonValue(conditionAnswerCodeList, answerCodeList) {
+
+    let validate = false;
+
+    $.each(conditionAnswerCodeList, function (index, answerCode) {
+
+        if ($.inArray(answerCode, answerCodeList) > -1) {
+            validate = true;
+        }
+    });
+
+    showLog({
+        method: 'compareArrayHasCommonValue',
+        information: {
+            conditionAnswerCodeList: conditionAnswerCodeList,
+            answerCodeList: answerCodeList,
+            validate: validate
+        }
+    });
+    return validate;
+}
+
+function testValueState() {
     var values = ['', 0, NaN, undefined, null, 1, ' '];
     $(values).each(function (idx, val) {
         console.log(idx, val, val ? true : false);
     });
-}
-
-function compareArrayHasCommonValue(a, b) {
-    let array1 = $(a).toArray();
-    let array2 = $(b).toArray();
-
-    let result = false;
-    $.each(array1, function (index, value) {
-
-        if ($.inArray(value, array2) > -1) {
-            result = true;
-        }
-    });
-    return result;
 }

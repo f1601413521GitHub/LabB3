@@ -19,9 +19,10 @@
         @if (questEntity != null)
         {
             <div class="row question"
-                 data-NeedScore="@questEntity.NeedScore"
-                 data-QuestScore="@questEntity.QuestScore"
-                 data-ScoreKind="@questEntity.ScoreKind">
+                 id="questEntity"
+                 data-need-Score="@questEntity.NeedScore"
+                 data-quest-Score="@questEntity.QuestScore"
+                 data-score-Kind="@questEntity.ScoreKind">
 
                 <div class="col-md-12 question-head">
 
@@ -117,6 +118,13 @@
                                                     </span>
                                                 </div>
 
+                                                <div class="question-answer-other">
+                                                    @if (answerDefine.HaveOtherAnswer == "Y")
+                                                    {
+                                                        @Html.TextBox($"otherAnswer-{questDefineCount}", null, new { });
+                                                    }
+                                                </div>
+
                                             </div>
                                         }
                                     }
@@ -148,7 +156,7 @@
                     </div>
 
                     <div class="col-md-10 col-md-offset-5 question-footer-submit">
-                        <input id="done" type="button" value="確定"/>
+                        <input id="done" type="button" value="確定" />
                     </div>
 
                     <div class="col-md-10 col-md-offset-5 question-footer-test">
