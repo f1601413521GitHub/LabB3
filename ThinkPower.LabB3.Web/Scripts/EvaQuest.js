@@ -251,7 +251,7 @@ function validateOtherAnswer(question) {
         if (question.datas.answerType === "F") {
 
             hasOtherAnswerCondition++;
-            if (answer.otherAnswer.val().trim()) {
+            if (answer.otherAnswer.val().trim() !== '') {
                 validate = true;
             }
         }
