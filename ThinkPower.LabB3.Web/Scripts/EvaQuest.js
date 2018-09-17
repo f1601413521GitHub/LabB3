@@ -21,10 +21,6 @@ function binding() {
     showLog(true, 'binding', null, null);
 
     $('#done').on('click', function () {
-        $('#evaQuestForm').submit();
-    });
-
-    $('#test').on('click', function () {
         validate();
     });
 }
@@ -101,13 +97,15 @@ function validateRule(questionList) {
             showTip(question.footer, message);
         }
     });
-    
+
     if (validateFailCount == 0) {
 
-        let totalScore = getScore(questionList);
-        if (totalScore == 0) {
-            let msg = '您的問卷己填答完畢，謝謝您的參與';
-        }
+        //let totalScore = getScore(questionList);
+        //if (totalScore == 0) {
+        //    let msg = '您的問卷己填答完畢，謝謝您的參與';
+        //}
+
+        $('#evaQuestForm').submit();
     }
 }
 
