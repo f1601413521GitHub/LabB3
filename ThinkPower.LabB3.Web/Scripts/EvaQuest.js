@@ -69,7 +69,7 @@ function validateRule(questionList) {
     questionList.each(function () {
 
         let question = this;
-        let message;
+        let message = '';
 
         showLog(true, question.datas.questionId, {
             questionId: question.datas.questionId,
@@ -92,13 +92,13 @@ function validateRule(questionList) {
             message = "請輸入其他說明文字!";
         }
 
-        if (message) {
+        if (message !== '') {
             validateFailCount++;
             showTip(question.footer, message);
         }
     });
 
-    if (validateFailCount == 0) {
+    if (validateFailCount === 0) {
 
         //let totalScore = getScore(questionList);
         //if (totalScore == 0) {
@@ -112,10 +112,10 @@ function validateRule(questionList) {
 function validateNeedAnswer(question, questionList) {
 
     let validate = false;
-    if (question.datas.needAnswer == "Y") {
+    if (question.datas.needAnswer === "Y") {
 
         let allowNaCondition = false;
-        if (question.datas.allowNaCondition) {
+        if (question.datas.allowNaCondition !== '') {
 
             let conditionValidateResultList = [];
             $(question.datas.allowNaCondition.Conditions).each(function () {
@@ -147,7 +147,7 @@ function validateNeedAnswer(question, questionList) {
             }
         }
 
-        if ((allowNaCondition) ||
+        if ((allowNaCondition === true) ||
             (getAnswerCodeList(question).length > 0)) {
             validate = true;
         }
@@ -164,8 +164,8 @@ function validateNeedAnswer(question, questionList) {
 function validateMinMultipleAnswers(question) {
 
     let validate = false;
-    if (question.datas.answertype == 'M' &&
-        question.datas.minMultipleAnswers) {
+    if (question.datas.answertype === 'M' &&
+        question.datas.minMultipleAnswers !== '') {
 
         let answerCodeList = getAnswerCodeList(question);
         if (answerCodeList >= question.datas.minMultipleAnswers) {
@@ -183,8 +183,8 @@ function validateMinMultipleAnswers(question) {
 function validateMaxMultipleAnswers(question) {
 
     let validate = false;
-    if (question.datas.answertype == 'M' &&
-        question.datas.maxMultipleAnswers) {
+    if (question.datas.answertype === 'M' &&
+        question.datas.maxMultipleAnswers !== '') {
 
         let answerCodeList = getAnswerCodeList(question);
         if (answerCodeList <= question.datas.maxMultipleAnswers) {
@@ -202,7 +202,7 @@ function validateMaxMultipleAnswers(question) {
 function validateSingleAnswerCondition(question, questionList) {
 
     let validate = false;
-    if (question.datas.singleAnswerCondition) {
+    if (question.datas.singleAnswerCondition !== '') {
 
         let conditionValidateResultList = [];
         $(question.datas.singleAnswerCondition.Conditions).each(function () {
@@ -228,7 +228,7 @@ function validateSingleAnswerCondition(question, questionList) {
 
         });
 
-        if ($.inArray(false, conditionValidateResultList) == -1) {
+        if ($.inArray(false, conditionValidateResultList) === -1) {
             validate = true;
         }
     }
@@ -248,25 +248,25 @@ function validateOtherAnswer(question) {
     let hasOtherAnswerCondition = 0;
     $(question.answerList).each(function (index, answer) {
 
-        if (question.datas.answerType == "F") {
+        if (question.datas.answerType === "F") {
 
             hasOtherAnswerCondition++;
             if (answer.otherAnswer.val().trim()) {
                 validate = true;
             }
         }
-        else if ((answer.datas.haveOtherAnswer == "Y") &&
-            (answer.datas.needOtherAnswer == "Y") &&
-            answer.answerCode.is(':checked')) {
+        else if ((answer.datas.haveOtherAnswer === "Y") &&
+            (answer.datas.needOtherAnswer === "Y") &&
+            answer.answerCode.is(':checked') === true) {
 
             hasOtherAnswerCondition++;
-            if (answer.otherAnswer.val().trim()) {
+            if (answer.otherAnswer.val().trim() !== '') {
                 validate = true;
             }
         }
     });
 
-    if (hasOtherAnswerCondition == 0) {
+    if (hasOtherAnswerCondition === 0) {
         validate = true;
     }
 
@@ -282,23 +282,23 @@ function getAnswerCodeList(quetion) {
     $(quetion.answerList).each(function () {
 
         let answer = this;
-        let answerCode;
+        let answerCode = '';
 
-        if ((quetion.datas.answerType == 'S') ||
-            (quetion.datas.answerType == 'M')) {
+        if ((quetion.datas.answerType === 'S') ||
+            (quetion.datas.answerType === 'M')) {
 
-            if (answer.answerCode.is(':checked')) {
+            if (answer.answerCode.is(':checked') === true) {
                 answerCode = answer.datas.answerCode;
             }
 
-        } else if (quetion.datas.answerType == 'F') {
+        } else if (quetion.datas.answerType === 'F') {
 
-            if (answer.answerCode.val().trim()) {
+            if (answer.answerCode.val().trim() !== '') {
                 answerCode = answer.answerCode.val().trim();
             }
         }
 
-        if (answerCode) {
+        if (answerCode !== '') {
             answerCodeList.push(answerCode.toString());
         }
     });
@@ -316,23 +316,23 @@ function getAnswerScoreList(quetion) {
     $(quetion.answerList).each(function () {
 
         let answer = this;
-        let answerScore;
+        let answerScore = '';
 
-        if ((quetion.datas.answerType == 'S') ||
-            (quetion.datas.answerType == 'M')) {
+        if ((quetion.datas.answerType === 'S') ||
+            (quetion.datas.answerType === 'M')) {
 
-            if (answer.answerCode.is(':checked')) {
+            if (answer.answerCode.is(':checked') === true) {
                 answerScore = answer.datas.score;
             }
 
-        } else if (quetion.datas.answerType == 'F') {
+        } else if (quetion.datas.answerType === 'F') {
 
-            if (answer.answerCode.val().trim()) {
+            if (answer.answerCode.val().trim() !== '') {
                 answerScore = answer.datas.score;
             }
         }
 
-        if (answerScore) {
+        if (answerScore !== '') {
             answerScoreList.push(parseInt(answerScore));
         }
     });
@@ -350,7 +350,7 @@ function showTip(footer, msg) {
 
 function showLog(show, method, information, result) {
 
-    if (show) {
+    if (show === true) {
         let log = {
             show: show,
             method: method,
@@ -371,7 +371,7 @@ function getScore(questionList) {
     questEntity.datas = questEntity.element.data();
 
     let scoreList = [];
-    if (questEntity.datas.needScore == "Y") {
+    if (questEntity.datas.needScore === "Y") {
 
         questionList.each(function () {
 
@@ -386,16 +386,16 @@ function getScore(questionList) {
                 avg: avg(sum(answerScoreList), answerScoreList.length),
             });
 
-            if (question.datas.countScoreType == 1) {
+            if (question.datas.countScoreType === 1) {
                 answerScore = sum(answerScoreList);
             }
-            else if (question.datas.countScoreType == 2) {
+            else if (question.datas.countScoreType === 2) {
                 answerScore = Math.max.apply(Math, answerScoreList);
             }
-            else if (question.datas.countScoreType == 3) {
+            else if (question.datas.countScoreType === 3) {
                 answerScore = Math.min.apply(Math, answerScoreList);
             }
-            else if (question.datas.countScoreType == 4) {
+            else if (question.datas.countScoreType === 4) {
                 answerScore = avg(sum(answerScoreList), answerScoreList.length);
             }
 
@@ -403,7 +403,7 @@ function getScore(questionList) {
         });
         showLog(true, 'scoreList', null, scoreList);
 
-        if (questEntity.datas.scoreKind == 1) {
+        if (questEntity.datas.scoreKind === 1) {
             totalScore = sum(scoreList);
         }
         showLog(true, 'questScore', null, questEntity.datas.questScore);
@@ -446,7 +446,7 @@ function compareSameArray(conditionAnswerCodeList, answerCodeList) {
     });
 
     if ((answerCodeInArray.length > 0) &&
-        (answerCodeInArray.length == answerCodeList.length)) {
+        (answerCodeInArray.length === answerCodeList.length)) {
         validate = true;
     }
 
@@ -462,7 +462,7 @@ function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
 
     let validate = false;
 
-    if (answerCodeList.length == 1) {
+    if (answerCodeList.length === 1) {
         validate = true;
     } else {
 
