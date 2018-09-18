@@ -53,7 +53,26 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public RiskEvaResultDTO EvaluateRiskRank(RiskEvaAnswerEntity answer)
         {
-            throw new NotImplementedException();
+            RiskEvaResultDTO result = null;
+
+            try
+            {
+                if (answer == null)
+                {
+                    throw new ArgumentNullException("answer");
+                }
+
+                QuestionnaireResultEntity questResultEntity = 
+                    QuestService.Calculate(answer.QuestionnaireAnswerEntity);
+
+                //TODO: result = ConvertQuestionnaireResultEntity(questResultEntity);
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return result;
         }
 
         /// <summary>
