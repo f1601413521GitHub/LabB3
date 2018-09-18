@@ -164,11 +164,11 @@ function validateNeedAnswer(question, questionList) {
 function validateMinMultipleAnswers(question) {
 
     let validate = false;
-    if (question.datas.answertype === 'M' &&
+    if (question.datas.answerType === 'M' &&
         question.datas.minMultipleAnswers !== '') {
 
         let answerCodeList = getAnswerCodeList(question);
-        if (answerCodeList >= question.datas.minMultipleAnswers) {
+        if (answerCodeList.length >= question.datas.minMultipleAnswers) {
             validate = true;
         }
     } else {
@@ -183,11 +183,11 @@ function validateMinMultipleAnswers(question) {
 function validateMaxMultipleAnswers(question) {
 
     let validate = false;
-    if (question.datas.answertype === 'M' &&
+    if (question.datas.answerType === 'M' &&
         question.datas.maxMultipleAnswers !== '') {
 
         let answerCodeList = getAnswerCodeList(question);
-        if (answerCodeList <= question.datas.maxMultipleAnswers) {
+        if (answerCodeList.length <= question.datas.maxMultipleAnswers) {
             validate = true;
         }
     } else {
