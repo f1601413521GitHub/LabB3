@@ -9,8 +9,8 @@ using ThinkPower.LabB3.DataAccess.DAO;
 using ThinkPower.LabB3.DataAccess.DO;
 using NLog;
 using System.Runtime.ExceptionServices;
-using ThinkPower.LabB3.Domain.DTO;
 using System.Configuration;
+using Newtonsoft.Json;
 
 namespace ThinkPower.LabB3.Domain.Service
 {
@@ -31,7 +31,91 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public QuestionnaireResultEntity Calculate(QuestionnaireAnswerEntity answer)
         {
-            throw new NotImplementedException();
+            QuestionnaireResultEntity result = null;
+            string message = null;
+
+            try
+            {
+                if (answer == null)
+                {
+                    throw new ArgumentNullException("answer");
+                }
+
+                QuestionnaireEntity questEntity = GetQuestionnaire(answer.QuestUid);
+
+                if (questEntity == null)
+                {
+                    throw new InvalidOperationException("questEntity not found");
+                }
+
+                if (!validateNeedAnswer(answer, questEntity))
+                {
+                    message = "此題必須填答!";
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 檢核必填規則
+        /// </summary>
+        /// <param name="answer">問卷填答資料</param>
+        /// <param name="questEntity">問卷類別</param>
+        private bool validateNeedAnswer(QuestionnaireAnswerEntity answer,
+            QuestionnaireEntity questEntity)
+        {
+            bool validateResult = false;
+
+            foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
+            {
+                AnswerDetailEntity answerDetail = answer.AnswerDetailEntities
+                    .Where(x => x.QuestionId == questDefine.QuestionId).FirstOrDefault();
+
+                if (answerDetail == null)
+                {
+                    throw new InvalidOperationException("answerDetail not found");
+                }
+
+                if (questDefine.NeedAnswer == "Y")
+                {
+                    bool conditionCanBeIgnored = false;
+
+                    if (!String.IsNullOrEmpty(questDefine.AllowNaCondition))
+                    {
+                        var allowNaCondition = JsonConvert.DeserializeAnonymousType(questDefine.AllowNaCondition,
+                            new { Conditions = new[] { new { QuestionId = "", AnswerCode = new[] { "" } } } });
+
+                        foreach (var condition in allowNaCondition.Conditions)
+                        {
+                            AnswerDetailEntity conditionAnswerDetail = answer.AnswerDetailEntities
+                                .Where(x => x.QuestionId == condition.QuestionId).FirstOrDefault();
+
+                            if (conditionAnswerDetail == null)
+                            {
+                                throw new InvalidOperationException("conditionAnswerDetail not found");
+                            }
+
+                            if (conditionAnswerDetail.AnswerCode ==
+                                String.Join(",", condition.AnswerCode))
+                            {
+                                conditionCanBeIgnored = true;
+                            }
+                        }
+                    }
+
+                    if (!conditionCanBeIgnored && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                    {
+                        validateResult = true;
+                    }
+                }
+            }
+
+            return validateResult;
         }
 
         /// <summary>
@@ -187,7 +271,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns>問卷資料</returns>
         public QuestionnaireEntity GetQuestionnaire(string uid)
         {
-            QuestionnaireEntity questInfo = null;
+            QuestionnaireEntity questEntity = null;
 
             if (String.IsNullOrEmpty(uid))
             {
@@ -196,14 +280,78 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                //TODO
+                QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
+
+                if (quest == null)
+                {
+                    throw new InvalidOperationException($"quest not found, uid={uid}");
+                }
+
+                IEnumerable<QuestionDefineDO> questDefineList =
+                    new QuestionDefineDAO().GetQuestionDefineList(quest.Uid);
+
+                if ((questDefineList == null) ||
+                    (questDefineList.Count() == 0))
+                {
+                    throw new InvalidOperationException(
+                        $"questDefineList not found,questUid={quest.Uid}");
+                }
+
+                List<QuestDefineEntity> questDefineEntities =
+                    ConvertQuestDefineEntity(questDefineList).ToList();
+
+                QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
+                IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
+
+
+                foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
+                {
+                    tempAnswerDefineList = answerDefineDAO.
+                        GetQuestionAnswerDefineList(questDefineEntity.Uid);
+
+                    if ((tempAnswerDefineList == null) ||
+                        (tempAnswerDefineList.Count() == 0))
+                    {
+                        throw new InvalidOperationException(
+                            $"answerDefineList not found, questDefineEntityUid={questDefineEntity.Uid}");
+                    }
+
+                    questDefineEntity.AnswerDefineEntities =
+                        ConvertAnswerDefineEntity(tempAnswerDefineList);
+
+                    tempAnswerDefineList = null;
+                }
+
+                questEntity = new QuestionnaireEntity()
+                {
+                    Uid = quest.Uid,
+                    QuestId = quest.QuestId,
+                    Version = quest.Version,
+                    Kind = quest.Kind,
+                    Name = quest.Name,
+                    Memo = quest.Memo,
+                    Ondate = quest.Ondate,
+                    Offdate = quest.Offdate,
+                    NeedScore = quest.NeedScore,
+                    QuestScore = quest.QuestScore,
+                    ScoreKind = quest.ScoreKind,
+                    HeadBackgroundImg = quest.HeadBackgroundImg,
+                    HeadDescription = quest.HeadDescription,
+                    FooterDescription = quest.FooterDescription,
+                    CreateUserId = quest.CreateUserId,
+                    CreateTime = quest.CreateTime,
+                    ModifyUserId = quest.ModifyUserId,
+                    ModifyTime = quest.ModifyTime,
+
+                    QuestDefineEntities = questDefineEntities,
+                };
             }
             catch (Exception e)
             {
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return questInfo;
+            return questEntity;
         }
     }
 }
