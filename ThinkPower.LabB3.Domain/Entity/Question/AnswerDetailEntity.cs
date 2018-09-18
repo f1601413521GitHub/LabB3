@@ -11,6 +11,11 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
     /// </summary>
     public class AnswerDetailEntity : BaseEntity
     {
+        /// <summary>
+        /// 題目編號 
+        /// </summary> 
+        public string QuestionId { get; set; }
+
         /// <summary> 
         ///問卷答題識別碼 
         /// </summary> 

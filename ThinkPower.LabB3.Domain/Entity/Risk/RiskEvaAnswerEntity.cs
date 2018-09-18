@@ -13,13 +13,8 @@ namespace ThinkPower.LabB3.Domain.Entity.Risk
     public class RiskEvaAnswerEntity : BaseEntity
     {
         /// <summary>
-        /// 問卷類別
+        /// 問卷填答類別
         /// </summary>
-        public QuestionnaireEntity QuestionnaireEntity { get; set; }
-
-        /// <summary>
-        /// 可否進行風險評估問卷填答
-        /// </summary>
-        public bool CanUseRiskEvaluation { get; set; }
+        public QuestionnaireAnswerEntity QuestionnaireAnswerEntity { get; set; }
     }
 }

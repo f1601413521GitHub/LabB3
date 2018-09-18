@@ -8,10 +8,17 @@
     @TempData["FormCollection"]
 }
 
-
 <hr />
 @if (TempData["FormCollection2"] != null)
 {
     @TempData["FormCollection2"]
 }
 
+<hr />
+@if (TempData["FormCollection3"] != null)
+{
+    @TempData["FormCollection3"]
+}
+
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })

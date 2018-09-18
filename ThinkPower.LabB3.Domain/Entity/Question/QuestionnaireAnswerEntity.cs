@@ -12,6 +12,11 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
     public class QuestionnaireAnswerEntity : BaseEntity
     {
         /// <summary> 
+        /// 問卷識別碼
+        /// </summary>
+        public string QuestUid { get; set; }
+
+        /// <summary> 
         /// 問卷填答評分結果類別
         /// </summary>
         public QuestionnaireResultEntity QuestionnaireResultEntity { get; set; }
@@ -19,6 +24,6 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// <summary>
         /// 問卷答案明細類別集合
         /// </summary>
-        public IEnumerable<AnswerDetailEntity> AnswerDetailEntity { get; set; }
+        public IEnumerable<AnswerDetailEntity> AnswerDetailEntities { get; set; }
     }
 }
