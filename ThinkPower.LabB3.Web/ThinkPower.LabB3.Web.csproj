@@ -333,7 +333,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ThinkPower.LabB3.Domain\ThinkPower.LabB3.Domain.csproj">
-      <Project>{7a316c2d-2161-4e35-b233-88d211b3667a}</Project>
+      <Project>{7A316C2D-2161-4E35-B233-88D211B3667A}</Project>
       <Name>ThinkPower.LabB3.Domain</Name>
     </ProjectReference>
   </ItemGroup>
