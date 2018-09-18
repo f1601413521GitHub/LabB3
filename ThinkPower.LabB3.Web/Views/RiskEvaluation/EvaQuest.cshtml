@@ -18,6 +18,8 @@
 
         @if (questEntity != null)
         {
+            @Html.HiddenFor(x => questEntity.QuestId)
+
             <div class="row question"
                  id="questEntity"
                  data-need-Score="@questEntity.NeedScore"
@@ -51,6 +53,7 @@
                         foreach (var questDefine in questDefineEntities)
                         {
                             questDefineCount++;
+                            @Html.HiddenFor(x => questDefine.QuestionId)
 
                             <!--forloop-->
                             <div class="col-md-12 question-subject"
@@ -98,16 +101,16 @@
 
                                                     @if (questDefine.AnswerType == "S")
                                                     {
-                                                        @Html.RadioButton($"answerCode-{questDefineCount}",
+                                                        @Html.RadioButton($"answerCode-{questDefine.QuestionId}",
                                                        answerDefine.AnswerCode, new { });
                                                     }
                                                     else if (questDefine.AnswerType == "M")
                                                     {
-                                                        @Html.CheckBox($"answerCode-{questDefineCount}", new { });
+                                                        @Html.CheckBox($"answerCode-{questDefine.QuestionId}", new { });
                                                     }
                                                     else if (questDefine.AnswerType == "F")
                                                     {
-                                                        @Html.TextBox($"answerCode-{questDefineCount}", null, new { });
+                                                        @Html.TextBox($"answerCode-{questDefine.QuestionId}", null, new { });
                                                     }
 
                                                 </div>
@@ -121,7 +124,7 @@
                                                 <div class="question-answer-other">
                                                     @if (answerDefine.HaveOtherAnswer == "Y")
                                                     {
-                                                        @Html.TextBox($"otherAnswer-{questDefineCount}", null, new { });
+                                                        @Html.TextBox($"otherAnswer-{questDefine.QuestionId}", null, new { });
                                                     }
                                                 </div>
 
