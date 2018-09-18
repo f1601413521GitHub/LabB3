@@ -136,5 +136,71 @@ ORDER BY Version DESC";
                 ModifyTime = questionnaire.Field<DateTime?>("ModifyTime"),
             };
         }
+
+        /// <summary>
+        /// 取得問卷資料
+        /// </summary>
+        /// <param name="uid">問卷識別碼</param>
+        /// <returns>問卷資料</returns>
+        public QuestionnaireDO GetQuestionnaire(string uid)
+        {
+            QuestionnaireDO questDO = null;
+
+            if (String.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentNullException("uid");
+            }
+
+            try
+            {
+                string query = @"
+SELECT 
+    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
+    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
+    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
+FROM Questionnaire 
+WHERE Uid = @Uid
+    AND Ondate < @DateTimeNow 
+    AND ((Offdate > @DateTimeNow) OR (Offdate is null)) ";
+
+
+                using (SqlConnection connection = DbConnection)
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
+
+                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = uid });
+                    command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
+                    {
+                        Value = DateTime.Now.Date,
+                    });
+
+                    connection.Open();
+
+                    DataTable dt = new DataTable();
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    adapter.Fill(dt);
+
+                    if (dt.Rows.Count == 1)
+                    {
+                        questDO = ConvertQuestionnaireDO(dt.Rows[0]);
+                    }
+
+                    adapter = null;
+                    dt = null;
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return questDO;
+        }
     }
 }
