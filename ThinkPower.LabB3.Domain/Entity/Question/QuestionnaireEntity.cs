@@ -81,10 +81,5 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// 問卷題目定義集合
         /// </summary>
         public IEnumerable<QuestDefineEntity> QuestDefineEntities { get; set; }
-
-        /// <summary>
-        /// 問卷填答類別集合
-        /// </summary>
-        public IEnumerable<QuestionnaireAnswerEntity> QuestAnswerEntities { get; set; }
     }
 }
