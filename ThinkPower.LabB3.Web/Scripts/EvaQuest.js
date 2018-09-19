@@ -250,10 +250,7 @@ function validateOtherAnswer(question) {
 
         if (question.datas.answerType === "F") {
 
-            hasOtherAnswerCondition++;
-            if (answer.otherAnswer.val().trim() !== '') {
-                validate = true;
-            }
+            validate = true;
         }
         else if ((answer.datas.haveOtherAnswer === "Y") &&
             (answer.datas.needOtherAnswer === "Y") &&
