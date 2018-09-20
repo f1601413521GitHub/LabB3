@@ -73,6 +73,10 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     throw new ArgumentNullException("answer");
                 }
+                else if (answer["questEntity.Uid"] == null)
+                {
+                    throw new InvalidOperationException("questEntityUid not found");
+                }
 
                 List<AnswerDetailEntity> answerDetailList = GetAnswerDetailList(answer);
 
@@ -80,7 +84,6 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     throw new InvalidOperationException("answerDetailList not found");
                 }
-
                 RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
                 {
                     QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
@@ -91,12 +94,9 @@ namespace ThinkPower.LabB3.Web.Controllers
                     },
                 };
 
-                Domain.DTO.RiskEvaResultDTO reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                //Domain.DTO.RiskEvaResultDTO reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
 
                 //TODO: viewModel = ConvertRiskEvaResultDTO(reuslt);
-
-                TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailList, Formatting.Indented);
-                TempData["FormCollection3"] = JsonConvert.SerializeObject(riskEvaAnswerEntity, Formatting.Indented);
             }
             catch (Exception e)
             {
@@ -125,61 +125,103 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <returns>問卷答案明細集合</returns>
         private List<AnswerDetailEntity> GetAnswerDetailList(FormCollection answer)
         {
-            List<AnswerDetailEntity> answerList = new List<AnswerDetailEntity>();
-
-            foreach (string questId in answer["questDefine.QuestionId"].Split(','))
+            Dictionary<string, string> answerKeyValues = new Dictionary<string, string>();
+            foreach (string key in answer.AllKeys)
             {
-                AnswerDetailEntity answerEntity = new AnswerDetailEntity()
-                {
-                    QuestionId = questId
-                };
-
-                foreach (KeyValuePair<string, string> questAnswer
-                    in answer.AllKeys.Where(x => x.EndsWith(questId))
-                        .Select(x => new KeyValuePair<string, string>(x, answer[x])))
-                {
-                    if (questAnswer.Key.StartsWith("answerCode"))
-                    {
-                        if (questAnswer.Value.StartsWith("true") ||
-                            questAnswer.Value.StartsWith("false"))
-                        {
-                            string[] valueSplit = questAnswer.Value.Split(',');
-                            List<string> answerItem = new List<string>();
-                            int count = 1;
-                            for (int j = 0; j < valueSplit.Length; j++)
-                            {
-                                if (valueSplit[j] == "true")
-                                {
-                                    answerItem.Add($"{count}");
-                                    count++;
-                                    j++;
-                                }
-                                else
-                                {
-                                    count++;
-                                }
-                            }
-
-                            answerEntity.AnswerCode = String.Join(",", answerItem);
-                        }
-                        else
-                        {
-                            answerEntity.AnswerCode = questAnswer.Value;
-                        }
-                    }
-                    else if (questAnswer.Key.StartsWith("otherAnswer"))
-                    {
-                        answerEntity.OtherAnswer = questAnswer.Value;
-                    }
-                    else
-                    {
-                        throw new Exception("Key not in condition");
-                    }
-                }
-                answerList.Add(answerEntity);
+                answerKeyValues.Add(key, answer[key]);
             }
 
-            return answerList;
+            //TODO TEST FormCollection
+            TempData["FormCollection"] = JsonConvert.SerializeObject(answerKeyValues);
+
+
+            List<AnswerDetailEntity> answerDetailList = new List<AnswerDetailEntity>();
+            foreach (string questId in answerKeyValues.Where(x => x.Key.StartsWith("questId")).Select(x => x.Value))
+            {
+                IEnumerable<KeyValuePair<string, string>> questAnswerList =
+                    answerKeyValues.Where(x => x.Key.EndsWith(questId));
+
+                string questAnswerType =
+                    questAnswerList.FirstOrDefault(x => x.Key.StartsWith("questAnswerType")).Value;
+
+                string questUid =
+                    questAnswerList.FirstOrDefault(x => x.Key.StartsWith("questUid")).Value;
+
+                if (String.IsNullOrEmpty(questUid) ||
+                    !Guid.TryParse(questUid, out Guid tempQuestUid))
+                {
+                    throw new InvalidOperationException("questUid not found");
+                }
+
+                foreach (KeyValuePair<string, string> answerUid
+                    in questAnswerList.Where(x => x.Key.StartsWith("answerUid")))
+                {
+                    if (String.IsNullOrEmpty(answerUid.Value) ||
+                        !Guid.TryParse(answerUid.Value, out Guid tempAnswerUid))
+                    {
+                        throw new InvalidOperationException("answerUid not found");
+                    }
+
+                    AnswerDetailEntity answerDetailEntity = new AnswerDetailEntity()
+                    {
+                        QuestionId = questId,
+                        QuestionUid = tempQuestUid,
+                        AnswerUid = tempAnswerUid,
+                    };
+
+                    string answerIndex = answerUid.Key.Split('-')[1];
+
+                    KeyValuePair<string, string> answerCode = new KeyValuePair<string, string>();
+
+                    if (questAnswerType == "S")
+                    {
+                        answerCode = questAnswerList
+                            .FirstOrDefault(x => x.Key.StartsWith($"answerCode-radio"));
+
+                        if (answerCode.Key != null &&
+                            answerCode.Value.Split(',')[1] == answerIndex)
+                        {
+                            answerDetailEntity.AnswerCode = answerCode.Value.Split(',')[0];
+                        }
+                    }
+                    else if (questAnswerType == "M")
+                    {
+                        answerCode = questAnswerList
+                            .FirstOrDefault(x => x.Key.StartsWith($"answerCode-{answerIndex}"));
+
+                        if (answerCode.Key != null &&
+                            answerCode.Value != "false")
+                        {
+                            answerDetailEntity.AnswerCode = answerCode.Value.Split(',')[0];
+                        }
+
+                        KeyValuePair<string, string> otherAnswer = questAnswerList
+                            .FirstOrDefault(x => x.Key.StartsWith($"otherAnswer-{answerIndex}"));
+
+                        if (otherAnswer.Key != null)
+                        {
+                            answerDetailEntity.OtherAnswer = otherAnswer.Value;
+                        }
+                    }
+                    else if (questAnswerType == "F")
+                    {
+                        answerCode = questAnswerList
+                            .FirstOrDefault(x => x.Key.StartsWith("answerCode-text"));
+
+                        if (answerCode.Key != null)
+                        {
+                            answerDetailEntity.OtherAnswer = answerCode.Value;
+                        }
+                    }
+
+                    answerDetailList.Add(answerDetailEntity);
+                }
+            }
+
+            //TODO TEST FormCollection2
+            TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailList);
+
+            return answerDetailList;
         }
 
         [HttpPost]
