@@ -91,6 +91,8 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     throw new InvalidOperationException("Answer validate fail");
                 }
+
+                int score = GetQeustionnaireScore(answer, questEntity);
             }
             catch (Exception e)
             {
@@ -98,6 +100,129 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 計算問卷得分
+        /// </summary>
+        /// <param name="answer">問卷填答資料</param>
+        /// <param name="questEntity">問卷類別</param>
+        /// <returns>問卷得分</returns>
+        private int GetQeustionnaireScore(QuestionnaireAnswerEntity answer, 
+            QuestionnaireEntity questEntity)
+        {
+            int answerScoreResult = 0;
+            List<int> answerScoreList = null;
+
+            if (questEntity.NeedScore == "Y")
+            {
+                answerScoreList = new List<int>();
+                List<int> questAnswerScore = null;
+
+                foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
+                {
+                    questAnswerScore = new List<int>();
+
+                    if (questDefine.AnswerType == "S")
+                    {
+                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                            .Where(x => x.QuestionUid == questDefine.Uid &&
+                                !String.IsNullOrEmpty(x.AnswerCode));
+
+                        if (answerDetailList.Count() != 1)
+                        {
+                            throw new InvalidOperationException("answerCode not the only");
+                        }
+                        AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
+
+                        AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
+                            .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+
+                        if (answerDefine == null)
+                        {
+                            throw new InvalidOperationException("answerDefine not found");
+                        }
+
+                        questAnswerScore.Add(answerDefine.Score ?? 0);
+                    }
+                    else if (questDefine.AnswerType == "M")
+                    {
+                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                            .Where(x => x.QuestionUid == questDefine.Uid &&
+                                !String.IsNullOrEmpty(x.AnswerCode));
+
+                        foreach (AnswerDetailEntity answerDetail in answerDetailList)
+                        {
+                            AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
+                           .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+
+                            if (answerDefine == null)
+                            {
+                                throw new InvalidOperationException("answerDefine not found");
+                            }
+
+                            questAnswerScore.Add(answerDefine.Score ?? 0);
+                        }
+                    }
+                    else if (questDefine.AnswerType == "F")
+                    {
+                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                            .Where(x => x.QuestionUid == questDefine.Uid &&
+                                !String.IsNullOrEmpty(x.OtherAnswer));
+
+                        if (answerDetailList.Count() != 1)
+                        {
+                            throw new InvalidOperationException("answerCode not the only");
+                        }
+                        AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
+
+                        AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
+                            .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+
+                        if (answerDefine == null)
+                        {
+                            throw new InvalidOperationException("answerDefine not found");
+                        }
+
+                        questAnswerScore.Add(answerDefine.Score ?? 0);
+                    }
+
+
+                    if (questDefine.CountScoreType == "1")
+                    {
+                        answerScoreList.Add(questAnswerScore.Sum());
+                    }
+                    else if (questDefine.CountScoreType == "2")
+                    {
+                        answerScoreList.Add(questAnswerScore.Max());
+                    }
+                    else if (questDefine.CountScoreType == "3")
+                    {
+                        answerScoreList.Add(questAnswerScore.Min());
+                    }
+                    else if (questDefine.CountScoreType == "4")
+                    {
+                        if (Int32.TryParse(questAnswerScore.Average().ToString(), out int tempScore))
+                        {
+                            answerScoreList.Add(tempScore);
+                        }
+                    }
+                }
+
+
+                if (questEntity.ScoreKind == "1")
+                {
+                    answerScoreResult = answerScoreList.Sum();
+                }
+
+                if (questEntity.QuestScore != null &&
+                    answerScoreResult > questEntity.QuestScore)
+                {
+                    answerScoreResult = (int)questEntity.QuestScore;
+                }
+            }
+
+            return answerScoreResult;
         }
 
         /// <summary>
@@ -177,10 +302,20 @@ namespace ThinkPower.LabB3.Domain.Service
                         throw new InvalidOperationException("conditionAnswerDetail not found");
                     }
 
-                    if (String.Join(",", conditionAnswerDetail
+                    if (condition.AnswerCode.Length != 1)
+                    {
+                        throw new InvalidOperationException("Condition answerCode not the only");
+                    }
+
+                    IEnumerable<string> effectiveAnswerCodeList = conditionAnswerDetail
                         .Where(x => !String.IsNullOrEmpty(x.AnswerCode))
-                        .Select(x => x.AnswerCode)) ==
-                        String.Join(",", condition.AnswerCode))
+                        .Select(x => x.AnswerCode);
+
+                    if (effectiveAnswerCodeList.Count() == 1)
+                    {
+                        validateResult = true;
+                    }
+                    else if(!effectiveAnswerCodeList.Contains(condition.AnswerCode.First()))
                     {
                         validateResult = true;
                     }
