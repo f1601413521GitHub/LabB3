@@ -94,7 +94,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     },
                 };
 
-                //Domain.DTO.RiskEvaResultDTO reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                Domain.DTO.RiskEvaResultDTO reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
 
                 //TODO: viewModel = ConvertRiskEvaResultDTO(reuslt);
             }
