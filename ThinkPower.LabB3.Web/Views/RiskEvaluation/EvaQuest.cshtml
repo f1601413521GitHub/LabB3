@@ -3,11 +3,14 @@
 @{
     ViewBag.Title = "EvaQuest";
 
-    var questEntity = (Model != null &&
-        Model.RiskEvaQuestionnaire != null) ?
-        Model.RiskEvaQuestionnaire.QuestionnaireEntity :
-        null;
-    var questDefineEntities = questEntity.QuestDefineEntities;
+    var questEntity = (Model != null && Model.RiskEvaQuestionnaire != null) ?
+            Model.RiskEvaQuestionnaire.QuestionnaireEntity : null;
+
+    var questDefineEntities = (questEntity != null) ? questEntity.QuestDefineEntities : null;
+
+
+    var questValidateFailInfo = (Model.ValidateFailInfo != null && Model.ValidateFailInfo.Count > 0) ?
+            Model.ValidateFailInfo : null;
 }
 
 @using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { id = "evaQuestForm" }))
@@ -143,7 +146,13 @@
 
                                     <div class="col-md-12 question-subject-footer-tip"
                                          id="tip-@questDefineCount">
-                                        <span></span>
+                                        <span>
+                                            @if (questValidateFailInfo != null &&
+                                                questValidateFailInfo.ContainsKey(questDefine.Uid.ToString()))
+                                            {
+                                                @questValidateFailInfo[questDefine.Uid.ToString()];
+                                            }
+                                        </span>
                                     </div>
 
                                 </div>

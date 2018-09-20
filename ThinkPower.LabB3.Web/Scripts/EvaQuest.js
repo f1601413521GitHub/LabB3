@@ -2,9 +2,21 @@
 
     showLog(true, 'ready', null, null);
 
-    removeTip();
+    hideTip();
     binding();
 });
+
+function hideTip() {
+
+    showLog(true, 'hideTip', null, null);
+
+    $('[id*=footer]').each(function () {
+        $(this).hide();
+        if ($(this).find('span').html().trim() !== '') {
+            $(this).show();
+        };
+    });
+}
 
 function removeTip() {
 

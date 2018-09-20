@@ -28,7 +28,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 計算問卷填答得分
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
-        /// <returns></returns>
+        /// <returns>問卷填答評分結果</returns>
         public QuestionnaireResultEntity Calculate(QuestionnaireAnswerEntity answer)
         {
             QuestionnaireResultEntity result = null;
@@ -37,17 +37,17 @@ namespace ThinkPower.LabB3.Domain.Service
             {
                 if (answer == null)
                 {
-                    throw new ArgumentNullException("answer");
+                    throw new ArgumentNullException("沒有提供問卷填答資料");
                 }
 
                 QuestionnaireEntity questEntity = GetQuestionnaire(answer.QuestUid);
 
                 if (questEntity == null)
                 {
-                    throw new InvalidOperationException("questEntity not found");
+                    throw new InvalidOperationException("問卷資料不存在或沒有有效的問卷資料");
                 }
 
-                List<string> validates = new List<string>();
+                Dictionary<string, string> validates = new Dictionary<string, string>();
                 string message = null;
 
                 foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
@@ -84,15 +84,48 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
 
                     if (message != null)
-                        validates.Add(message);
+                    {
+                        validates.Add(questDefine.Uid.ToString(), message);
+                    }
                 }
 
-                if (validates.Count > 0)
+                if (validates.Count == 0)
                 {
-                    throw new InvalidOperationException("Answer validate fail");
+                    if (questEntity.NeedScore == "Y")
+                    {
+                        int actualScore = GetQeustionnaireScore(answer, questEntity);
+
+                        //TODO CreateQuestionnaireAnswer
+                        //DateTime timeNow = DateTime.Now;
+                        //string userId = timeNow.ToString("yyyymm");
+
+                        //QuestionnaireAnswerDAO questAnswertDAO = new QuestionnaireAnswerDAO();
+                        //questAnswertDAO.CreateQuestionnaireAnswer(new QuestionnaireAnswerDO()
+                        //{
+                        //    Uid = Guid.NewGuid(),
+                        //    QuestUid = questEntity.Uid,
+                        //    QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
+                        //    TesteeId = userId,
+                        //    QuestScore = questEntity.QuestScore,
+                        //    ActualScore = actualScore,
+                        //    TesteeSource = "LabB3",
+                        //    CreateUserId = userId,
+                        //    CreateTime = timeNow,
+                        //    ModifyUserId = null,
+                        //    ModifyTime = null,
+                        //});
+                    }
+                    else
+                    {
+                        //您的問卷己填答完畢，謝謝您的參與
+                    }
                 }
 
-                int score = GetQeustionnaireScore(answer, questEntity);
+                result = new QuestionnaireResultEntity()
+                {
+                    ValidateFailInfo = validates,
+                    ValidateFailQuestId = questEntity.QuestId,
+                };
             }
             catch (Exception e)
             {
@@ -108,35 +141,49 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <param name="answer">問卷填答資料</param>
         /// <param name="questEntity">問卷類別</param>
         /// <returns>問卷得分</returns>
-        private int GetQeustionnaireScore(QuestionnaireAnswerEntity answer, 
+        private int GetQeustionnaireScore(QuestionnaireAnswerEntity answer,
             QuestionnaireEntity questEntity)
         {
             int answerScoreResult = 0;
-            List<int> answerScoreList = null;
+            List<int> answerScoreList = new List<int>();
+            List<int> questAnswerScore = null;
 
-            if (questEntity.NeedScore == "Y")
+            foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
             {
-                answerScoreList = new List<int>();
-                List<int> questAnswerScore = null;
+                questAnswerScore = new List<int>();
 
-                foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
+                if (questDefine.AnswerType == "S")
                 {
-                    questAnswerScore = new List<int>();
+                    IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                        .Where(x => x.QuestionUid == questDefine.Uid &&
+                            !String.IsNullOrEmpty(x.AnswerCode));
 
-                    if (questDefine.AnswerType == "S")
+                    if (answerDetailList.Count() != 1)
                     {
-                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                            .Where(x => x.QuestionUid == questDefine.Uid &&
-                                !String.IsNullOrEmpty(x.AnswerCode));
+                        throw new InvalidOperationException("answerCode not the only");
+                    }
+                    AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
 
-                        if (answerDetailList.Count() != 1)
-                        {
-                            throw new InvalidOperationException("answerCode not the only");
-                        }
-                        AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
+                    AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
+                        .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
 
+                    if (answerDefine == null)
+                    {
+                        throw new InvalidOperationException("answerDefine not found");
+                    }
+
+                    questAnswerScore.Add(answerDefine.Score ?? 0);
+                }
+                else if (questDefine.AnswerType == "M")
+                {
+                    IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                        .Where(x => x.QuestionUid == questDefine.Uid &&
+                            !String.IsNullOrEmpty(x.AnswerCode));
+
+                    foreach (AnswerDetailEntity answerDetail in answerDetailList)
+                    {
                         AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                            .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+                       .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
 
                         if (answerDefine == null)
                         {
@@ -145,81 +192,62 @@ namespace ThinkPower.LabB3.Domain.Service
 
                         questAnswerScore.Add(answerDefine.Score ?? 0);
                     }
-                    else if (questDefine.AnswerType == "M")
-                    {
-                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                            .Where(x => x.QuestionUid == questDefine.Uid &&
-                                !String.IsNullOrEmpty(x.AnswerCode));
-
-                        foreach (AnswerDetailEntity answerDetail in answerDetailList)
-                        {
-                            AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                           .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
-
-                            if (answerDefine == null)
-                            {
-                                throw new InvalidOperationException("answerDefine not found");
-                            }
-
-                            questAnswerScore.Add(answerDefine.Score ?? 0);
-                        }
-                    }
-                    else if (questDefine.AnswerType == "F")
-                    {
-                        IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                            .Where(x => x.QuestionUid == questDefine.Uid &&
-                                !String.IsNullOrEmpty(x.OtherAnswer));
-
-                        if (answerDetailList.Count() != 1)
-                        {
-                            throw new InvalidOperationException("answerCode not the only");
-                        }
-                        AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
-
-                        AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                            .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
-
-                        if (answerDefine == null)
-                        {
-                            throw new InvalidOperationException("answerDefine not found");
-                        }
-
-                        questAnswerScore.Add(answerDefine.Score ?? 0);
-                    }
-
-
-                    if (questDefine.CountScoreType == "1")
-                    {
-                        answerScoreList.Add(questAnswerScore.Sum());
-                    }
-                    else if (questDefine.CountScoreType == "2")
-                    {
-                        answerScoreList.Add(questAnswerScore.Max());
-                    }
-                    else if (questDefine.CountScoreType == "3")
-                    {
-                        answerScoreList.Add(questAnswerScore.Min());
-                    }
-                    else if (questDefine.CountScoreType == "4")
-                    {
-                        if (Int32.TryParse(questAnswerScore.Average().ToString(), out int tempScore))
-                        {
-                            answerScoreList.Add(tempScore);
-                        }
-                    }
                 }
-
-
-                if (questEntity.ScoreKind == "1")
+                else if (questDefine.AnswerType == "F")
                 {
-                    answerScoreResult = answerScoreList.Sum();
+                    IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                        .Where(x => x.QuestionUid == questDefine.Uid &&
+                            !String.IsNullOrEmpty(x.OtherAnswer));
+
+                    if (answerDetailList.Count() != 1)
+                    {
+                        throw new InvalidOperationException("answerCode not the only");
+                    }
+                    AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
+
+                    AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
+                        .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+
+                    if (answerDefine == null)
+                    {
+                        throw new InvalidOperationException("answerDefine not found");
+                    }
+
+                    questAnswerScore.Add(answerDefine.Score ?? 0);
                 }
 
-                if (questEntity.QuestScore != null &&
-                    answerScoreResult > questEntity.QuestScore)
+
+                if (questDefine.CountScoreType == "1")
                 {
-                    answerScoreResult = (int)questEntity.QuestScore;
+                    answerScoreList.Add(questAnswerScore.Sum());
                 }
+                else if (questDefine.CountScoreType == "2")
+                {
+                    answerScoreList.Add(questAnswerScore.Max());
+                }
+                else if (questDefine.CountScoreType == "3")
+                {
+                    answerScoreList.Add(questAnswerScore.Min());
+                }
+                else if (questDefine.CountScoreType == "4")
+                {
+                    if (Int32.TryParse(questAnswerScore.Average().ToString(), out int tempScore))
+                    {
+                        answerScoreList.Add(tempScore);
+                    }
+                }
+            }
+
+
+            if (questEntity.ScoreKind == "1")
+            {
+                answerScoreResult = answerScoreList.Sum();
+            }
+
+            if (questEntity.QuestScore != null &&
+                answerScoreResult > questEntity.QuestScore)
+            {
+                answerScoreResult = (int)questEntity.QuestScore;
             }
 
             return answerScoreResult;
@@ -315,7 +343,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     {
                         validateResult = true;
                     }
-                    else if(!effectiveAnswerCodeList.Contains(condition.AnswerCode.First()))
+                    else if (!effectiveAnswerCodeList.Contains(condition.AnswerCode.First()))
                     {
                         validateResult = true;
                     }

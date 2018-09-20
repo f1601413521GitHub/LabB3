@@ -66,6 +66,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult EvaluationRank(FormCollection answer)
         {
             HttpStatusCode? statusCode = null;
+            Domain.DTO.RiskEvaResultDTO reuslt = null;
 
             try
             {
@@ -94,9 +95,17 @@ namespace ThinkPower.LabB3.Web.Controllers
                     },
                 };
 
-                Domain.DTO.RiskEvaResultDTO reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
 
-                //TODO: viewModel = ConvertRiskEvaResultDTO(reuslt);
+                if (reuslt.QuestionnaireResultEntity.ValidateFailInfo != null &&
+                    reuslt.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
+                {
+                    return View("EvaQuest", new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = reuslt.RiskEvaQuestionnaire,
+                        ValidateFailInfo = reuslt.QuestionnaireResultEntity.ValidateFailInfo,
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -107,8 +116,8 @@ namespace ThinkPower.LabB3.Web.Controllers
 
             if (statusCode != null)
             {
-                ModelState.AddModelError("",
-                    "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
+                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
+                    "造成不便敬請見諒。");
             }
             else if (true)
             {
@@ -264,13 +273,12 @@ namespace ThinkPower.LabB3.Web.Controllers
 
             if (statusCode != null)
             {
-                ModelState.AddModelError("",
-                    "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
+                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
+                    "造成不便敬請見諒。");
             }
             else if (!evaQuestVM.RiskEvaQuestionnaire.CanUseRiskEvaluation)
             {
-                ModelState.AddModelError("",
-                    "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
+                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
             return View(evaQuestVM);

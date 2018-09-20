@@ -54,6 +54,8 @@ namespace ThinkPower.LabB3.Domain.Service
         public RiskEvaResultDTO EvaluateRiskRank(RiskEvaAnswerEntity answer)
         {
             RiskEvaResultDTO result = null;
+            QuestionnaireResultEntity questResultEntity = null;
+            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
 
             try
             {
@@ -62,10 +64,30 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new ArgumentNullException("answer");
                 }
 
-                QuestionnaireResultEntity questResultEntity = 
-                    QuestService.Calculate(answer.QuestionnaireAnswerEntity);
+                questResultEntity = QuestService.Calculate(answer.QuestionnaireAnswerEntity);
 
-                //TODO: result = ConvertQuestionnaireResultEntity(questResultEntity);
+                if (questResultEntity == null)
+                {
+                    throw new InvalidOperationException("questResultEntity not found");
+                }
+
+                if (questResultEntity.ValidateFailInfo != null &&
+                    questResultEntity.ValidateFailInfo.Count > 0 &&
+                    !String.IsNullOrEmpty(questResultEntity.ValidateFailQuestId))
+                {
+                    riskEvaQuestEntity = GetRiskQuestionnaire(questResultEntity.ValidateFailQuestId);
+
+                    if (riskEvaQuestEntity == null)
+                    {
+                        throw new InvalidOperationException("riskEvaQuestEntity not found");
+                    }
+                }
+
+                result = new RiskEvaResultDTO()
+                {
+                    QuestionnaireResultEntity = questResultEntity,
+                    RiskEvaQuestionnaire = riskEvaQuestEntity,
+                };
             }
             catch (Exception e)
             {

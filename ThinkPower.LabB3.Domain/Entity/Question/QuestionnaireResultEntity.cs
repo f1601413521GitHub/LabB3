@@ -40,5 +40,15 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         ///問卷填寫來源代號 
         /// </summary> 
         public string TesteeSource { get; set; }
+
+        /// <summary>
+        /// 問卷答題檢核失敗的資訊，包含問卷題目定義識別碼與錯誤訊息
+        /// </summary>
+        public Dictionary<string, string> ValidateFailInfo { get; set; }
+
+        /// <summary>
+        ///  問卷答題檢核失敗的問卷編號
+        /// </summary>
+        public string ValidateFailQuestId { get; set; }
     }
 }
