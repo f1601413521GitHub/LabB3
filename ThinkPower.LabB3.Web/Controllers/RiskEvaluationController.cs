@@ -75,39 +75,22 @@ namespace ThinkPower.LabB3.Web.Controllers
                     throw new ArgumentNullException("answer");
                 }
 
-                //TODO 0921 調整FormCollection 資料處理
-                Dictionary<string, string> answerDetailInfo = new Dictionary<string, string>();
-                foreach (string key in answer.AllKeys)
-                {
-                    answerDetailInfo.Add(key, answer[key]);
-                }
-                TempData["FormCollection"] = JsonConvert.SerializeObject(answerDetailInfo);
-
-                if (answerDetailInfo == null || answerDetailInfo.Count == 0)
-                {
-                    throw new InvalidOperationException("answerDetailInfo not found");
-                }
-
-
-
 
                 List<AnswerDetailEntity> answerDetailList = GetAnswerDetailList(answer);
 
-                //if (answerDetailList == null || answerDetailList.Count == 0)
-                //{
-                //    throw new InvalidOperationException("answerDetailList not found");
-                //}
-
+                if (answerDetailList == null || answerDetailList.Count == 0)
+                {
+                    throw new InvalidOperationException("answerDetailList not found");
+                }
 
 
                 RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
                 {
-                    AnswerDetailInfo = answerDetailInfo,
-                    //QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
-                    //{
-                    //    QuestUid = answer["questEntity.Uid"],
-                    //    AnswerDetailEntities = answerDetailList,
-                    //},
+                    QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
+                    {
+                        QuestUid = answer["questEntity.Uid"],
+                        AnswerDetailEntities = answerDetailList,
+                    },
                 };
 
                 reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
@@ -149,14 +132,14 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <returns>問卷答案明細集合</returns>
         private List<AnswerDetailEntity> GetAnswerDetailList(FormCollection answer)
         {
+            //TODO TEST FormCollection
             Dictionary<string, string> answerInfo = new Dictionary<string, string>();
             foreach (string key in answer.AllKeys)
             {
                 answerInfo.Add(key, answer[key]);
             }
-
-            //TODO TEST FormCollection
             TempData["FormCollection"] = JsonConvert.SerializeObject(answerInfo);
+            
 
             string questionnaireUid = answer["questEntity.Uid"];
             if (questionnaireUid == null)

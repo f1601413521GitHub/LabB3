@@ -139,8 +139,11 @@
                                                     {
                                                         if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
                                                         {
-                                                            @Html.CheckBox($"answer-{questDefine.QuestionId}-code",
-                                                                true, new { value = answerDefine.AnswerCode });
+                                                            <input type="checkbox"
+                                                                   id="answer-@questDefine.QuestionId-code"
+                                                                   name="answer-@questDefine.QuestionId-code"
+                                                                   value="@answerDefine.AnswerCode"
+                                                                   checked/>
                                                         }
                                                         else
                                                         {
@@ -148,8 +151,6 @@
                                                                    id="answer-@questDefine.QuestionId-code"
                                                                    name="answer-@questDefine.QuestionId-code"
                                                                    value="@answerDefine.AnswerCode" />
-                                                            @*@Html.CheckBox($"answer-code-{questDefine.QuestionId}-",
-                                                                false,new { value = false ;*@
                                                         }
                                                     }
                                                     else if (questDefine.AnswerType == "F")
