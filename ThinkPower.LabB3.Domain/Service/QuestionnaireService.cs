@@ -52,7 +52,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
                 {
-                    IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
+                    IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
                         .Where(x => x.QuestionUid == questDefine.Uid);
 
                     message = null;
@@ -61,24 +61,24 @@ namespace ThinkPower.LabB3.Domain.Service
                     //questDefine.MinMultipleAnswers = 2;
                     //questDefine.MaxMultipleAnswers = 3;
 
-                    if (!ValidateNeedAnswer(questDefine, answerDetailList, answer.AnswerDetailEntities))
+                    if (!ValidateNeedAnswer(questDefine, questAnswerDetailList, answer.AnswerDetailEntities))
                     {
                         message = $"此題必須填答!";
                     }
-                    else if (!ValidateMinMultipleAnswers(questDefine, answerDetailList))
+                    else if (!ValidateMinMultipleAnswers(questDefine, questAnswerDetailList))
                     {
                         message = $"此題至少須勾選{questDefine.MinMultipleAnswers}個項目!";
                     }
-                    else if (!ValidateMaxMultipleAnswers(questDefine, answerDetailList))
+                    else if (!ValidateMaxMultipleAnswers(questDefine, questAnswerDetailList))
                     {
                         message = $"此題至多僅能勾選{questDefine.MaxMultipleAnswers}個項目!";
                     }
-                    else if (!ValidateSingleAnswerCondition(questDefine, answerDetailList,
+                    else if (!ValidateSingleAnswerCondition(questDefine, questAnswerDetailList,
                         answer.AnswerDetailEntities))
                     {
                         message = $"此題僅能勾選1個項目!";
                     }
-                    else if (!ValidateOtherAnswer(questDefine, answerDetailList))
+                    else if (!ValidateOtherAnswer(questDefine, questAnswerDetailList))
                     {
                         message = $"請輸入其他說明文字!";
                     }
@@ -93,7 +93,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     if (questEntity.NeedScore == "Y")
                     {
-                        int actualScore = GetQeustionnaireScore(answer, questEntity);
+                        int actualScore = CalculateScore(answer, questEntity);
 
                         //TODO CreateQuestionnaireAnswer
                         //DateTime timeNow = DateTime.Now;
@@ -140,9 +140,9 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 計算問卷得分
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
-        /// <param name="questEntity">問卷類別</param>
+        /// <param name="questEntity">問卷定義資料</param>
         /// <returns>問卷得分</returns>
-        private int GetQeustionnaireScore(QuestionnaireAnswerEntity answer,
+        private int CalculateScore(QuestionnaireAnswerEntity answer,
             QuestionnaireEntity questEntity)
         {
             int answerScoreResult = 0;
@@ -257,11 +257,11 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 檢核答題說明是否必填規則
         /// </summary>
-        /// <param name="questDefine">問卷題目定義類別</param>
-        /// <param name="answerDetailList">此題目答案明細</param>
+        /// <param name="questDefine">問卷題目定義</param>
+        /// <param name="questAnswerDetailList">問卷題目答案明細集合</param>
         /// <returns>檢核結果</returns>
         private bool ValidateOtherAnswer(QuestDefineEntity questDefine,
-            IEnumerable<AnswerDetailEntity> answerDetailList)
+            IEnumerable<AnswerDetailEntity> questAnswerDetailList)
         {
             bool validateResult = false;
             bool hasOtherAnswerCondition = false;
@@ -274,12 +274,12 @@ namespace ThinkPower.LabB3.Domain.Service
             {
                 foreach (AnswerDefineEntity answerDefine in questDefine.AnswerDefineEntities)
                 {
-                    AnswerDetailEntity answerDetail = answerDetailList
+                    AnswerDetailEntity answerDetail = questAnswerDetailList
                         .Where(x => x.AnswerUid == answerDefine.Uid).FirstOrDefault();
 
                     if (answerDetail == null)
                     {
-                        //throw new InvalidOperationException("answerDetail not found");
+                        throw new InvalidOperationException("answerDetail not found");
                     }
 
                     if (answerDefine.HaveOtherAnswer == "Y" &&
@@ -294,7 +294,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
                 }
 
-                if (hasOtherAnswerCondition == false)
+                if (!hasOtherAnswerCondition)
                 {
                     validateResult = true;
                 }
@@ -306,13 +306,13 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 檢核複選限制單一做答規則
         /// </summary>
-        /// <param name="questDefine">問卷題目定義類別</param>
-        /// <param name="answerDetailList">此題目答案明細</param>
-        /// <param name="answerDetailEntities">問卷答案明細集合</param>
+        /// <param name="questDefine">問卷題目定義</param>
+        /// <param name="questAnswerDetailList">問卷題目答案明細集合</param>
+        /// <param name="answerDetailList">問卷答案明細集合</param>
         /// <returns>檢核結果</returns>
         private bool ValidateSingleAnswerCondition(QuestDefineEntity questDefine,
-            IEnumerable<AnswerDetailEntity> answerDetailList,
-            IEnumerable<AnswerDetailEntity> answerDetailEntities)
+            IEnumerable<AnswerDetailEntity> questAnswerDetailList,
+            IEnumerable<AnswerDetailEntity> answerDetailList)
         {
             bool validateResult = false;
 
@@ -323,7 +323,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 foreach (var condition in allowNaCondition.Conditions)
                 {
-                    IEnumerable<AnswerDetailEntity> conditionAnswerDetail = answerDetailEntities
+                    IEnumerable<AnswerDetailEntity> conditionAnswerDetail = answerDetailList
                         .Where(x => x.QuestionId == condition.QuestionId);
 
                     if (conditionAnswerDetail == null)
@@ -361,17 +361,17 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 檢核複選最多答項數規則
         /// </summary>
-        /// <param name="questDefine">問卷題目定義類別</param>
-        /// <param name="answerDetailList">此題目答案明細</param>
+        /// <param name="questDefine">問卷題目定義</param>
+        /// <param name="questAnswerDetailList">問卷題目答案明細集合</param>
         /// <returns>檢核結果</returns>
         private bool ValidateMaxMultipleAnswers(QuestDefineEntity questDefine,
-            IEnumerable<AnswerDetailEntity> answerDetailList)
+            IEnumerable<AnswerDetailEntity> questAnswerDetailList)
         {
             bool validateResult = false;
 
             if (questDefine.AnswerType == "M" && questDefine.MaxMultipleAnswers != null)
             {
-                if (answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() <=
+                if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() <=
                     questDefine.MaxMultipleAnswers)
                 {
                     validateResult = true;
@@ -388,17 +388,17 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 檢核複選最少答項數規則
         /// </summary>
-        /// <param name="questDefine">問卷題目定義類別</param>
-        /// <param name="answerDetailList">此題目答案明細</param>
+        /// <param name="questDefine">問卷題目定義</param>
+        /// <param name="questAnswerDetailList">問卷題目答案明細集合</param>
         /// <returns>檢核結果</returns>
         private bool ValidateMinMultipleAnswers(QuestDefineEntity questDefine,
-            IEnumerable<AnswerDetailEntity> answerDetailList)
+            IEnumerable<AnswerDetailEntity> questAnswerDetailList)
         {
             bool validateResult = false;
 
             if (questDefine.AnswerType == "M" && questDefine.MinMultipleAnswers != null)
             {
-                if (answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() >=
+                if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() >=
                     questDefine.MinMultipleAnswers)
                 {
                     validateResult = true;
@@ -415,13 +415,13 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 檢核必填規則
         /// </summary>
-        /// <param name="questDefine">問卷題目定義類別</param>
-        /// <param name="answerDetailList">此題目答案明細</param>
-        /// <param name="answerDetailEntities">問卷答案明細集合</param>
+        /// <param name="questDefine">問卷題目定義</param>
+        /// <param name="questAnswerDetailList">問卷題目答案明細集合</param>
+        /// <param name="answerDetailList">問卷答案明細集合</param>
         /// <returns>檢核結果</returns>
         private bool ValidateNeedAnswer(QuestDefineEntity questDefine,
-            IEnumerable<AnswerDetailEntity> answerDetailList,
-            IEnumerable<AnswerDetailEntity> answerDetailEntities)
+            IEnumerable<AnswerDetailEntity> questAnswerDetailList,
+            IEnumerable<AnswerDetailEntity> answerDetailList)
         {
             bool validateResult = false;
 
@@ -436,7 +436,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                     foreach (var condition in allowNaCondition.Conditions)
                     {
-                        IEnumerable<AnswerDetailEntity> conditionAnswerDetail = answerDetailEntities
+                        IEnumerable<AnswerDetailEntity> conditionAnswerDetail = answerDetailList
                             .Where(x => x.QuestionId == condition.QuestionId);
 
                         if (conditionAnswerDetail == null)
@@ -458,14 +458,19 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     validateResult = true;
                 }
-                else if (questDefine.AnswerType == "F" &&
-                    answerDetailList.Where(x => !String.IsNullOrEmpty(x.OtherAnswer)).Count() > 0)
+                else if (questDefine.AnswerType == "F")
                 {
-                    validateResult = true;
+                    if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.OtherAnswer)).Count() > 0)
+                    {
+                        validateResult = true;
+                    }
                 }
-                else if (answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() > 0)
+                else
                 {
-                    validateResult = true;
+                    if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() > 0)
+                    {
+                        validateResult = true;
+                    }
                 }
             }
             else
@@ -639,8 +644,10 @@ namespace ThinkPower.LabB3.Domain.Service
             try
             {
                 QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
+                DateTime dt = DateTime.Now;
 
-                if (quest == null)
+                if (quest == null ||
+                    !((quest.Ondate < dt) && (quest.Offdate > dt || quest.Offdate == null)))
                 {
                     throw new InvalidOperationException($"quest not found, uid={uid}");
                 }

@@ -159,20 +159,12 @@ SELECT
     [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
     [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
 FROM Questionnaire 
-WHERE Uid = @Uid
-    AND Ondate < @DateTimeNow 
-    AND ((Offdate > @DateTimeNow) OR (Offdate is null)) ";
-
-
+WHERE Uid = @Uid";
                 using (SqlConnection connection = DbConnection)
                 {
                     SqlCommand command = new SqlCommand(query, connection);
 
                     command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = uid });
-                    command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
-                    {
-                        Value = DateTime.Now.Date,
-                    });
 
                     connection.Open();
 
