@@ -52,18 +52,19 @@ function getQuestionList() {
     let questionList = $('[id*=question]').map(function () {
 
         let question = this;
+        let questId = $(question).data('questionId');
         return {
 
             element: question,
             datas: $(question).data(),
-            answerList: $(question).find('[id*=answer-]').map(function () {
+            answerList: $(question).find('[id*=answer-entity]').map(function () {
 
                 let answer = this;
                 return {
                     element: answer,
                     datas: $(answer).data(),
-                    answerCode: $(answer).find('[id*=answerCode]'),
-                    otherAnswer: $(answer).find('[id*=otherAnswer]'),
+                    answerCode: $(answer).find('[id*=answer-' + questId + '-code]'),
+                    otherAnswer: $(answer).find('[id*=answer-' + questId + '-other]'),
                 };
             }),
             footer: $(question).find('[id*=footer]'),
