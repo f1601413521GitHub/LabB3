@@ -8,9 +8,19 @@
 
     var questDefineEntities = (questEntity != null) ? questEntity.QuestDefineEntities : null;
 
+    var questResultEntity = (Model.QuestionnaireResultEntity != null) ?
+            Model.QuestionnaireResultEntity : null;
 
-    var questValidateFailInfo = (Model.ValidateFailInfo != null && Model.ValidateFailInfo.Count > 0) ?
-            Model.ValidateFailInfo : null;
+    var questValidateFailInfo = (questResultEntity != null &&
+            questResultEntity.ValidateFailInfo != null &&
+            questResultEntity.ValidateFailInfo.Count > 0) ?
+            questResultEntity.ValidateFailInfo : null;
+
+
+    var answerDetailEntities = (questResultEntity != null &&
+            questResultEntity.AnswerDetailEntities != null) ?
+            questResultEntity.AnswerDetailEntities : null;
+
 }
 
 @using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { id = "evaQuestForm" }))
@@ -56,6 +66,12 @@
                         foreach (var questDefine in questDefineEntities)
                         {
                             questDefineCount++;
+
+                            var answerDetailList = (answerDetailEntities != null &&
+                                    answerDetailEntities.Any(x => x.QuestionUid == questDefine.Uid)) ?
+                                    answerDetailEntities.Where(x => x.QuestionUid == questDefine.Uid) :
+                                    null;
+
                             @Html.Hidden($"questId-{questDefine.QuestionId}", questDefine.QuestionId)
                             @Html.Hidden($"questAnswerType-{questDefine.QuestionId}", questDefine.AnswerType)
                             @Html.Hidden($"questUid-{questDefine.QuestionId}", questDefine.Uid)
@@ -93,6 +109,13 @@
                                         foreach (var answerDefine in questDefine.AnswerDefineEntities)
                                         {
                                             answerDefineCount++;
+
+                                            var answerDetail = (answerDetailList != null &&
+                                                    answerDetailList.FirstOrDefault(x => x.AnswerUid == answerDefine.Uid) != null) ?
+                                                    answerDetailList.FirstOrDefault(x => x.AnswerUid == answerDefine.Uid) :
+                                                    null;
+
+
                                             @Html.Hidden($"answerUid-{answerDefineCount}-{questDefine.QuestionId}", answerDefine.Uid)
 
                                             <!--forloop-->
@@ -107,16 +130,42 @@
 
                                                     @if (questDefine.AnswerType == "S")
                                                     {
-                                                        @Html.RadioButton($"answerCode-radio-{questDefine.QuestionId}",
-                                                       $"{answerDefine.AnswerCode},{answerDefineCount}", new { });
+                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                                                        {
+                                                            @Html.RadioButton($"answerCode-radio-{questDefine.QuestionId}",
+                                                           $"{answerDetail.AnswerCode},{answerDefineCount}",true, new { });
+                                                        }
+                                                        else
+                                                        {
+                                                            @Html.RadioButton($"answerCode-radio-{questDefine.QuestionId}",
+                                                           $"{answerDefine.AnswerCode},{answerDefineCount}",false, new { });
+                                                        }
                                                     }
                                                     else if (questDefine.AnswerType == "M")
                                                     {
-                                                        @Html.CheckBox($"answerCode-{answerDefineCount}-{questDefine.QuestionId}", new { value = answerDefine.AnswerCode });
+                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                                                        {
+                                                            @Html.CheckBox($"answerCode-{answerDefineCount}-{questDefine.QuestionId}",
+                                                                true, new { value = answerDefine.AnswerCode });
+                                                        }
+                                                        else
+                                                        {
+                                                            @Html.CheckBox($"answerCode-{answerDefineCount}-{questDefine.QuestionId}",
+                                                                false,new { value = answerDefine.AnswerCode });
+                                                        }
                                                     }
                                                     else if (questDefine.AnswerType == "F")
                                                     {
-                                                        @Html.TextBox($"answerCode-text-{questDefine.QuestionId}", null, new { });
+                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
+                                                        {
+                                                            @Html.TextBox($"answerCode-text-{questDefine.QuestionId}",
+                                                                answerDetail.OtherAnswer, new { });
+                                                        }
+                                                        else
+                                                        {
+                                                            @Html.TextBox($"answerCode-text-{questDefine.QuestionId}",
+                                                                null, new { });
+                                                        }
                                                     }
 
                                                 </div>
@@ -131,7 +180,16 @@
                                                     @if (questDefine.AnswerType != "F" &&
                                                         answerDefine.HaveOtherAnswer == "Y")
                                                     {
-                                                        @Html.TextBox($"otherAnswer-{answerDefineCount}-{questDefine.QuestionId}", null, new { });
+                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
+                                                        {
+                                                            @Html.TextBox($"otherAnswer-{answerDefineCount}-{questDefine.QuestionId}",
+                                                                answerDetail.OtherAnswer, new { });
+                                                        }
+                                                        else
+                                                        {
+                                                            @Html.TextBox($"otherAnswer-{answerDefineCount}-{questDefine.QuestionId}",
+                                                                null, new { });
+                                                        }
                                                     }
                                                 </div>
 

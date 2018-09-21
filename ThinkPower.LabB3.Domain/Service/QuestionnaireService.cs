@@ -125,6 +125,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     ValidateFailInfo = validates,
                     ValidateFailQuestId = questEntity.QuestId,
+                    AnswerDetailEntities = answer.AnswerDetailEntities,
                 };
             }
             catch (Exception e)

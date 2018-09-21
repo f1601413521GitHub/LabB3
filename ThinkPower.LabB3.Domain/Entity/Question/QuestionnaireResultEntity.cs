@@ -50,5 +50,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         ///  問卷答題檢核失敗的問卷編號
         /// </summary>
         public string ValidateFailQuestId { get; set; }
+
+        /// <summary>
+        /// 問卷答案明細類別集合
+        /// </summary>
+        public IEnumerable<AnswerDetailEntity> AnswerDetailEntities { get; set; }
     }
 }

@@ -103,7 +103,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     return View("EvaQuest", new EvaQuestViewModel()
                     {
                         RiskEvaQuestionnaire = reuslt.RiskEvaQuestionnaire,
-                        ValidateFailInfo = reuslt.QuestionnaireResultEntity.ValidateFailInfo,
+                        QuestionnaireResultEntity = reuslt.QuestionnaireResultEntity,
                     });
                 }
             }
