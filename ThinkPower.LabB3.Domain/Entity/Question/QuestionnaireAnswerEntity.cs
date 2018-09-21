@@ -16,11 +16,6 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// </summary>
         public string QuestUid { get; set; }
 
-        /// <summary> 
-        /// 問卷填答評分結果類別
-        /// </summary>
-        public QuestionnaireResultEntity QuestionnaireResultEntity { get; set; }
-
         /// <summary>
         /// 問卷答案明細類別集合
         /// </summary>

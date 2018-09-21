@@ -79,6 +79,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     throw new InvalidOperationException("questEntityUid not found");
                 }
 
+                //TODO 0921 調整FormCollection 資料處理
                 List<AnswerDetailEntity> answerDetailList = GetAnswerDetailList(answer);
 
                 if (answerDetailList == null || answerDetailList.Count == 0)
@@ -90,7 +91,6 @@ namespace ThinkPower.LabB3.Web.Controllers
                     QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
                     {
                         QuestUid = answer["questEntity.Uid"],
-                        QuestionnaireResultEntity = new QuestionnaireResultEntity(),
                         AnswerDetailEntities = answerDetailList,
                     },
                 };
