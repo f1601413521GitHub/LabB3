@@ -1,4 +1,5 @@
 ﻿@model ThinkPower.LabB3.Web.ViewModels.EvaQuestViewModel
+@using ThinkPower.LabB3.Domain.Entity.Question
 
 @{
     ViewBag.Title = "EvaQuest";
@@ -8,13 +9,10 @@
 
     var questDefineEntities = (questEntity != null) ? questEntity.QuestDefineEntities : null;
 
-    var questResultEntity = (Model.QuestionnaireResultEntity != null) ?
-            Model.QuestionnaireResultEntity : null;
+    var questResultEntity = Model.QuestionnaireResultEntity;
 
     var questValidateFailInfo = (questResultEntity != null &&
-            questResultEntity.ValidateFailInfo != null &&
-            questResultEntity.ValidateFailInfo.Count > 0) ?
-            questResultEntity.ValidateFailInfo : null;
+            questResultEntity.ValidateFailInfo.Count > 0) ? questResultEntity.ValidateFailInfo : null;
 
 
     var answerDetailEntities = (questResultEntity != null &&
@@ -69,8 +67,8 @@
                             @Html.HiddenFor(x => questDefine.QuestionId)
 
                             var answerDetailList = (answerDetailEntities != null &&
-                                    answerDetailEntities.Any(x => x.QuestionUid == questDefine.Uid)) ?
-                                    answerDetailEntities.Where(x => x.QuestionUid == questDefine.Uid) :
+                                    answerDetailEntities.Any(x => x.QuestionId == questDefine.QuestionId)) ?
+                                    answerDetailEntities.Where(x => x.QuestionId == questDefine.QuestionId) :
                                     null;
 
                             <!--forloop-->
@@ -107,10 +105,31 @@
                                         {
                                             answerDefineCount++;
 
-                                            var answerDetail = (answerDetailList != null &&
-                                                    answerDetailList.FirstOrDefault(x => x.AnswerUid == answerDefine.Uid) != null) ?
-                                                    answerDetailList.FirstOrDefault(x => x.AnswerUid == answerDefine.Uid) :
-                                                    null;
+                                            AnswerDetailEntity answerDetail = null;
+
+                                            if (questDefine.AnswerType == "F")
+                                            {
+                                                var tempAnswer = (answerDetailList != null) ?
+                                                        answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)) : null;
+
+                                                if (tempAnswer != null &&
+                                                    tempAnswer.Count() == 1)
+                                                {
+                                                    answerDetail = tempAnswer.First();
+                                                }
+                                            }
+                                            else
+                                            {
+                                                var tempAnswer = (answerDetailList != null &&
+                                                        answerDetailList.Any(x => x.AnswerCode == answerDefine.AnswerCode)) ?
+                                                        answerDetailList.FirstOrDefault(x => x.AnswerCode == answerDefine.AnswerCode) :
+                                                        null;
+
+                                                if (tempAnswer != null)
+                                                {
+                                                    answerDetail = tempAnswer;
+                                                }
+                                            }
 
                                             <!--forloop-->
                                             <div class="col-md-6 question-answer"
@@ -127,7 +146,7 @@
                                                         if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
                                                         {
                                                             @Html.RadioButton($"answer-{questDefine.QuestionId}-code",
-                                                                answerDetail.AnswerCode,true, new { });
+                                                                answerDetail.AnswerCode, true, new { });
                                                         }
                                                         else
                                                         {
@@ -143,7 +162,7 @@
                                                                    id="answer-@questDefine.QuestionId-code"
                                                                    name="answer-@questDefine.QuestionId-code"
                                                                    value="@answerDefine.AnswerCode"
-                                                                   checked/>
+                                                                   checked />
                                                         }
                                                         else
                                                         {
@@ -155,10 +174,10 @@
                                                     }
                                                     else if (questDefine.AnswerType == "F")
                                                     {
-                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
+                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
                                                         {
                                                             @Html.TextBox($"answer-{questDefine.QuestionId}-code",
-                                                                answerDetail.OtherAnswer, new { });
+                                                                answerDetail.AnswerCode, new { });
                                                         }
                                                         else
                                                         {
@@ -205,9 +224,9 @@
                                          id="tip-@questDefine.QuestionId">
                                         <span>
                                             @if (questValidateFailInfo != null &&
-                                                questValidateFailInfo.ContainsKey(questDefine.Uid.ToString()))
+                                                questValidateFailInfo.ContainsKey(questDefine.QuestionId))
                                             {
-                                                @questValidateFailInfo[questDefine.Uid.ToString()];
+                                                @questValidateFailInfo[questDefine.QuestionId];
                                             }
                                         </span>
                                     </div>

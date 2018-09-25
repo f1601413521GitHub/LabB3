@@ -42,7 +42,7 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         public string TesteeSource { get; set; }
 
         /// <summary>
-        /// 問卷答題檢核失敗的資訊，包含問卷題目定義識別碼與錯誤訊息
+        /// 問卷答題檢核失敗的資訊，包含題目編號與錯誤訊息
         /// </summary>
         public Dictionary<string, string> ValidateFailInfo { get; set; }
 

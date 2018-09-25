@@ -71,9 +71,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("questResultEntity not found");
                 }
 
-                if (questResultEntity.ValidateFailInfo != null &&
-                    questResultEntity.ValidateFailInfo.Count > 0 &&
-                    !String.IsNullOrEmpty(questResultEntity.ValidateFailQuestId))
+                if (questResultEntity.ValidateFailInfo.Count > 0)
                 {
                     riskEvaQuestEntity = GetRiskQuestionnaire(questResultEntity.ValidateFailQuestId);
 

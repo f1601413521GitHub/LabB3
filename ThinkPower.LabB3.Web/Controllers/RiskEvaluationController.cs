@@ -78,11 +78,6 @@ namespace ThinkPower.LabB3.Web.Controllers
 
                 List<AnswerDetailEntity> answerDetailList = GetAnswerDetailList(answer);
 
-                if (answerDetailList == null || answerDetailList.Count == 0)
-                {
-                    throw new InvalidOperationException("answerDetailList not found");
-                }
-
 
                 RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
                 {
@@ -95,15 +90,14 @@ namespace ThinkPower.LabB3.Web.Controllers
 
                 reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
 
-                //if (reuslt.QuestionnaireResultEntity.ValidateFailInfo != null &&
-                //    reuslt.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
-                //{
-                //    return View("EvaQuest", new EvaQuestViewModel()
-                //    {
-                //        RiskEvaQuestionnaire = reuslt.RiskEvaQuestionnaire,
-                //        QuestionnaireResultEntity = reuslt.QuestionnaireResultEntity,
-                //    });
-                //}
+                if (reuslt.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
+                {
+                    return View("EvaQuest", new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = reuslt.RiskEvaQuestionnaire,
+                        QuestionnaireResultEntity = reuslt.QuestionnaireResultEntity,
+                    });
+                }
             }
             catch (Exception e)
             {
@@ -139,7 +133,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 answerInfo.Add(key, answer[key]);
             }
             TempData["FormCollection"] = JsonConvert.SerializeObject(answerInfo);
-            
+
 
             string questionnaireUid = answer["questEntity.Uid"];
             if (questionnaireUid == null)
@@ -160,51 +154,54 @@ namespace ThinkPower.LabB3.Web.Controllers
                 IEnumerable<string> answerCodeKeys = answer.AllKeys
                     .Where(x => x.StartsWith($"answer-{questId}-code"));
 
-                if (answerCodeKeys.Count() != 1)
+                if (answerCodeKeys.Count() == 0)
+                {
+                    continue;
+                }
+
+                if (answerCodeKeys.Count() > 1)
                 {
                     throw new InvalidOperationException("answerCodeKeys not the only");
                 }
 
-                string answerCodeFirst = answer[answerCodeKeys.First()];
+                string[] answerCodeList = answer[answerCodeKeys.First()].Split(',');
 
                 IEnumerable<string> answerOtherKeys = answer.AllKeys
                     .Where(x => x.StartsWith($"answer-{questId}-other"));
 
-
-                if (answerOtherKeys.Count() != 0)
+                foreach (string answerCode in answerCodeList)
                 {
-                    foreach (string answerCode in answerCodeFirst.Split(','))
+                    if (answerOtherKeys.Count() != 0 &&
+                        answerOtherKeys.Any(x => x == $"answer-{questId}-other-{answerCode}"))
                     {
-                        if (answerOtherKeys.Any(x => x == $"answer-{questId}-other-{answerCode}"))
+                        IEnumerable<string> answerOtherList = answerOtherKeys
+                            .Where(x => x == $"answer-{questId}-other-{answerCode}");
+
+                        if (answerOtherList.Count() != 1)
                         {
-                            IEnumerable<string> answerOtherList = answerOtherKeys
-                                .Where(x => x == $"answer-{questId}-other-{answerCode}");
-
-                            if (answerOtherList.Count() != 1)
-                            {
-                                throw new InvalidOperationException("answerOtherList not the only");
-                            }
-
-                            string answerOther = answer[answerOtherList.First()];
-
-                            answerDetailEntities.Add(new AnswerDetailEntity()
-                            {
-                                QuestionId = questId,
-                                AnswerCode = answerCode,
-                                OtherAnswer = answerOther,
-                            });
+                            throw new InvalidOperationException("answerOtherList not the only");
                         }
+
+                        string answerOther = answer[answerOtherList.First()];
+
+                        answerDetailEntities.Add(new AnswerDetailEntity()
+                        {
+                            QuestionId = questId,
+                            AnswerCode = answerCode,
+                            OtherAnswer = answerOther,
+                        });
+                    }
+                    else
+                    {
+                        answerDetailEntities.Add(new AnswerDetailEntity()
+                        {
+                            QuestionId = questId,
+                            AnswerCode = answerCode,
+                        });
                     }
                 }
-                else
-                {
-                    answerDetailEntities.Add(new AnswerDetailEntity()
-                    {
-                        QuestionId = questId,
-                        AnswerCode = answerCodeFirst,
-                    });
-                }
             }
+            TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailEntities);
 
             return answerDetailEntities;
         }

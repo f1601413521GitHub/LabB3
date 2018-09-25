@@ -11,11 +11,7 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
     /// </summary>
     public class AnswerDetailEntity : BaseEntity
     {
-        /// <summary>
-        /// 題目編號 
-        /// </summary> 
-        public string QuestionId { get; set; }
-
+        #region TEMP
         /// <summary> 
         ///問卷答題識別碼 
         /// </summary> 
@@ -27,6 +23,17 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         public System.Guid QuestionUid { get; set; }
 
         /// <summary> 
+        ///答題計分分數 
+        /// </summary> 
+        public Nullable<int> Score { get; set; } 
+        #endregion
+
+        /// <summary>
+        /// 題目編號 
+        /// </summary> 
+        public string QuestionId { get; set; }
+
+        /// <summary> 
         ///答案代碼 
         /// </summary> 
         public string AnswerCode { get; set; }
@@ -35,10 +42,5 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         ///答題其他說明 
         /// </summary> 
         public string OtherAnswer { get; set; }
-
-        /// <summary> 
-        ///答題計分分數 
-        /// </summary> 
-        public Nullable<int> Score { get; set; }
     }
 }

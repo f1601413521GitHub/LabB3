@@ -31,6 +31,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns>問卷填答評分結果</returns>
         public QuestionnaireResultEntity Calculate(QuestionnaireAnswerEntity answer)
         {
+            //TODO 0921 QuestionnaireAnswerEntity換成自訂類別?
             QuestionnaireResultEntity result = null;
 
             try
@@ -53,7 +54,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
                 {
                     IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
-                        .Where(x => x.QuestionUid == questDefine.Uid);
+                        .Where(x => x.QuestionId == questDefine.QuestionId);
 
                     message = null;
 
@@ -85,7 +86,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                     if (message != null)
                     {
-                        validates.Add(questDefine.Uid.ToString(), message);
+                        validates.Add(questDefine.QuestionId, message);
                     }
                 }
 
@@ -93,7 +94,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     if (questEntity.NeedScore == "Y")
                     {
-                        int actualScore = CalculateScore(answer, questEntity);
+                        //int actualScore = CalculateScore(answer, questEntity);
 
                         //TODO CreateQuestionnaireAnswer
                         //DateTime timeNow = DateTime.Now;
@@ -275,11 +276,11 @@ namespace ThinkPower.LabB3.Domain.Service
                 foreach (AnswerDefineEntity answerDefine in questDefine.AnswerDefineEntities)
                 {
                     AnswerDetailEntity answerDetail = questAnswerDetailList
-                        .Where(x => x.AnswerUid == answerDefine.Uid).FirstOrDefault();
+                        .FirstOrDefault(x => x.AnswerCode == answerDefine.AnswerCode);
 
                     if (answerDetail == null)
                     {
-                        throw new InvalidOperationException("answerDetail not found");
+                        continue;
                     }
 
                     if (answerDefine.HaveOtherAnswer == "Y" &&
@@ -460,7 +461,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
                 else if (questDefine.AnswerType == "F")
                 {
-                    if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.OtherAnswer)).Count() > 0)
+                    if (questAnswerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)).Count() > 0)
                     {
                         validateResult = true;
                     }
@@ -644,10 +645,10 @@ namespace ThinkPower.LabB3.Domain.Service
             try
             {
                 QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
-                DateTime dt = DateTime.Now;
+                DateTime timeNow = DateTime.Now;
 
-                if (quest == null ||
-                    !((quest.Ondate < dt) && (quest.Offdate > dt || quest.Offdate == null)))
+                if (quest == null || quest.Ondate >= timeNow || 
+                    quest.Offdate != null && quest.Offdate <= timeNow)
                 {
                     throw new InvalidOperationException($"quest not found, uid={uid}");
                 }
