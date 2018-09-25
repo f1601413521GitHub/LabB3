@@ -33,6 +33,7 @@ namespace ThinkPower.LabB3.Domain.Service
         {
             //TODO 0921 QuestionnaireAnswerEntity換成自訂類別?
             QuestionnaireResultEntity result = null;
+            QuestionnaireAnswerDO questionnaireAnswerDO = null;
 
             try
             {
@@ -94,40 +95,103 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     if (questEntity.NeedScore == "Y")
                     {
-                        //int actualScore = CalculateScore(answer, questEntity);
+                        Tuple<int, List<AnswerDetailEntity>> calculateResult =
+                            CalculateScore(answer, questEntity);
 
-                        //TODO CreateQuestionnaireAnswer
-                        //DateTime timeNow = DateTime.Now;
-                        //string userId = timeNow.ToString("yyyymm");
 
-                        //QuestionnaireAnswerDAO questAnswertDAO = new QuestionnaireAnswerDAO();
-                        //questAnswertDAO.CreateQuestionnaireAnswer(new QuestionnaireAnswerDO()
-                        //{
-                        //    Uid = Guid.NewGuid(),
-                        //    QuestUid = questEntity.Uid,
-                        //    QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
-                        //    TesteeId = userId,
-                        //    QuestScore = questEntity.QuestScore,
-                        //    ActualScore = actualScore,
-                        //    TesteeSource = "LabB3",
-                        //    CreateUserId = userId,
-                        //    CreateTime = timeNow,
-                        //    ModifyUserId = null,
-                        //    ModifyTime = null,
-                        //});
+                        DateTime timeNow = DateTime.Now;
+                        string userId = timeNow.ToString("yyyymm");
+                        Guid questionAnswerUid = Guid.NewGuid();
+
+
+                        questionnaireAnswerDO = new QuestionnaireAnswerDO()
+                        {
+                            Uid = questionAnswerUid,
+                            QuestUid = questEntity.Uid,
+                            QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
+                            TesteeId = userId,
+                            QuestScore = questEntity.QuestScore,
+                            ActualScore = calculateResult.Item1,
+                            TesteeSource = "LabB3",
+                            CreateUserId = userId,
+                            CreateTime = timeNow,
+                            ModifyUserId = null,
+                            ModifyTime = null,
+                        };
+
+                        if (!new QuestionnaireAnswerDAO().CreateQuestionnaireAnswer(questionnaireAnswerDO))
+                        {
+                            throw new InvalidOperationException("CreateQuestionnaireAnswer is fail");
+                        }
+
+
+
+                        QuestionnaireAnswerDetailDAO questAnswerDetailDAO =
+                            new QuestionnaireAnswerDetailDAO();
+
+                        QuestionnaireAnswerDetailDO questAnswerDetailDO = null;
+
+                        foreach (AnswerDetailEntity answerDetail in calculateResult.Item2)
+                        {
+                            timeNow = DateTime.Now;
+                            userId = timeNow.ToString("yyyymm");
+
+                            questAnswerDetailDO = new QuestionnaireAnswerDetailDO()
+                            {
+                                Uid = Guid.NewGuid(),
+                                AnswerUid = questionAnswerUid,
+                                QuestionUid = answerDetail.QuestionUid,
+                                AnswerCode = answerDetail.AnswerCode,
+                                OtherAnswer = answerDetail.OtherAnswer,
+                                Score = answerDetail.Score,
+                                CreateUserId = userId,
+                                CreateTime = timeNow,
+                                ModifyUserId = null,
+                                ModifyTime = null,
+                            };
+
+                            if (!questAnswerDetailDAO.CreateQuestionnaireAnswerDetail(questAnswerDetailDO))
+                            {
+                                throw new InvalidOperationException("CreateQuestionnaireAnswerDetail is fail");
+                            }
+                        }
                     }
                     else
                     {
-                        //您的問卷己填答完畢，謝謝您的參與
+                        //TODO 0925 您的問卷己填答完畢，謝謝您的參與
                     }
                 }
 
-                result = new QuestionnaireResultEntity()
+                if (questionnaireAnswerDO != null)
                 {
-                    ValidateFailInfo = validates,
-                    ValidateFailQuestId = questEntity.QuestId,
-                    AnswerDetailEntities = answer.AnswerDetailEntities,
-                };
+                    result = new QuestionnaireResultEntity()
+                    {
+                        Uid = questionnaireAnswerDO.Uid,
+                        QuestUid = questionnaireAnswerDO.QuestUid,
+                        QuestAnswerId = questionnaireAnswerDO.QuestAnswerId,
+                        TesteeId = questionnaireAnswerDO.TesteeId,
+                        QuestScore = questionnaireAnswerDO.QuestScore,
+                        ActualScore = questionnaireAnswerDO.ActualScore,
+                        TesteeSource = questionnaireAnswerDO.TesteeSource,
+                        CreateUserId = questionnaireAnswerDO.CreateUserId,
+                        CreateTime = questionnaireAnswerDO.CreateTime,
+                        ModifyUserId = questionnaireAnswerDO.ModifyUserId,
+                        ModifyTime = questionnaireAnswerDO.ModifyTime,
+
+                        ValidateFailInfo = validates,
+                        ValidateFailQuestId = questEntity.QuestId,
+                        AnswerDetailEntities = answer.AnswerDetailEntities,
+                    };
+                }
+                else
+                {
+                    result = new QuestionnaireResultEntity()
+                    {
+                        ValidateFailInfo = validates,
+                        ValidateFailQuestId = questEntity.QuestId,
+                        AnswerDetailEntities = answer.AnswerDetailEntities,
+                    };
+                }
             }
             catch (Exception e)
             {
@@ -138,121 +202,163 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 計算問卷得分
+        /// 計算問卷得分，回傳問卷得分與問卷填答完整資料(包含問卷題目識別碼與答題分數)
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
         /// <param name="questEntity">問卷定義資料</param>
-        /// <returns>問卷得分</returns>
-        private int CalculateScore(QuestionnaireAnswerEntity answer,
+        /// <returns>問卷得分與問卷填答完整資料</returns>
+        private Tuple<int, List<AnswerDetailEntity>> CalculateScore(QuestionnaireAnswerEntity answer,
             QuestionnaireEntity questEntity)
         {
-            int answerScoreResult = 0;
-            List<int> answerScoreList = new List<int>();
-            List<int> questAnswerScore = null;
+            List<AnswerDetailEntity> answerFullDetailList = new List<AnswerDetailEntity>();
+
+            int questionScoreResult = 0;
+            List<int> questionScoreList = new List<int>();
 
             foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
             {
-                questAnswerScore = new List<int>();
-
                 if (questDefine.AnswerType == "S")
                 {
                     IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                        .Where(x => x.QuestionUid == questDefine.Uid &&
+                        .Where(x => x.QuestionId == questDefine.QuestionId &&
                             !String.IsNullOrEmpty(x.AnswerCode));
 
-                    if (answerDetailList.Count() != 1)
+                    if (answerDetailList.Count() == 0)
+                    {
+                        throw new InvalidOperationException("answerCode not found");
+                    }
+                    else if (answerDetailList.Count() > 1)
                     {
                         throw new InvalidOperationException("answerCode not the only");
                     }
-                    AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
+
+                    AnswerDetailEntity answerDetail = answerDetailList.First();
 
                     AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                        .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+                        .FirstOrDefault(x => x.AnswerCode == answerDetail.AnswerCode);
 
                     if (answerDefine == null)
                     {
                         throw new InvalidOperationException("answerDefine not found");
                     }
 
-                    questAnswerScore.Add(answerDefine.Score ?? 0);
+                    answerFullDetailList.Add(new AnswerDetailEntity
+                    {
+                        QuestionUid = questDefine.Uid,
+                        Score = answerDefine.Score,
+
+                        QuestionId = answerDetail.QuestionId,
+                        AnswerCode = answerDetail.AnswerCode,
+                        OtherAnswer = answerDetail.OtherAnswer,
+                    });
+
                 }
                 else if (questDefine.AnswerType == "M")
                 {
                     IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                        .Where(x => x.QuestionUid == questDefine.Uid &&
+                        .Where(x => x.QuestionId == questDefine.QuestionId &&
                             !String.IsNullOrEmpty(x.AnswerCode));
 
                     foreach (AnswerDetailEntity answerDetail in answerDetailList)
                     {
                         AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                       .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+                            .FirstOrDefault(x => x.AnswerCode == answerDetail.AnswerCode);
 
                         if (answerDefine == null)
                         {
                             throw new InvalidOperationException("answerDefine not found");
                         }
 
-                        questAnswerScore.Add(answerDefine.Score ?? 0);
+                        answerFullDetailList.Add(new AnswerDetailEntity
+                        {
+                            QuestionUid = questDefine.Uid,
+                            Score = answerDefine.Score,
+
+                            QuestionId = answerDetail.QuestionId,
+                            AnswerCode = answerDetail.AnswerCode,
+                            OtherAnswer = answerDetail.OtherAnswer,
+                        });
                     }
                 }
                 else if (questDefine.AnswerType == "F")
                 {
                     IEnumerable<AnswerDetailEntity> answerDetailList = answer.AnswerDetailEntities
-                        .Where(x => x.QuestionUid == questDefine.Uid &&
-                            !String.IsNullOrEmpty(x.OtherAnswer));
+                        .Where(x => x.QuestionId == questDefine.QuestionId &&
+                            !String.IsNullOrEmpty(x.AnswerCode));
 
-                    if (answerDetailList.Count() != 1)
+                    if (answerDetailList.Count() == 0)
+                    {
+                        throw new InvalidOperationException("answerCode not found");
+                    }
+                    else if (answerDetailList.Count() != 1)
                     {
                         throw new InvalidOperationException("answerCode not the only");
                     }
-                    AnswerDetailEntity answerDetail = answerDetailList.FirstOrDefault();
 
-                    AnswerDefineEntity answerDefine = questDefine.AnswerDefineEntities
-                        .FirstOrDefault(x => x.Uid == answerDetail.AnswerUid);
+                    AnswerDetailEntity answerDetail = answerDetailList.First();
 
-                    if (answerDefine == null)
+                    IEnumerable<AnswerDefineEntity> answerDefineList = questDefine.AnswerDefineEntities
+                        .Where(x => x.AnswerCode == "");
+
+                    if (answerDetailList.Count() == 0)
                     {
-                        throw new InvalidOperationException("answerDefine not found");
+                        throw new InvalidOperationException("answerDefineList not found");
+                    }
+                    else if (answerDetailList.Count() != 1)
+                    {
+                        throw new InvalidOperationException("answerDefineList not the only");
                     }
 
-                    questAnswerScore.Add(answerDefine.Score ?? 0);
+                    AnswerDefineEntity answerDefine = answerDefineList.First();
+
+
+                    answerFullDetailList.Add(new AnswerDetailEntity
+                    {
+                        QuestionUid = questDefine.Uid,
+                        Score = answerDefine.Score,
+
+                        QuestionId = answerDetail.QuestionId,
+                        AnswerCode = null,
+                        OtherAnswer = answerDetail.AnswerCode,
+                    });
                 }
 
+
+                IEnumerable<int> questScoreList = answerFullDetailList
+                    .Where(x => x.QuestionId == questDefine.QuestionId && x.Score != null)
+                    .Select(x => (int)x.Score);
 
                 if (questDefine.CountScoreType == "1")
                 {
-                    answerScoreList.Add(questAnswerScore.Sum());
+                    questionScoreList.Add(questScoreList.Sum());
                 }
                 else if (questDefine.CountScoreType == "2")
                 {
-                    answerScoreList.Add(questAnswerScore.Max());
+                    questionScoreList.Add(questScoreList.Max());
                 }
                 else if (questDefine.CountScoreType == "3")
                 {
-                    answerScoreList.Add(questAnswerScore.Min());
+                    questionScoreList.Add(questScoreList.Min());
                 }
                 else if (questDefine.CountScoreType == "4")
                 {
-                    if (Int32.TryParse(questAnswerScore.Average().ToString(), out int tempScore))
-                    {
-                        answerScoreList.Add(tempScore);
-                    }
+                    questionScoreList.Add((int)Math.Round(questScoreList.Average()));
                 }
             }
 
 
             if (questEntity.ScoreKind == "1")
             {
-                answerScoreResult = answerScoreList.Sum();
+                questionScoreResult = questionScoreList.Sum();
             }
 
             if (questEntity.QuestScore != null &&
-                answerScoreResult > questEntity.QuestScore)
+                questionScoreResult > questEntity.QuestScore)
             {
-                answerScoreResult = (int)questEntity.QuestScore;
+                questionScoreResult = (int)questEntity.QuestScore;
             }
 
-            return answerScoreResult;
+            return Tuple.Create(questionScoreResult, answerFullDetailList);
         }
 
         /// <summary>
@@ -647,7 +753,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
                 DateTime timeNow = DateTime.Now;
 
-                if (quest == null || quest.Ondate >= timeNow || 
+                if (quest == null || quest.Ondate >= timeNow ||
                     quest.Offdate != null && quest.Offdate <= timeNow)
                 {
                     throw new InvalidOperationException($"quest not found, uid={uid}");

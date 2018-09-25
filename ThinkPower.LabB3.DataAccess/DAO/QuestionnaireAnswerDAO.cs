@@ -125,5 +125,66 @@ WHERE QuestUid =@QuestUid";
                 ModifyTime = questAnswer.Field<DateTime?>("ModifyTime"),
             };
         }
+
+        /// <summary>
+        /// 新增問卷填答結果至問卷答題主檔
+        /// </summary>
+        /// <param name="questAnswerDO">問卷填答資料</param>
+        /// <returns>執行結果(Success/Fail)</returns>
+        public bool CreateQuestionnaireAnswer(QuestionnaireAnswerDO questAnswerDO)
+        {
+            bool result = false;
+
+            if (questAnswerDO == null)
+            {
+                throw new ArgumentNullException("questAnswerDO");
+            }
+
+            try
+            {
+                string query = @"
+INSERT INTO [QuestionnaireAnswer]
+    ([Uid], [QuestUid], [QuestAnswerId], [TesteeId], [QuestScore], [ActualScore], [TesteeSource],
+    [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime]) 
+VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @TesteeSource,
+    @CreateUserId, @CreateTime, @ModifyUserId, @ModifyTime);";
+
+                using (SqlConnection connection = DbConnection)
+                {
+
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDO.Uid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.VarChar) { Value = questAnswerDO.QuestUid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar) { Value = questAnswerDO.QuestAnswerId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@TesteeId", SqlDbType.VarChar) { Value = questAnswerDO.TesteeId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@QuestScore", SqlDbType.Int) { Value = questAnswerDO.QuestScore ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ActualScore", SqlDbType.Int) { Value = questAnswerDO.ActualScore ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@TesteeSource", SqlDbType.VarChar) { Value = questAnswerDO.TesteeSource ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDO.CreateUserId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDO.CreateTime ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDO.ModifyUserId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDO.ModifyTime ?? Convert.DBNull });
+
+                    connection.Open();
+                    if (command.ExecuteNonQuery() == 1)
+                    {
+                        result = true;
+                    }
+
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return result;
+        }
     }
 }

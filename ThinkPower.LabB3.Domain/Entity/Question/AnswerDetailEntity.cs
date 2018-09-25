@@ -11,11 +11,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
     /// </summary>
     public class AnswerDetailEntity : BaseEntity
     {
-        #region TEMP
         /// <summary> 
         ///問卷答題識別碼 
         /// </summary> 
-        public System.Guid AnswerUid { get; set; }
+        //public System.Guid AnswerUid { get; set; }
 
         /// <summary> 
         ///問卷題目識別碼 
@@ -25,8 +24,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// <summary> 
         ///答題計分分數 
         /// </summary> 
-        public Nullable<int> Score { get; set; } 
-        #endregion
+        public Nullable<int> Score { get; set; }
+
+
+
 
         /// <summary>
         /// 題目編號 

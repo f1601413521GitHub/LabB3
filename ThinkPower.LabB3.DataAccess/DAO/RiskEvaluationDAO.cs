@@ -63,7 +63,7 @@ SELECT TOP 1
     [Uid],[RiskEvaId],[QuestAnswerId],[CliId],[RiskResult],
     [RiskScore],[RiskAttribute],[EvaluationDate],[BusinessDate],
     [IsUsed],[CreateUserId],[CreateTime],[ModifyUserId],[ModifyTime]
-FROM [dbo].[RiskEvaluation]
+FROM [RiskEvaluation]
 WHERE [QuestAnswerId] = @QuestAnswerId
 AND [RiskEvaId] = 'FNDINV'
 AND [IsUsed] = 'Y'
