@@ -55,5 +55,10 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// 問卷答案明細類別集合
         /// </summary>
         public IEnumerable<AnswerDetailEntity> AnswerDetailEntities { get; set; }
+
+        /// <summary>
+        /// 風險問卷填寫結果
+        /// </summary>
+        public Dictionary<string, string> RiskResult { get; set; }
     }
 }

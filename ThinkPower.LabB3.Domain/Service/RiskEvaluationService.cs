@@ -87,15 +87,35 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("riskRankDetailDOList not found");
                 }
 
+                DateTime timeNow = DateTime.Now;
+                RiskEvaluationEntity riskEvaluationEntity = new RiskEvaluationEntity()
+                {
+                    Uid = Guid.NewGuid(),
+                    RiskEvaId = "FNDINV",
+                    QuestAnswerId = questResultEntity.QuestAnswerId,
+                    CliId = questResultEntity.TesteeId,
+                    RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
+                    RiskScore = questResultEntity.ActualScore,
+                    RiskAttribute = riskRankDO.RiskRankKind,
+                    EvaluationDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
+                    BusinessDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
+                    IsUsed = "Y",
+                    CreateUserId = questResultEntity.TesteeId,
+                    CreateTime = timeNow,
+                    ModifyUserId = null,
+                    ModifyTime = null,
+                };
+
 
                 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                var cache = CacheProvider.GetCache("RiskRankDetailList");
+                var cache = CacheProvider.GetCache("riskEvaluationEntity");
                 if (cache == null)
                 {
-                    CacheProvider.SetCache("RiskRankDetailList", riskRankDetailDOList);
-                    cache = riskRankDetailDOList;
+                    CacheProvider.SetCache("riskEvaluationEntity", riskEvaluationEntity);
+                    cache = riskEvaluationEntity;
                 }
                 //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
                 if (questResultEntity.ValidateFailInfo.Count > 0)
                 {

@@ -91,6 +91,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
                 }
 
+                Dictionary<string, string> riskResult = new Dictionary<string, string>();
                 if (validates.Count == 0)
                 {
                     if (questEntity.NeedScore == "Y")
@@ -98,6 +99,16 @@ namespace ThinkPower.LabB3.Domain.Service
                         Tuple<int, List<AnswerDetailEntity>> calculateResult =
                             CalculateScore(answer, questEntity);
 
+                        var anonymousList = calculateResult.Item2
+                            .Select(x => new { x.QuestionId, x.AnswerCode });
+
+
+                        foreach (string questionId in anonymousList.Select(x => x.QuestionId).Distinct())
+                        {
+                            riskResult[questionId] = String.Join(",", anonymousList
+                                .Where(x => x.QuestionId == questionId &&
+                                    !String.IsNullOrEmpty(x.AnswerCode)).Select(x => x.AnswerCode));
+                        }
 
                         DateTime timeNow = DateTime.Now;
                         string userId = timeNow.ToString("yyyymm");
@@ -181,6 +192,7 @@ namespace ThinkPower.LabB3.Domain.Service
                         ValidateFailInfo = validates,
                         ValidateFailQuestId = questEntity.QuestId,
                         AnswerDetailEntities = answer.AnswerDetailEntities,
+                        RiskResult = riskResult,
                     };
                 }
                 else
@@ -190,6 +202,7 @@ namespace ThinkPower.LabB3.Domain.Service
                         ValidateFailInfo = validates,
                         ValidateFailQuestId = questEntity.QuestId,
                         AnswerDetailEntities = answer.AnswerDetailEntities,
+                        RiskResult = riskResult,
                     };
                 }
             }
