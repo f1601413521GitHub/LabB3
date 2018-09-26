@@ -71,6 +71,20 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("questResultEntity not found");
                 }
 
+                RiskRankDO riskRankDO = new RiskRankDAO().GetRiskRank(questResultEntity.ActualScore);
+
+                if (riskRankDO == null)
+                {
+                    throw new InvalidOperationException("riskRankDO not found");
+                }
+
+                List<RiskRankDetailDO> riskRankDetailDOList = new RiskRankDetailDAO().GetRiskRankDetail(riskRankDO.Uid);
+
+                if (riskRankDetailDOList == null || riskRankDetailDOList.Count == 0)
+                {
+                    throw new InvalidOperationException("riskRankDetailDOList not found");
+                }
+
                 if (questResultEntity.ValidateFailInfo.Count > 0)
                 {
                     riskEvaQuestEntity = GetRiskQuestionnaire(questResultEntity.ValidateFailQuestId);
