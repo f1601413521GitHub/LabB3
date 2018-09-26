@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,6 +12,7 @@ using ThinkPower.LabB3.DataAccess.DO;
 using ThinkPower.LabB3.Domain.DTO;
 using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
+using ThinkPower.LabB3.Domain.Resources;
 using ThinkPower.LabB3.Domain.Service.Interface;
 
 namespace ThinkPower.LabB3.Domain.Service
@@ -84,6 +86,16 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     throw new InvalidOperationException("riskRankDetailDOList not found");
                 }
+
+
+                //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                var cache = CacheProvider.GetCache("RiskRankDetailList");
+                if (cache == null)
+                {
+                    CacheProvider.SetCache("RiskRankDetailList", riskRankDetailDOList);
+                    cache = riskRankDetailDOList;
+                }
+                //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
                 if (questResultEntity.ValidateFailInfo.Count > 0)
                 {

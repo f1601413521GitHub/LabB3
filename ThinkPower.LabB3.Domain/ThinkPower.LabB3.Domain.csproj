@@ -41,6 +41,7 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Transactions" />
@@ -65,14 +66,13 @@
     <Compile Include="Entity\Risk\RiskEvaQuestionnaireEntity.cs" />
     <Compile Include="Entity\Risk\RiskRankEntity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Resources\CacheProvider.cs" />
     <Compile Include="Service\Interface\IQuestionnaire.cs" />
     <Compile Include="Service\Interface\IRiskEvaluation.cs" />
     <Compile Include="Service\QuestionnaireService.cs" />
     <Compile Include="Service\RiskEvaluationService.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <ProjectReference Include="..\ThinkPower.LabB3.DataAccess\ThinkPower.LabB3.DataAccess.csproj">
       <Project>{5ba9b2cb-b681-4d7a-8e1a-61748f3bd905}</Project>
