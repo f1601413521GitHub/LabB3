@@ -45,11 +45,9 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// 新增問卷填答資料至問卷答題明細
         /// </summary>
         /// <param name="questAnswerDetailDO">問卷答題明細</param>
-        /// <returns>執行結果(Success/Fail)</returns>
-        public bool CreateQuestionnaireAnswerDetail(QuestionnaireAnswerDetailDO questAnswerDetailDO)
+        /// <returns></returns>
+        public void Insert(QuestionnaireAnswerDetailDO questAnswerDetailDO)
         {
-            bool result = false;
-
             if (questAnswerDetailDO == null)
             {
                 throw new ArgumentNullException("questAnswerDetailDO");
@@ -79,10 +77,7 @@ VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@Crea
                     command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDetailDO.ModifyTime ?? Convert.DBNull });
 
                     connection.Open();
-                    if (command.ExecuteNonQuery() == 1)
-                    {
-                        result = true;
-                    }
+                    command.ExecuteNonQuery();
 
                     command = null;
 
@@ -96,8 +91,6 @@ VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@Crea
             {
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
-
-            return result;
         }
     }
 }

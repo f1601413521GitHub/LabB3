@@ -11,6 +11,7 @@ using NLog;
 using System.Runtime.ExceptionServices;
 using System.Configuration;
 using Newtonsoft.Json;
+using System.Transactions;
 
 namespace ThinkPower.LabB3.Domain.Service
 {
@@ -96,6 +97,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     if (questEntity.NeedScore == "Y")
                     {
+                        //TODO 0927 Tuple
                         Tuple<int, List<AnswerDetailEntity>> calculateResult =
                             CalculateScore(answer, questEntity);
 
@@ -114,56 +116,61 @@ namespace ThinkPower.LabB3.Domain.Service
                         string userId = timeNow.ToString("yyyymm");
                         Guid questionAnswerUid = Guid.NewGuid();
 
-
-                        questionnaireAnswerDO = new QuestionnaireAnswerDO()
+                        using (TransactionScope scope = new TransactionScope())
                         {
-                            Uid = questionAnswerUid,
-                            QuestUid = questEntity.Uid,
-                            QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
-                            TesteeId = userId,
-                            QuestScore = questEntity.QuestScore,
-                            ActualScore = calculateResult.Item1,
-                            TesteeSource = "LabB3",
-                            CreateUserId = userId,
-                            CreateTime = timeNow,
-                            ModifyUserId = null,
-                            ModifyTime = null,
-                        };
-
-                        if (!new QuestionnaireAnswerDAO().CreateQuestionnaireAnswer(questionnaireAnswerDO))
-                        {
-                            throw new InvalidOperationException("CreateQuestionnaireAnswer is fail");
-                        }
-
-
-
-                        QuestionnaireAnswerDetailDAO questAnswerDetailDAO =
-                            new QuestionnaireAnswerDetailDAO();
-
-                        QuestionnaireAnswerDetailDO questAnswerDetailDO = null;
-
-                        foreach (AnswerDetailEntity answerDetail in calculateResult.Item2)
-                        {
-                            timeNow = DateTime.Now;
-                            userId = timeNow.ToString("yyyymm");
-
-                            questAnswerDetailDO = new QuestionnaireAnswerDetailDO()
+                            try
                             {
-                                Uid = Guid.NewGuid(),
-                                AnswerUid = questionAnswerUid,
-                                QuestionUid = answerDetail.QuestionUid,
-                                AnswerCode = answerDetail.AnswerCode,
-                                OtherAnswer = answerDetail.OtherAnswer,
-                                Score = answerDetail.Score,
-                                CreateUserId = userId,
-                                CreateTime = timeNow,
-                                ModifyUserId = null,
-                                ModifyTime = null,
-                            };
+                                questionnaireAnswerDO = new QuestionnaireAnswerDO()
+                                {
+                                    Uid = questionAnswerUid,
+                                    QuestUid = questEntity.Uid,
+                                    QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
+                                    TesteeId = userId,
+                                    QuestScore = questEntity.QuestScore,
+                                    ActualScore = calculateResult.Item1,
+                                    TesteeSource = "LabB3",
+                                    CreateUserId = userId,
+                                    CreateTime = timeNow,
+                                    ModifyUserId = null,
+                                    ModifyTime = null,
+                                };
 
-                            if (!questAnswerDetailDAO.CreateQuestionnaireAnswerDetail(questAnswerDetailDO))
+                                new QuestionnaireAnswerDAO().Insert(questionnaireAnswerDO);
+
+
+
+                                QuestionnaireAnswerDetailDAO questAnswerDetailDAO =
+                                    new QuestionnaireAnswerDetailDAO();
+
+                                QuestionnaireAnswerDetailDO questAnswerDetailDO = null;
+
+                                foreach (AnswerDetailEntity answerDetail in calculateResult.Item2)
+                                {
+                                    timeNow = DateTime.Now;
+                                    userId = timeNow.ToString("yyyymm");
+
+                                    questAnswerDetailDO = new QuestionnaireAnswerDetailDO()
+                                    {
+                                        Uid = Guid.NewGuid(),
+                                        AnswerUid = questionAnswerUid,
+                                        QuestionUid = answerDetail.QuestionUid,
+                                        AnswerCode = answerDetail.AnswerCode,
+                                        OtherAnswer = answerDetail.OtherAnswer,
+                                        Score = answerDetail.Score,
+                                        CreateUserId = userId,
+                                        CreateTime = timeNow,
+                                        ModifyUserId = null,
+                                        ModifyTime = null,
+                                    };
+
+                                    questAnswerDetailDAO.Insert(questAnswerDetailDO);
+                                }
+
+                                scope.Complete();
+                            }
+                            catch (Exception e)
                             {
-                                throw new InvalidOperationException("CreateQuestionnaireAnswerDetail is fail");
+                                ExceptionDispatchInfo.Capture(e).Throw();
                             }
                         }
                     }

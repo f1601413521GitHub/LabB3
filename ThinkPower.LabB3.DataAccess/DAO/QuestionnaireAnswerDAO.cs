@@ -130,11 +130,9 @@ WHERE QuestUid =@QuestUid";
         /// 新增問卷填答結果至問卷答題主檔
         /// </summary>
         /// <param name="questAnswerDO">問卷填答資料</param>
-        /// <returns>執行結果(Success/Fail)</returns>
-        public bool CreateQuestionnaireAnswer(QuestionnaireAnswerDO questAnswerDO)
+        /// <returns></returns>
+        public void Insert(QuestionnaireAnswerDO questAnswerDO)
         {
-            bool result = false;
-
             if (questAnswerDO == null)
             {
                 throw new ArgumentNullException("questAnswerDO");
@@ -166,10 +164,7 @@ VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @
                     command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDO.ModifyTime ?? Convert.DBNull });
 
                     connection.Open();
-                    if (command.ExecuteNonQuery() == 1)
-                    {
-                        result = true;
-                    }
+                    command.ExecuteNonQuery();
 
                     command = null;
 
@@ -183,8 +178,6 @@ VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @
             {
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
-
-            return result;
         }
     }
 }
