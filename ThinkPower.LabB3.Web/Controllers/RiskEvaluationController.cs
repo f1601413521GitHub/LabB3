@@ -226,7 +226,7 @@ namespace ThinkPower.LabB3.Web.Controllers
             return answerDetailEntities;
         }
 
-        [HttpPost]
+        [HttpGet]
         /// <summary>
         /// 進行投資風險評估問卷填答
         /// </summary>

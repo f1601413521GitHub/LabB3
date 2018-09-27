@@ -92,3 +92,26 @@ input[type=button], input[type=submit] {
     .question-footer-submit > input {
         margin-bottom: 9px;
     }
+
+
+
+
+/*layout*/
+.layout-header {
+    background-color: #548DD4;
+    color: white;
+}
+
+.layout-body-left {
+    background-color: #F2F2F2;
+}
+
+    .layout-body-left img {
+        width: 12px;
+    }
+
+.layout-footer {
+    text-align: center;
+    background-color: #A6A6A6;
+    padding: 5px;
+}

@@ -77,7 +77,6 @@ function getQuestionList() {
 }
 
 function validateRule(questionList) {
-$('#evaQuestForm').submit();
     let validateFailCount = 0;
     questionList.each(function () {
 
@@ -118,7 +117,7 @@ $('#evaQuestForm').submit();
         //    let msg = '您的問卷己填答完畢，謝謝您的參與';
         //}
 
-        
+        $('#evaQuestForm').submit();
     }
 }
 
