@@ -10,17 +10,25 @@ namespace ThinkPower.LabB3.Domain.Resources
     {
         private static ObjectCache _cache = MemoryCache.Default;
 
-        public static object GetCache(string cacheKey)
-        {
-            return _cache[cacheKey];
-        }
+        public static string state { get; private set; }
 
-        public static void SetCache(string cacheKey, object contents)
+        public static object GetCache(string key, object data, bool overwrite = false, CacheItemPolicy policy = null)
         {
-            _cache.Set(cacheKey, contents, new CacheItemPolicy()
+            object result = _cache[key];
+            state = "get";
+
+            if (result == null || overwrite)
             {
-                AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(20),
-            });
+                _cache.Set(key, data, policy ?? new CacheItemPolicy()
+                {
+                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(20),
+                });
+
+                state = "set";
+                result = data;
+            }
+
+            return result;
         }
     }
 }

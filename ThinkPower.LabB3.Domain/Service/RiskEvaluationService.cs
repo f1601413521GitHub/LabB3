@@ -66,6 +66,8 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new ArgumentNullException("answer");
                 }
 
+                //TODO 0927 若作業週期期間內己有生效的風險評估紀錄，則不可做投資風險評估。
+
                 questResultEntity = QuestService.Calculate(answer.QuestionnaireAnswerEntity);
 
                 if (questResultEntity == null)
@@ -99,7 +101,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     RiskAttribute = riskRankDO.RiskRankKind,
                     EvaluationDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
                     BusinessDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
-                    IsUsed = "Y",
+                    IsUsed = "N",
                     CreateUserId = questResultEntity.TesteeId,
                     CreateTime = timeNow,
                     ModifyUserId = null,
@@ -107,14 +109,8 @@ namespace ThinkPower.LabB3.Domain.Service
                 };
 
 
-                //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-                var cache = CacheProvider.GetCache("riskEvaluationEntity");
-                if (cache == null)
-                {
-                    CacheProvider.SetCache("riskEvaluationEntity", riskEvaluationEntity);
-                    cache = riskEvaluationEntity;
-                }
-                //<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+                object cache = CacheProvider.GetCache(
+                    $"RiskEvaluation-{questResultEntity.QuestAnswerId}", riskEvaluationEntity, true);
 
 
                 if (questResultEntity.ValidateFailInfo.Count > 0)
