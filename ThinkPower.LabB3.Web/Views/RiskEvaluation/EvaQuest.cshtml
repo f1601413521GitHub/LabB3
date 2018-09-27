@@ -9,7 +9,8 @@
 
     var questDefineEntities = (questEntity != null) ? questEntity.QuestDefineEntities : null;
 
-    var questResultEntity = Model.QuestionnaireResultEntity;
+    var questResultEntity = (Model != null && Model.QuestionnaireResultEntity != null) ?
+            Model.QuestionnaireResultEntity : null; ;
 
     var questValidateFailInfo = (questResultEntity != null &&
             questResultEntity.ValidateFailInfo.Count > 0) ? questResultEntity.ValidateFailInfo : null;
