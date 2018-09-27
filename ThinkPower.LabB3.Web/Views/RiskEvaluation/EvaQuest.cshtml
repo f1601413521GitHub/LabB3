@@ -24,7 +24,7 @@
 
 @using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { id = "evaQuestForm" }))
 {
-    <div class="container">
+    <div class="row">
 
         @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
@@ -32,228 +32,231 @@
         {
             @Html.HiddenFor(x => questEntity.Uid)
 
-            <div class="row question"
+            <div class="col question"
                  id="questEntity"
                  data-need-Score="@questEntity.NeedScore"
                  data-quest-Score="@questEntity.QuestScore"
                  data-score-Kind="@questEntity.ScoreKind">
 
-                <div class="col-md-12 question-head">
+                <div class="row question-head">
+                    <div class="col">
+                        <div class="row question-head-img"
+                             style="background-image:url(@questEntity.HeadBackgroundImg);">
 
-                    <div class="col-md-12 question-head-title">
-                        <span>
-                            @Html.DisplayFor(x => questEntity.Name)
-                        </span>
+                            <div class="col align-self-end question-head-title">
+                                <h3>@Html.DisplayFor(x => questEntity.Name)</h3>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col question-head-descript">
+                                <span>
+                                    @(new HtmlString(questEntity.HeadDescription))
+                                </span>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="question-head-img"
-                         style="background-image:url(@questEntity.HeadBackgroundImg);">
-                    </div>
-
-                    <div class="col-md-12 question-head-descript">
-                        <span>
-                            @(new HtmlString(questEntity.HeadDescription))
-                        </span>
-                    </div>
-
                 </div>
 
-                <div class="col-md-12 question-body">
+                <div class="row question-body">
+                    <div class="col">
 
-                    @{
-                        var questDefineCount = 0;
-                        foreach (var questDefine in questDefineEntities)
-                        {
-                            questDefineCount++;
-                            @Html.HiddenFor(x => questDefine.QuestionId)
+                        @{
+                            var questDefineCount = 0;
+                            foreach (var questDefine in questDefineEntities)
+                            {
+                                questDefineCount++;
+                                @Html.HiddenFor(x => questDefine.QuestionId)
 
-                            var answerDetailList = (answerDetailEntities != null &&
-                                    answerDetailEntities.Any(x => x.QuestionId == questDefine.QuestionId)) ?
-                                    answerDetailEntities.Where(x => x.QuestionId == questDefine.QuestionId) :
-                                    null;
+                                var answerDetailList = (answerDetailEntities != null &&
+                                        answerDetailEntities.Any(x => x.QuestionId == questDefine.QuestionId)) ?
+                                        answerDetailEntities.Where(x => x.QuestionId == questDefine.QuestionId) :
+                                        null;
 
-                            <!--forloop-->
-                            <div class="col-md-12 question-subject"
-                                 id="question-@questDefine.QuestionId"
-                                 data-question-Id="@questDefine.QuestionId"
-                                 data-need-Answer="@questDefine.NeedAnswer"
-                                 data-allow-Na-Condition="@questDefine.AllowNaCondition"
-                                 data-answer-Type="@questDefine.AnswerType"
-                                 data-min-Multiple-Answers="@questDefine.MinMultipleAnswers"
-                                 data-max-Multiple-Answers="@questDefine.MaxMultipleAnswers"
-                                 data-single-Answer-Condition="@questDefine.SingleAnswerCondition"
-                                 data-count-Score-Type="@questDefine.CountScoreType">
+                                <!--forloop-->
+                                <div class="row question-subject"
+                                     id="question-@questDefine.QuestionId"
+                                     data-question-Id="@questDefine.QuestionId"
+                                     data-need-Answer="@questDefine.NeedAnswer"
+                                     data-allow-Na-Condition="@questDefine.AllowNaCondition"
+                                     data-answer-Type="@questDefine.AnswerType"
+                                     data-min-Multiple-Answers="@questDefine.MinMultipleAnswers"
+                                     data-max-Multiple-Answers="@questDefine.MaxMultipleAnswers"
+                                     data-single-Answer-Condition="@questDefine.SingleAnswerCondition"
+                                     data-count-Score-Type="@questDefine.CountScoreType">
 
-                                <div class="col-md-12 question-subject-head">
-
-                                    <div class="question-subject-head-no">
-                                        <span>@questDefineCount.</span>
-                                    </div>
-
-                                    <div class="question-subject-head-descript">
-                                        <span>
-                                            @Html.DisplayFor(x => questDefine.QuestionContent)
-                                        </span>
-                                    </div>
-
-                                </div>
-
-                                <div class="col-md-12 question-subject-body">
-
-                                    @{
-                                        var answerDefineCount = 0;
-                                        foreach (var answerDefine in questDefine.AnswerDefineEntities)
-                                        {
-                                            answerDefineCount++;
-
-                                            AnswerDetailEntity answerDetail = null;
-
-                                            if (questDefine.AnswerType == "F")
-                                            {
-                                                var tempAnswer = (answerDetailList != null) ?
-                                                        answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)) : null;
-
-                                                if (tempAnswer != null &&
-                                                    tempAnswer.Count() == 1)
-                                                {
-                                                    answerDetail = tempAnswer.First();
-                                                }
-                                            }
-                                            else
-                                            {
-                                                var tempAnswer = (answerDetailList != null &&
-                                                        answerDetailList.Any(x => x.AnswerCode == answerDefine.AnswerCode)) ?
-                                                        answerDetailList.FirstOrDefault(x => x.AnswerCode == answerDefine.AnswerCode) :
-                                                        null;
-
-                                                if (tempAnswer != null)
-                                                {
-                                                    answerDetail = tempAnswer;
-                                                }
-                                            }
-
-                                            <!--forloop-->
-                                            <div class="col-md-6 question-answer"
-                                                 id="answer-entity-@questDefine.QuestionId-@answerDefineCount"
-                                                 data-answer-Code="@answerDefine.AnswerCode"
-                                                 data-have-Other-Answer="@answerDefine.HaveOtherAnswer"
-                                                 data-need-Other-Answer="@answerDefine.NeedOtherAnswer"
-                                                 data-score="@answerDefine.Score">
-
-                                                <div class="question-answer-code">
-
-                                                    @if (questDefine.AnswerType == "S")
-                                                    {
-                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
-                                                        {
-                                                            @Html.RadioButton($"answer-{questDefine.QuestionId}-code",
-                                                                answerDetail.AnswerCode, true, new { });
-                                                        }
-                                                        else
-                                                        {
-                                                            @Html.RadioButton($"answer-{questDefine.QuestionId}-code",
-                                                                answerDefine.AnswerCode,false, new { });
-                                                        }
-                                                    }
-                                                    else if (questDefine.AnswerType == "M")
-                                                    {
-                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
-                                                        {
-                                                            <input type="checkbox"
-                                                                   id="answer-@questDefine.QuestionId-code"
-                                                                   name="answer-@questDefine.QuestionId-code"
-                                                                   value="@answerDefine.AnswerCode"
-                                                                   checked />
-                                                        }
-                                                        else
-                                                        {
-                                                            <input type="checkbox"
-                                                                   id="answer-@questDefine.QuestionId-code"
-                                                                   name="answer-@questDefine.QuestionId-code"
-                                                                   value="@answerDefine.AnswerCode" />
-                                                        }
-                                                    }
-                                                    else if (questDefine.AnswerType == "F")
-                                                    {
-                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
-                                                        {
-                                                            @Html.TextBox($"answer-{questDefine.QuestionId}-code",
-                                                                answerDetail.AnswerCode, new { });
-                                                        }
-                                                        else
-                                                        {
-                                                            @Html.TextBox($"answer-{questDefine.QuestionId}-code",
-                                                                null, new { });
-                                                        }
-                                                    }
-
+                                    <div class="col">
+                                        <div class="row">
+                                            <div class="col question-subject-head">
+                                                <div class="question-subject-head-no">
+                                                    <span>@questDefineCount.</span>
                                                 </div>
-
-                                                <div class="question-answer-descript">
+                                                <div class="question-subject-head-descript">
                                                     <span>
-                                                        @Html.DisplayFor(x => answerDefine.AnswerContent)
+                                                        @Html.DisplayFor(x => questDefine.QuestionContent)
                                                     </span>
                                                 </div>
+                                            </div>
+                                        </div>
 
-                                                <div class="question-answer-other">
-                                                    @if (questDefine.AnswerType != "F" &&
-                                                        answerDefine.HaveOtherAnswer == "Y")
+                                        <div class="row question-subject-body">
+                                            <div class="col">
+                                                @{
+                                                    var answerDefineCount = 0;
+                                                    foreach (var answerDefine in questDefine.AnswerDefineEntities)
                                                     {
-                                                        if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
+                                                        answerDefineCount++;
+                                                        AnswerDetailEntity answerDetail = null;
+                                                        if (questDefine.AnswerType == "F")
                                                         {
-                                                            @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
-                                                                answerDetail.OtherAnswer, new { });
+                                                            var tempAnswer = (answerDetailList != null) ?
+                                                                    answerDetailList.Where(x => !String.IsNullOrEmpty(x.AnswerCode)) : null;
+
+                                                            if (tempAnswer != null &&
+                                                                tempAnswer.Count() == 1)
+                                                            {
+                                                                answerDetail = tempAnswer.First();
+                                                            }
                                                         }
                                                         else
                                                         {
-                                                            @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
-                                                                null, new { });
+                                                            var tempAnswer = (answerDetailList != null &&
+                                                                    answerDetailList.Any(x => x.AnswerCode == answerDefine.AnswerCode)) ?
+                                                                    answerDetailList.FirstOrDefault(x => x.AnswerCode == answerDefine.AnswerCode) :
+                                                                    null;
+
+                                                            if (tempAnswer != null)
+                                                            {
+                                                                answerDetail = tempAnswer;
+                                                            }
                                                         }
+
+                                                        <!--forloop-->
+                                                        <div class="col-md-5 question-answer"
+                                                             id="answer-entity-@questDefine.QuestionId-@answerDefineCount"
+                                                             data-answer-Code="@answerDefine.AnswerCode"
+                                                             data-have-Other-Answer="@answerDefine.HaveOtherAnswer"
+                                                             data-need-Other-Answer="@answerDefine.NeedOtherAnswer"
+                                                             data-score="@answerDefine.Score">
+
+                                                            <div class="question-answer-code">
+
+                                                                @if (questDefine.AnswerType == "S")
+                                                                {
+                                                                    if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                                                                    {
+                                                                        @Html.RadioButton($"answer-{questDefine.QuestionId}-code",
+                                                                            answerDetail.AnswerCode, true, new { });
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        @Html.RadioButton($"answer-{questDefine.QuestionId}-code",
+                                                                            answerDefine.AnswerCode,false, new { });
+                                                                    }
+                                                                }
+                                                                else if (questDefine.AnswerType == "M")
+                                                                {
+                                                                    if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                                                                    {
+                                                                        <input type="checkbox"
+                                                                               id="answer-@questDefine.QuestionId-code"
+                                                                               name="answer-@questDefine.QuestionId-code"
+                                                                               value="@answerDefine.AnswerCode"
+                                                                               checked />
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <input type="checkbox"
+                                                                               id="answer-@questDefine.QuestionId-code"
+                                                                               name="answer-@questDefine.QuestionId-code"
+                                                                               value="@answerDefine.AnswerCode" />
+                                                                    }
+                                                                }
+                                                                else if (questDefine.AnswerType == "F")
+                                                                {
+                                                                    if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
+                                                                    {
+                                                                        @Html.TextBox($"answer-{questDefine.QuestionId}-code",
+                                                                            answerDetail.AnswerCode, new { });
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        @Html.TextBox($"answer-{questDefine.QuestionId}-code",
+                                                                            null, new { });
+                                                                    }
+                                                                }
+
+                                                            </div>
+
+                                                            <div class="question-answer-descript">
+                                                                <span>
+                                                                    @Html.DisplayFor(x => answerDefine.AnswerContent)
+                                                                </span>
+                                                            </div>
+
+                                                            <div class="question-answer-other">
+                                                                @if (questDefine.AnswerType != "F" &&
+                                                                    answerDefine.HaveOtherAnswer == "Y")
+                                                                {
+                                                                    if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
+                                                                    {
+                                                                        @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
+                                                                            answerDetail.OtherAnswer, new { });
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
+                                                                            null, new { });
+                                                                    }
+                                                                }
+                                                            </div>
+                                                        </div>
                                                     }
-                                                </div>
+                                                }
 
                                             </div>
-                                        }
-                                    }
+                                        </div>
 
-                                </div>
+                                        <div class="row question-subject-footer"
+                                             id="footer-@questDefine.QuestionId">
 
-                                <div class="col-md-12 question-subject-footer"
-                                     id="footer-@questDefine.QuestionId">
-
-                                    <div class="col-md-12 question-subject-footer-tip"
-                                         id="tip-@questDefine.QuestionId">
-                                        <span>
-                                            @if (questValidateFailInfo != null &&
-                                                questValidateFailInfo.ContainsKey(questDefine.QuestionId))
-                                            {
-                                                @questValidateFailInfo[questDefine.QuestionId];
-                                            }
-                                        </span>
+                                            <div class="col question-subject-footer-tip"
+                                                 id="tip-@questDefine.QuestionId">
+                                                <span>
+                                                    @if (questValidateFailInfo != null &&
+                                                        questValidateFailInfo.ContainsKey(questDefine.QuestionId))
+                                                    {
+                                                        @questValidateFailInfo[questDefine.QuestionId];
+                                                    }
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
-
                                 </div>
-
-                            </div>
+                            }
                         }
-                    }
 
-                </div>
-
-                <div class="col-md-12 question-footer">
-
-                    <div class="col-md-12 question-footer-descript">
-                        <span>
-                            @(new HtmlString(questEntity.FooterDescription))
-                        </span>
-                    </div>
-
-                    <div class="col-md-10 col-md-offset-5 question-footer-submit">
-                        <input id="done" type="button" value="確定" />
                     </div>
 
                 </div>
 
+                <div class="row question-footer">
+                    <div class="col">
+                        <div class="row">
+                            <div class="col question-footer-descript">
+                                <span>
+                                    @(new HtmlString(questEntity.FooterDescription))
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col text-center question-footer-submit">
+                                <input id="done" type="button" value="確定" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         }
 

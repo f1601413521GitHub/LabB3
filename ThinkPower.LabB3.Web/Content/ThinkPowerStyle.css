@@ -32,12 +32,18 @@ input[type=button], input[type=submit] {
     color: #010180;
 }
 
+    .question-head-title h3 {
+        font-weight: bold;
+        color: #010180;
+    }
+
 .question-head-img {
-    height: 80px;
-    z-index: 1;
+    height: 120px;
+    /*z-index: 1;*/
 }
 
 .question-head-descript {
+    padding: 10px;
 }
 
 /*body*/
@@ -48,7 +54,7 @@ input[type=button], input[type=submit] {
 }
 
 .question-subject-head {
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .question-subject-head-no {
@@ -60,11 +66,11 @@ input[type=button], input[type=submit] {
 }
 
 .question-subject-body {
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .question-subject-footer {
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .question-subject-footer-tip > span {
@@ -72,6 +78,7 @@ input[type=button], input[type=submit] {
 }
 
 .question-answer {
+    display: inline-block;
 }
 
 .question-answer-code {
@@ -86,11 +93,15 @@ input[type=button], input[type=submit] {
 .question-footer {
 }
 
+.question-footer-descript{
+    margin:15px;
+}
+
 .question-footer-submit {
 }
 
     .question-footer-submit > input {
-        margin-bottom: 9px;
+        margin-bottom: 10px;
     }
 
 
