@@ -66,7 +66,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult EvaluationRank(FormCollection answer)
         {
             HttpStatusCode? statusCode = null;
-            Domain.DTO.RiskEvaResultDTO reuslt = null;
+            Domain.DTO.RiskEvaResultDTO evaluateResult = null;
 
             try
             {
@@ -76,7 +76,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 }
 
 
-                List<AnswerDetailEntity> answerDetailList = GetAnswerDetailList(answer);
+                List<AnswerDetailEntity> answerDetailList = ConvertAnswerDetailList(answer);
 
 
                 RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
@@ -88,16 +88,29 @@ namespace ThinkPower.LabB3.Web.Controllers
                     },
                 };
 
-                reuslt = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                evaluateResult = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                //TempData["FormCollection3"] = JsonConvert.SerializeObject(evaluateResult);
 
-                if (reuslt.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
+                if (evaluateResult == null)
                 {
-                    return View("EvaQuest", new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaire = reuslt.RiskEvaQuestionnaire,
-                        QuestionnaireResultEntity = reuslt.QuestionnaireResultEntity,
-                    });
+                    throw new InvalidOperationException("evaluateResult not found");
                 }
+
+
+
+                if (evaluateResult.QuestionnaireResultEntity != null)
+                {
+                    //TODO 0927 取出全部的投資風險等級 >> RiskService.RiskRank
+                    if (evaluateResult.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
+                    {
+                        return View("EvaQuest", new EvaQuestViewModel()
+                        {
+                            RiskEvaQuestionnaire = evaluateResult.RiskEvaQuestionnaire,
+                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
+                        });
+                    }
+                }
+
             }
             catch (Exception e)
             {
@@ -111,7 +124,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
                     "造成不便敬請見諒。");
             }
-            else if (true)
+            else if (!evaluateResult.RiskEvaQuestionnaire.CanUseRiskEvaluation)
             {
                 ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
@@ -124,7 +137,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// </summary>
         /// <param name="answer">問卷填答字典</param>
         /// <returns>問卷答案明細集合</returns>
-        private List<AnswerDetailEntity> GetAnswerDetailList(FormCollection answer)
+        private List<AnswerDetailEntity> ConvertAnswerDetailList(FormCollection answer)
         {
             //TODO TEST FormCollection
             Dictionary<string, string> answerInfo = new Dictionary<string, string>();
@@ -132,7 +145,7 @@ namespace ThinkPower.LabB3.Web.Controllers
             {
                 answerInfo.Add(key, answer[key]);
             }
-            TempData["FormCollection"] = JsonConvert.SerializeObject(answerInfo);
+            //TempData["FormCollection"] = JsonConvert.SerializeObject(answerInfo);
 
 
             string questionnaireUid = answer["questEntity.Uid"];
@@ -201,7 +214,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     }
                 }
             }
-            TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailEntities);
+            //TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailEntities);
 
             return answerDetailEntities;
         }

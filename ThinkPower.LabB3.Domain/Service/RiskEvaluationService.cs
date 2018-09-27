@@ -66,7 +66,26 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new ArgumentNullException("answer");
                 }
 
-                //TODO 0927 若作業週期期間內己有生效的風險評估紀錄，則不可做投資風險評估。
+                riskEvaQuestEntity = CheckLatestRiskEvaluation(answer.QuestionnaireAnswerEntity.QuestUid);
+
+                if (riskEvaQuestEntity == null)
+                {
+                    throw new InvalidOperationException("riskEvaQuestEntity not found");
+                }
+
+                if (!riskEvaQuestEntity.CanUseRiskEvaluation)
+                {
+                    result = new RiskEvaResultDTO()
+                    {
+                        QuestionnaireResultEntity = questResultEntity,
+                        RiskEvaQuestionnaire = riskEvaQuestEntity,
+                    };
+
+                    return result;
+                }
+
+
+
 
                 questResultEntity = QuestService.Calculate(answer.QuestionnaireAnswerEntity);
 
@@ -135,6 +154,61 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 檢查是否己有生效的風險評估紀錄
+        /// </summary>
+        /// <param name="questUid">問卷識別碼</param>
+        /// <returns>投資風險評估問卷</returns>
+        private RiskEvaQuestionnaireEntity CheckLatestRiskEvaluation(string questUid)
+        {
+            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
+
+            QuestionnaireEntity questEntity = QuestService.GetQuestionnaire(questUid);
+
+            if (questEntity == null)
+            {
+                throw new InvalidOperationException("questEntity not found");
+            }
+
+            QuestionnaireAnswerDO questAnswer = new QuestionnaireAnswerDAO()
+                .GetQuestionnaireAnswer(questEntity.Uid);
+
+            if (questAnswer == null)
+            {
+                throw new InvalidOperationException(
+                    $"questAnswer not found,activeQuestUid={questEntity.Uid}");
+            }
+
+            RiskEvaluationDO riskEvaluation =
+                new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
+
+            bool riskEvaluationInCuttimeRange = false;
+
+            if (riskEvaluation != null)
+            {
+                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                if (cuttimeRange == null)
+                {
+                    throw new InvalidOperationException("cuttimeRange not found");
+                }
+
+                if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                    (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
+                {
+                    riskEvaluationInCuttimeRange = true;
+                }
+            }
+
+            riskEvaQuestEntity = new RiskEvaQuestionnaireEntity()
+            {
+                QuestionnaireEntity = questEntity,
+                CanUseRiskEvaluation = !riskEvaluationInCuttimeRange,
+            };
+
+            return riskEvaQuestEntity;
         }
 
         /// <summary>
