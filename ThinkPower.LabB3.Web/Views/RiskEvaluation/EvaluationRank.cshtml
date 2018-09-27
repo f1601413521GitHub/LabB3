@@ -1,24 +1,68 @@
-﻿
+﻿@model ThinkPower.LabB3.Web.ViewModels.EvaluationRankViewModel
+
+
 @{
     ViewBag.Title = "EvaluationRank";
-}
 
-@if (TempData["FormCollection"] != null)
-{
-    @TempData["FormCollection"]
-}
+    var riskRankEntryList = ((Model != null) && (Model.RiskRankEntryList != null) &&
+        (Model.RiskRankEntryList.Count() > 0)) ? Model.RiskRankEntryList : null;
 
-<hr />
-@if (TempData["FormCollection2"] != null)
-{
-    @TempData["FormCollection2"]
-}
-
-<hr />
-@if (TempData["FormCollection3"] != null)
-{
-    @TempData["FormCollection3"]
+    var riskEvaResult = ((Model != null) && (Model.RiskEvaluationResult != null)) ?
+        Model.RiskEvaluationResult : null;
 }
 
 
 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+
+@if (Model != null)
+{
+    var riskRankItems = (riskRankEntryList == null) ? null : riskRankEntryList.Select(x =>
+         new
+         {
+             title = x.Split('|')[0],
+             attribute = x.Split('|')[1],
+             level = x.Split('|')[2],
+         });
+
+    <h1 class="text-center">投資風險承受度評估表(僅供參考)</h1>
+
+    if (riskEvaResult != null)
+    {
+        <h3>總分：@riskEvaResult.RiskScore 分</h3>
+    }
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <td></td>
+                @foreach (var item in riskRankItems)
+                {
+                    <td>@item.title</td>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>投資屬性</td>
+                @foreach (var item in riskRankItems)
+                {
+                    <td>@item.attribute</td>
+                }
+            </tr>
+            <tr>
+                <td>可選擇投資標的風險收益等級</td>
+                @foreach (var item in riskRankItems)
+                {
+                    <td>@item.level</td>
+                }
+            </tr>
+            <tr>
+                <td colspan="@(riskRankItems.Count()+1)">
+                    ◎可選擇之投資標的與風險收益等級請參見商品說明書。
+                    ◎若投資人拒絕提供前述資訊或合計總分與所選擇之投資標的風險收益等級不一致
+                    者，本公司將不予變更。
+                </td>
+            </tr>
+        </tbody>
+    </table>
+}

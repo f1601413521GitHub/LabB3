@@ -67,6 +67,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         {
             HttpStatusCode? statusCode = null;
             Domain.DTO.RiskEvaResultDTO evaluateResult = null;
+            EvaluationRankViewModel evaRankViewModel = null;
 
             try
             {
@@ -100,7 +101,6 @@ namespace ThinkPower.LabB3.Web.Controllers
 
                 if (evaluateResult.QuestionnaireResultEntity != null)
                 {
-                    //TODO 0927 取出全部的投資風險等級 >> RiskService.RiskRank
                     if (evaluateResult.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
                     {
                         return View("EvaQuest", new EvaQuestViewModel()
@@ -109,8 +109,15 @@ namespace ThinkPower.LabB3.Web.Controllers
                             QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
                         });
                     }
+                    else if (evaluateResult.RiskEvaluationEntity != null)
+                    {
+                        evaRankViewModel = new EvaluationRankViewModel()
+                        {
+                            RiskEvaluationResult = evaluateResult.RiskEvaluationEntity,
+                            RiskRankEntryList = RiskService.RiskRank(evaluateResult.RiskEvaluationEntity.RiskAttribute),
+                        };
+                    }
                 }
-
             }
             catch (Exception e)
             {
@@ -129,7 +136,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
-            return View();
+            return View(evaRankViewModel);
         }
 
         /// <summary>
