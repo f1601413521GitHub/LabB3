@@ -12,6 +12,7 @@ using System.Runtime.ExceptionServices;
 using System.Configuration;
 using Newtonsoft.Json;
 using System.Transactions;
+using ThinkPower.LabB3.Domain.Entity;
 
 namespace ThinkPower.LabB3.Domain.Service
 {
@@ -97,11 +98,10 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     if (questEntity.NeedScore == "Y")
                     {
-                        //TODO 0927 Tuple
-                        Tuple<int, List<AnswerDetailEntity>> calculateResult =
+                        CalculateScoreEntity calculateResult =
                             CalculateScore(answer, questEntity);
 
-                        var anonymousList = calculateResult.Item2
+                        var anonymousList = calculateResult.FullAnswerDetailList
                             .Select(x => new { x.QuestionId, x.AnswerCode });
 
 
@@ -127,7 +127,7 @@ namespace ThinkPower.LabB3.Domain.Service
                                     QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
                                     TesteeId = userId,
                                     QuestScore = questEntity.QuestScore,
-                                    ActualScore = calculateResult.Item1,
+                                    ActualScore = calculateResult.ActualScore,
                                     TesteeSource = "LabB3",
                                     CreateUserId = userId,
                                     CreateTime = timeNow,
@@ -144,7 +144,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                                 QuestionnaireAnswerDetailDO questAnswerDetailDO = null;
 
-                                foreach (AnswerDetailEntity answerDetail in calculateResult.Item2)
+                                foreach (AnswerDetailEntity answerDetail in calculateResult.FullAnswerDetailList)
                                 {
                                     timeNow = DateTime.Now;
                                     userId = timeNow.ToString("yyyymm");
@@ -222,12 +222,12 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 計算問卷得分，回傳問卷得分與問卷填答完整資料(包含問卷題目識別碼與答題分數)
+        /// 計算問卷得分，回傳問卷得分類別
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
         /// <param name="questEntity">問卷定義資料</param>
-        /// <returns>問卷得分與問卷填答完整資料</returns>
-        private Tuple<int, List<AnswerDetailEntity>> CalculateScore(QuestionnaireAnswerEntity answer,
+        /// <returns>問卷得分類別</returns>
+        private CalculateScoreEntity CalculateScore(QuestionnaireAnswerEntity answer,
             QuestionnaireEntity questEntity)
         {
             List<AnswerDetailEntity> answerFullDetailList = new List<AnswerDetailEntity>();
@@ -378,7 +378,11 @@ namespace ThinkPower.LabB3.Domain.Service
                 questionScoreResult = (int)questEntity.QuestScore;
             }
 
-            return Tuple.Create(questionScoreResult, answerFullDetailList);
+            return new CalculateScoreEntity()
+            {
+                ActualScore = questionScoreResult,
+                FullAnswerDetailList = answerFullDetailList,
+            };
         }
 
         /// <summary>
