@@ -123,5 +123,64 @@ WHERE RiskEvaId = 'FNDINV'
                 ModifyTime = riskRank.Field<DateTime?>("ModifyTime"),
             };
         }
+
+        /// <summary>
+        /// 取得所有投資風險等級
+        /// </summary>
+        /// <param name="riskEvaId">風險評估項目代號</param>
+        /// <returns>投資風險等級資料物件的集合</returns>
+        public List<RiskRankDO> ReadAll(string riskEvaId)
+        {
+            List<RiskRankDO> riskRankDOList = new List<RiskRankDO>();
+
+            if (String.IsNullOrEmpty(riskEvaId))
+            {
+                throw new ArgumentNullException("riskEvaId");
+            }
+
+            try
+            {
+                string query = @"
+SELECT 
+    [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
+    [ModifyUserId], [ModifyTime] 
+FROM [RiskRank] 
+WHERE RiskEvaId = @RiskEvaId;";
+
+
+                using (SqlConnection connection = DbConnection)
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.Add(new SqlParameter("@RiskEvaId", SqlDbType.VarChar) { Value = riskEvaId });
+
+
+                    connection.Open();
+
+                    DataTable dt = new DataTable();
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    adapter.Fill(dt);
+
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        riskRankDOList.Add(ConvertRiskRankDO(dr));
+                    }
+
+                    adapter = null;
+                    dt = null;
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return riskRankDOList;
+        }
     }
 }

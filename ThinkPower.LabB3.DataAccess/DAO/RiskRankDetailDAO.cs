@@ -122,5 +122,56 @@ WHERE RiskRankUid = @RiskRankUid;";
                 ModifyTime = riskRankDetail.Field<DateTime?>("ModifyTime"),
             };
         }
+
+        /// <summary>
+        /// 取得所有投資風險等級明細
+        /// </summary>
+        /// <returns>投資風險等級明細資料物件的集合</returns>
+        public List<RiskRankDetailDO> ReadAll()
+        {
+            List<RiskRankDetailDO> riskRankDetailDOList = new List<RiskRankDetailDO>();
+
+            try
+            {
+                string query = @"
+SELECT 
+    [Uid], [RiskRankUid], [ProfitRiskRank], [IsEffective], [CreateUserId], [CreateTime], 
+    [ModifyUserId], [ModifyTime] 
+FROM [RiskRankDetail];";
+
+
+                using (SqlConnection connection = DbConnection)
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
+                    connection.Open();
+
+                    DataTable dt = new DataTable();
+                    SqlDataAdapter adapter = new SqlDataAdapter(command);
+                    adapter.Fill(dt);
+
+
+                    riskRankDetailDOList = new List<RiskRankDetailDO>();
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        riskRankDetailDOList.Add(ConvertRiskRankDetailDO(dr));
+                    }
+
+                    adapter = null;
+                    dt = null;
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return riskRankDetailDOList;
+        }
     }
 }
