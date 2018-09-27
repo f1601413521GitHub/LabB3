@@ -58,6 +58,7 @@ namespace ThinkPower.LabB3.Domain.Service
             RiskEvaResultDTO result = null;
             QuestionnaireResultEntity questResultEntity = null;
             RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
+            RiskEvaluationEntity riskEvaluationEntity = null;
 
             try
             {
@@ -79,6 +80,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     {
                         QuestionnaireResultEntity = questResultEntity,
                         RiskEvaQuestionnaire = riskEvaQuestEntity,
+                        RiskEvaluationEntity = riskEvaluationEntity,
                     };
 
                     return result;
@@ -109,7 +111,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
 
                 DateTime timeNow = DateTime.Now;
-                RiskEvaluationEntity riskEvaluationEntity = new RiskEvaluationEntity()
+                riskEvaluationEntity = new RiskEvaluationEntity()
                 {
                     Uid = Guid.NewGuid(),
                     RiskEvaId = "FNDINV",
@@ -146,6 +148,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     QuestionnaireResultEntity = questResultEntity,
                     RiskEvaQuestionnaire = riskEvaQuestEntity,
+                    RiskEvaluationEntity = riskEvaluationEntity,
                 };
             }
             catch (Exception e)
@@ -316,7 +319,52 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public IEnumerable<string> RiskRank(string riskRankKind)
         {
-            throw new NotImplementedException();
+            List<string> result = new List<string>();
+
+            List<RiskRankDO> riskRankList = new RiskRankDAO().ReadAll("FNDINV");
+            List<RiskRankDetailDO> riskRankDetailList = new RiskRankDetailDAO().ReadAll();
+
+            string riskState = "";
+            string riskTile = "";
+            string riskAttribute = "";
+            string riskLevel = "";
+
+            foreach (RiskRankDO riskRank in riskRankList.OrderBy(x => x.MinScore))
+            {
+                IEnumerable<RiskRankDetailDO> rankDetailList = riskRankDetailList
+                    .Where(x => x.RiskRankUid == riskRank.Uid).OrderBy(x => x.ProfitRiskRank);
+
+
+                riskState = (riskRank.RiskRankKind == riskRankKind) ? "■" : "□";
+                riskTile = "";
+                riskAttribute = "";
+                riskLevel = String.Join("、", rankDetailList.Select(x => x.ProfitRiskRank));
+
+                switch (riskRank.RiskRankKind)
+                {
+                    case "L":
+                        riskTile = $"{riskState}{riskRank.MaxScore}分以下";
+                        riskAttribute = "低(保守)";
+                        break;
+
+                    case "M":
+                        riskTile = $"{riskState}{riskRank.MinScore}~{riskRank.MaxScore}分以下";
+                        riskAttribute = "中(穩健)";
+                        break;
+
+                    case "H":
+                        riskTile = $"{riskState}{riskRank.MaxScore??riskRank.MinScore}分(含)以上";
+                        riskAttribute = "高(成長)";
+                        break;
+
+                    default:
+                        break;
+                }
+
+                result.Add(String.Join("|", riskTile, riskAttribute, riskLevel));
+            }
+
+            return result;
         }
 
         /// <summary>
