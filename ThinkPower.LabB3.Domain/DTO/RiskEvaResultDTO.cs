@@ -18,5 +18,9 @@ namespace ThinkPower.LabB3.Domain.DTO
         /// </summary>
         public RiskEvaQuestionnaireEntity RiskEvaQuestionnaire { get; set; }
 
+        /// <summary>
+        /// 投資風險評估結果
+        /// </summary>
+        public RiskEvaluationEntity RiskEvaluationEntity { get; set; }
     }
 }
