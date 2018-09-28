@@ -95,44 +95,52 @@ namespace ThinkPower.LabB3.Domain.Service
                 {
                     throw new InvalidOperationException("questResultEntity not found");
                 }
-
-                RiskRankDO riskRankDO = new RiskRankDAO().GetRiskRank(questResultEntity.ActualScore);
-
-                if (riskRankDO == null)
+                else if (questResultEntity.QuestionnaireEntity == null)
                 {
-                    throw new InvalidOperationException("riskRankDO not found");
+                    throw new InvalidOperationException("questResultEntity.QuestionnaireEntity not found");
                 }
 
-                List<RiskRankDetailDO> riskRankDetailDOList = new RiskRankDetailDAO().GetRiskRankDetail(riskRankDO.Uid);
-
-                if (riskRankDetailDOList == null || riskRankDetailDOList.Count == 0)
+                if (questResultEntity.QuestionnaireEntity.NeedScore == "Y")
                 {
-                    throw new InvalidOperationException("riskRankDetailDOList not found");
+
+                    RiskRankDO riskRankDO = new RiskRankDAO().GetRiskRank(questResultEntity.ActualScore);
+
+                    if (riskRankDO == null)
+                    {
+                        throw new InvalidOperationException("riskRankDO not found");
+                    }
+
+                    List<RiskRankDetailDO> riskRankDetailDOList = new RiskRankDetailDAO().GetRiskRankDetail(riskRankDO.Uid);
+
+                    if (riskRankDetailDOList == null || riskRankDetailDOList.Count == 0)
+                    {
+                        throw new InvalidOperationException("riskRankDetailDOList not found");
+                    }
+
+                    DateTime timeNow = DateTime.Now;
+                    riskEvaluationEntity = new RiskEvaluationEntity()
+                    {
+                        Uid = Guid.NewGuid(),
+                        RiskEvaId = "FNDINV",
+                        QuestAnswerId = questResultEntity.QuestAnswerId,
+                        CliId = questResultEntity.TesteeId,
+                        RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
+                        RiskScore = questResultEntity.ActualScore,
+                        RiskAttribute = riskRankDO.RiskRankKind,
+                        EvaluationDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
+                        BusinessDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
+                        IsUsed = "N",
+                        CreateUserId = questResultEntity.TesteeId,
+                        CreateTime = timeNow,
+                        ModifyUserId = null,
+                        ModifyTime = null,
+                    };
+
+
+                    object cache = CacheProvider.GetCache(
+                        $"RiskEvaluation-{questResultEntity.QuestAnswerId}", riskEvaluationEntity, true);
+
                 }
-
-                DateTime timeNow = DateTime.Now;
-                riskEvaluationEntity = new RiskEvaluationEntity()
-                {
-                    Uid = Guid.NewGuid(),
-                    RiskEvaId = "FNDINV",
-                    QuestAnswerId = questResultEntity.QuestAnswerId,
-                    CliId = questResultEntity.TesteeId,
-                    RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
-                    RiskScore = questResultEntity.ActualScore,
-                    RiskAttribute = riskRankDO.RiskRankKind,
-                    EvaluationDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
-                    BusinessDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
-                    IsUsed = "N",
-                    CreateUserId = questResultEntity.TesteeId,
-                    CreateTime = timeNow,
-                    ModifyUserId = null,
-                    ModifyTime = null,
-                };
-
-
-                object cache = CacheProvider.GetCache(
-                    $"RiskEvaluation-{questResultEntity.QuestAnswerId}", riskEvaluationEntity, true);
-
 
                 if (questResultEntity.ValidateFailInfo.Count > 0)
                 {

@@ -94,6 +94,8 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
 
                 Dictionary<string, string> riskResult = new Dictionary<string, string>();
+                string questionnaireMessage = "";
+
                 if (validates.Count == 0)
                 {
                     if (questEntity.NeedScore == "Y")
@@ -176,7 +178,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
                     else
                     {
-                        //TODO 0925 您的問卷己填答完畢，謝謝您的參與
+                        questionnaireMessage = "您的問卷己填答完畢，謝謝您的參與";
                     }
                 }
 
@@ -200,6 +202,9 @@ namespace ThinkPower.LabB3.Domain.Service
                         ValidateFailQuestId = questEntity.QuestId,
                         AnswerDetailEntities = answer.AnswerDetailEntities,
                         RiskResult = riskResult,
+
+                        QuestionnaireMessage = questionnaireMessage,
+                        QuestionnaireEntity = questEntity,
                     };
                 }
                 else
@@ -210,6 +215,9 @@ namespace ThinkPower.LabB3.Domain.Service
                         ValidateFailQuestId = questEntity.QuestId,
                         AnswerDetailEntities = answer.AnswerDetailEntities,
                         RiskResult = riskResult,
+
+                        QuestionnaireMessage = questionnaireMessage,
+                        QuestionnaireEntity = questEntity,
                     };
                 }
             }

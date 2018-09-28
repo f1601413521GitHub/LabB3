@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
 
 namespace ThinkPower.LabB3.Web.ViewModels
@@ -17,5 +18,10 @@ namespace ThinkPower.LabB3.Web.ViewModels
         /// 可投資的風險等級項目
         /// </summary>
         public IEnumerable<string> RiskRankEntryList { get; set; }
+
+        /// <summary>
+        /// 問卷填答評分結果
+        /// </summary>
+        public QuestionnaireResultEntity QuestionnaireResultEntity { get; set; }
     }
 }

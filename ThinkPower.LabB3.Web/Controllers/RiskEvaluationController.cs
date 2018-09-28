@@ -115,8 +115,20 @@ namespace ThinkPower.LabB3.Web.Controllers
                         {
                             RiskEvaluationResult = evaluateResult.RiskEvaluationEntity,
                             RiskRankEntryList = RiskService.RiskRank(evaluateResult.RiskEvaluationEntity.RiskAttribute),
+                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
                         };
                     }
+                    else
+                    {
+                        evaRankViewModel = new EvaluationRankViewModel()
+                        {
+                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
+                        };
+                    }
+                }
+                else
+                {
+                    throw new InvalidOperationException("evaluateResult.QuestionnaireResultEntity not found");
                 }
             }
             catch (Exception e)

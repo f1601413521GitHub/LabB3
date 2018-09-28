@@ -60,5 +60,16 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// 風險問卷填寫結果
         /// </summary>
         public Dictionary<string, string> RiskResult { get; set; }
+
+
+        /// <summary>
+        /// 問卷填答處理訊息
+        /// </summary>
+        public string QuestionnaireMessage { get; set; }
+
+        /// <summary>
+        /// 問卷類別
+        /// </summary>
+        public QuestionnaireEntity QuestionnaireEntity { get; set; }
     }
 }
