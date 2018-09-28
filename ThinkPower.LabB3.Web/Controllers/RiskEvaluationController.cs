@@ -76,21 +76,16 @@ namespace ThinkPower.LabB3.Web.Controllers
                     throw new ArgumentNullException("answer");
                 }
 
-
-                List<AnswerDetailEntity> answerDetailList = ConvertAnswerDetailList(answer);
-
-
                 RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
                 {
                     QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
                     {
                         QuestUid = answer["questEntity.Uid"],
-                        AnswerDetailEntities = answerDetailList,
+                        AnswerDetailEntities = ConvertAnswerDetailList(answer),
                     },
                 };
 
                 evaluateResult = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
-                //TempData["FormCollection3"] = JsonConvert.SerializeObject(evaluateResult);
 
                 if (evaluateResult == null)
                 {
@@ -158,15 +153,6 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <returns>問卷答案明細集合</returns>
         private List<AnswerDetailEntity> ConvertAnswerDetailList(FormCollection answer)
         {
-            //TODO TEST FormCollection
-            Dictionary<string, string> answerInfo = new Dictionary<string, string>();
-            foreach (string key in answer.AllKeys)
-            {
-                answerInfo.Add(key, answer[key]);
-            }
-            //TempData["FormCollection"] = JsonConvert.SerializeObject(answerInfo);
-
-
             string questionnaireUid = answer["questEntity.Uid"];
             if (questionnaireUid == null)
             {
@@ -233,7 +219,6 @@ namespace ThinkPower.LabB3.Web.Controllers
                     }
                 }
             }
-            //TempData["FormCollection2"] = JsonConvert.SerializeObject(answerDetailEntities);
 
             return answerDetailEntities;
         }

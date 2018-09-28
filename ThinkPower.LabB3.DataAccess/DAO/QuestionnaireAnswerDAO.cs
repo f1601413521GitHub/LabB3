@@ -63,7 +63,8 @@ SELECT TOP 1
     [QuestScore],[ActualScore],[TesteeSource],[CreateUserId],
     [CreateTime],[ModifyUserId],[ModifyTime]
 FROM QuestionnaireAnswer
-WHERE QuestUid =@QuestUid";
+WHERE QuestUid =@QuestUid
+ORDER BY CreateTime DESC;";
 
                 using (SqlConnection connection = DbConnection)
                 {

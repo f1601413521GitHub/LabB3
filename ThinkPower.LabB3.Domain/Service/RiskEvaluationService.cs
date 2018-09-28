@@ -192,8 +192,8 @@ namespace ThinkPower.LabB3.Domain.Service
                     $"questAnswer not found,activeQuestUid={questEntity.Uid}");
             }
 
-            RiskEvaluationDO riskEvaluation =
-                new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
+            RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO()
+                .GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
 
             bool riskEvaluationInCuttimeRange = false;
 
@@ -361,7 +361,7 @@ namespace ThinkPower.LabB3.Domain.Service
                         break;
 
                     case "H":
-                        riskTile = $"{riskState}{riskRank.MaxScore??riskRank.MinScore}分(含)以上";
+                        riskTile = $"{riskState}{riskRank.MaxScore ?? riskRank.MinScore}分(含)以上";
                         riskAttribute = "高(成長)";
                         break;
 

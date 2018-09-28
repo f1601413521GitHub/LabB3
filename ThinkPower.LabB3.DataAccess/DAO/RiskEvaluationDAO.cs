@@ -67,7 +67,7 @@ FROM [RiskEvaluation]
 WHERE [QuestAnswerId] = @QuestAnswerId
 AND [RiskEvaId] = 'FNDINV'
 AND [IsUsed] = 'Y'
-ORDER BY EvaluationDate DESC";
+ORDER BY EvaluationDate DESC;";
 
                 using (SqlConnection connection = DbConnection)
                 {
