@@ -112,6 +112,14 @@
                 @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
             }
         </div>
+
+
+        <div class="text-hide">
+            @using (Html.BeginForm("AcceptRiskRank", "RiskEvaluation", FormMethod.Get, new { id = "submit-evaluation-form" }))
+            {
+                @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
+            }
+        </div>
     }
 }
 

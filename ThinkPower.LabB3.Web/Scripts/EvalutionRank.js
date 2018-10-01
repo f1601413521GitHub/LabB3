@@ -4,7 +4,11 @@
         $('#showMsg').click();
     }
 
-    $('#re-evaluation').on('click', function () {
+    $('#re-evaluation').click(function () {
         $('#re-evaluation-form').submit();
+    });
+
+    $('#submit').click(function () {
+        $('#submit-evaluation-form').submit();
     });
 });

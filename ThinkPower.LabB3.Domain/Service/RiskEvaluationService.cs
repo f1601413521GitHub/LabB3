@@ -210,7 +210,7 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
             RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO()
-                .GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
+                .GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
 
             bool riskEvaluationInCuttimeRange = false;
 
@@ -293,7 +293,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
 
                 RiskEvaluationDO riskEvaluation =
-                    new RiskEvaluationDAO().GetLatestRiskEvaluation(questAnswer.QuestAnswerId);
+                    new RiskEvaluationDAO().GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
 
                 bool riskEvaluationInCuttimeRange = false;
 
@@ -406,7 +406,84 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <param name="riskResultId">風險評估結果識別代號</param>
         public void SaveRiskRank(string riskResultId)
         {
-            throw new NotImplementedException();
+            try
+            {
+                RiskEvaResultDTO riskEvaResult = GetRiskResult(riskResultId);
+
+                if (riskEvaResult == null)
+                {
+                    throw new InvalidOperationException("riskEvaResult not found");
+                }
+
+
+                RiskEvaluationDAO riskEvaluationDAO = new RiskEvaluationDAO();
+
+                RiskEvaluationDO riskEvaluation = riskEvaluationDAO
+                    .GetLatestRiskEvaluation(riskEvaResult.QuestionnaireResultEntity.QuestAnswerId);
+
+
+                if (riskEvaluation == null)
+                {
+                    if (riskEvaResult.RiskEvaluationEntity == null)
+                    {
+                        throw new InvalidOperationException(
+                            "riskEvaResult.RiskEvaluationEntity not found");
+                    }
+
+                    RiskEvaluationDO riskEvaDO = 
+                        ConvertRiskEvaResultDTO(riskEvaResult.RiskEvaluationEntity);
+
+                    riskEvaluationDAO.Insert(riskEvaDO);
+                }
+
+                //bool riskEvaluationInCuttimeRange = false;
+
+                //if (riskEvaluation != null)
+                //{
+                //    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                //    if (cuttimeRange == null)
+                //    {
+                //        throw new InvalidOperationException("cuttimeRange not found");
+                //    }
+
+                //    if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                //        (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
+                //    {
+                //        riskEvaluationInCuttimeRange = true;
+                //    }
+                //}
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+        }
+
+        /// <summary>
+        /// 轉換投資風險評估結果
+        /// </summary>
+        /// <param name="riskEvaluationEntity">投資風險評估結果</param>
+        /// <returns>投資風險評估結果資料</returns>
+        private RiskEvaluationDO ConvertRiskEvaResultDTO(RiskEvaluationEntity riskEvaluationEntity)
+        {
+            return new RiskEvaluationDO()
+            {
+                Uid               =riskEvaluationEntity.Uid           ,
+                RiskEvaId         =riskEvaluationEntity.RiskEvaId     ,
+                QuestAnswerId     =riskEvaluationEntity.QuestAnswerId ,
+                CliId             =riskEvaluationEntity.CliId         ,
+                RiskResult        =riskEvaluationEntity.RiskResult    ,
+                RiskScore         =riskEvaluationEntity.RiskScore     ,
+                RiskAttribute     =riskEvaluationEntity.RiskAttribute ,
+                EvaluationDate    =riskEvaluationEntity.EvaluationDate,
+                BusinessDate      =riskEvaluationEntity.BusinessDate  ,
+                IsUsed            =riskEvaluationEntity.IsUsed        ,
+                CreateUserId      =riskEvaluationEntity.CreateUserId  ,
+                CreateTime        =riskEvaluationEntity.CreateTime    ,
+                ModifyUserId      =riskEvaluationEntity.ModifyUserId  ,
+                ModifyTime        =riskEvaluationEntity.ModifyTime,
+            };
         }
 
 

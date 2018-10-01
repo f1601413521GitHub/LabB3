@@ -1,7 +1,7 @@
 ﻿namespace ThinkPower.LabB3.Web.ActionModels
 {
     /// <summary>
-    /// 投資風險評估問卷填答 來源資料類別
+    /// 投資風險評估問卷填答資料模型類別
     /// </summary>
     public class EvaluationRankActionModel
     {

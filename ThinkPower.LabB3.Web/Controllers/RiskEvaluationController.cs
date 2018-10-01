@@ -53,7 +53,42 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <returns></returns>
         public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
         {
-            //TODO AcceptRiskRank 確認接受投資風險評估結果
+            HttpStatusCode? statusCode = null;
+
+            try
+            {
+                if (actionModel == null)
+                {
+                    statusCode = HttpStatusCode.NotFound;
+                }
+
+                RiskService.SaveRiskRank(actionModel.QuestAnswerId);
+
+                return View("EvaluationRank", new EvaluationRankViewModel
+                {
+                    QuestionnaireResultEntity = new QuestionnaireResultEntity()
+                    {
+                        QuestionnaireMessage = "風險評估結果儲存成功",
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                statusCode = HttpStatusCode.InternalServerError;
+            }
+
+            //TODO
+            if (statusCode != null)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            //TODO
             return View();
         }
 
@@ -246,11 +281,6 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     Domain.DTO.RiskEvaResultDTO riskResult =
                         RiskService.GetRiskResult(actionModel.QuestAnswerId);
-
-                    if (riskResult == null)
-                    {
-                        throw new InvalidOperationException("riskResult not found");
-                    }
 
                     evaQuestVM = new EvaQuestViewModel()
                     {
