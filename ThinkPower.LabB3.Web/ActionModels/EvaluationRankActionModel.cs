@@ -11,5 +11,11 @@
         /// 問卷2:FNDRE002
         /// </summary>
         public string questId { get; set; }
+
+
+        /// <summary> 
+        ///問卷答題編號 
+        /// </summary> 
+        public string QuestAnswerId { get; set; }
     }
 }

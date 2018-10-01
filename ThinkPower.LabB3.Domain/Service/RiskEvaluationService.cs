@@ -33,6 +33,16 @@ namespace ThinkPower.LabB3.Domain.Service
         private QuestionnaireService _questService;
 
         /// <summary>
+        /// 評估投資風險等級結果的暫存鍵值
+        /// </summary>
+        private readonly string _cacheKeyRiskEvaResultDTO = "RiskEvaResultDTO";
+
+        /// <summary>
+        /// 投資風險評估結果的暫存鍵值
+        /// </summary>
+        private readonly string _cacheKeyRiskEvaluation = "RiskEvaluation";
+
+        /// <summary>
         /// 問卷服務
         /// </summary>
         private QuestionnaireService QuestService
@@ -149,8 +159,8 @@ namespace ThinkPower.LabB3.Domain.Service
                         };
 
 
-                        object cache = CacheProvider.GetCache(
-                            $"RiskEvaluation-{questResultEntity.QuestAnswerId}", riskEvaluationEntity, true);
+                        CacheProvider.GetCache($"{_cacheKeyRiskEvaluation}-{questResultEntity.QuestAnswerId}",
+                            riskEvaluationEntity, true);
 
                     }
                 }
@@ -161,6 +171,10 @@ namespace ThinkPower.LabB3.Domain.Service
                     RiskEvaQuestionnaire = riskEvaQuestEntity,
                     RiskEvaluationEntity = riskEvaluationEntity,
                 };
+
+                CacheProvider.GetCache($"{_cacheKeyRiskEvaResultDTO}-{questResultEntity.QuestAnswerId}",
+                    result, true);
+
             }
             catch (Exception e)
             {
@@ -320,7 +334,15 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public RiskEvaResultDTO GetRiskResult(string key)
         {
-            throw new NotImplementedException();
+            object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaResultDTO}-{key}", null, false);
+            RiskEvaResultDTO riskEvaResult = (cache as RiskEvaResultDTO);
+
+            if (riskEvaResult == null)
+            {
+                throw new InvalidOperationException("riskEvaResult not found");
+            }
+
+            return riskEvaResult;
         }
 
         /// <summary>

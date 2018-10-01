@@ -19,13 +19,16 @@ namespace ThinkPower.LabB3.Domain.Resources
 
             if (result == null || overwrite)
             {
-                _cache.Set(key, data, policy ?? new CacheItemPolicy()
+                if (data != null)
                 {
-                    AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(20),
-                });
+                    _cache.Set(key, data, policy ?? new CacheItemPolicy()
+                    {
+                        AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(20),
+                    });
 
-                state = "set";
-                result = data;
+                    state = "set";
+                    result = data;
+                }
             }
 
             return result;

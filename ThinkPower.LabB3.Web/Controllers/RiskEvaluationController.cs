@@ -235,16 +235,30 @@ namespace ThinkPower.LabB3.Web.Controllers
             RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
             EvaQuestViewModel evaQuestVM = null;
 
-            if ((actionModel == null) ||
-                String.IsNullOrEmpty(actionModel.questId))
-            {
-                //throw new ArgumentNullException("actionModel");
-                statusCode = HttpStatusCode.NotFound;
-            }
 
             try
             {
-                if (statusCode == null)
+                if (actionModel == null)
+                {
+                    statusCode = HttpStatusCode.NotFound;
+                }
+                else if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
+                {
+                    Domain.DTO.RiskEvaResultDTO riskResult =
+                        RiskService.GetRiskResult(actionModel.QuestAnswerId);
+
+                    if (riskResult == null)
+                    {
+                        throw new InvalidOperationException("riskResult not found");
+                    }
+
+                    evaQuestVM = new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = riskResult.RiskEvaQuestionnaire,
+                        QuestionnaireResultEntity = riskResult.QuestionnaireResultEntity,
+                    };
+                }
+                else
                 {
                     riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
 
