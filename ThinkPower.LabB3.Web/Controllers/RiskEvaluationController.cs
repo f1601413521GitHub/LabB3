@@ -54,6 +54,8 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
         {
             HttpStatusCode? statusCode = null;
+            RiskEvaluationEntity riskEvaEntity = null;
+            EvaluationRankViewModel evaRankViewModel = null;
 
             try
             {
@@ -63,14 +65,24 @@ namespace ThinkPower.LabB3.Web.Controllers
                 }
 
                 RiskService.SaveRiskRank(actionModel.QuestAnswerId);
+                riskEvaEntity = RiskService.Get(actionModel.QuestAnswerId);
 
-                return View("EvaluationRank", new EvaluationRankViewModel
+                if (riskEvaEntity == null)
                 {
-                    QuestionnaireResultEntity = new QuestionnaireResultEntity()
+                    throw new InvalidOperationException("riskEvaEntity not found");
+                }
+
+                if (riskEvaEntity.IsUsed == "N")
+                {
+                    evaRankViewModel = new EvaluationRankViewModel
                     {
-                        QuestionnaireMessage = "風險評估結果儲存成功",
-                    }
-                });
+                        QuestionnaireResultEntity = new QuestionnaireResultEntity()
+                        {
+                            QuestionnaireMessage = "風險評估結果儲存成功",
+                        }
+                    };
+                }
+
             }
             catch (Exception e)
             {
@@ -78,18 +90,17 @@ namespace ThinkPower.LabB3.Web.Controllers
                 statusCode = HttpStatusCode.InternalServerError;
             }
 
-            //TODO
             if (statusCode != null)
             {
-
+                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
+                    "造成不便敬請見諒。");
             }
-            else
+            else if (riskEvaEntity.IsUsed == "Y")
             {
-
+                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
-            //TODO
-            return View();
+            return View("EvaluationRank", evaRankViewModel);
         }
 
         [HttpPost]

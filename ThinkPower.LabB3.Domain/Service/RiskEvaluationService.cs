@@ -43,6 +43,11 @@ namespace ThinkPower.LabB3.Domain.Service
         private readonly string _cacheKeyRiskEvaluation = "RiskEvaluation";
 
         /// <summary>
+        /// 投資風險評估結果DO物件的暫存鍵值
+        /// </summary>
+        private readonly string _cacheKeyRiskEvaluationDO = "RiskEvaluationDO";
+
+        /// <summary>
         /// 問卷服務
         /// </summary>
         private QuestionnaireService QuestService
@@ -139,7 +144,7 @@ namespace ThinkPower.LabB3.Domain.Service
                             throw new InvalidOperationException("riskRankDetailDOList not found");
                         }
 
-                        DateTime timeNow = DateTime.Now;
+                        DateTime currentTime = DateTime.Now;
                         riskEvaluationEntity = new RiskEvaluationEntity()
                         {
                             Uid = Guid.NewGuid(),
@@ -149,11 +154,11 @@ namespace ThinkPower.LabB3.Domain.Service
                             RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
                             RiskScore = questResultEntity.ActualScore,
                             RiskAttribute = riskRankDO.RiskRankKind,
-                            EvaluationDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
-                            BusinessDate = new DateTime(timeNow.Year, timeNow.Month, timeNow.Day),
+                            EvaluationDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day),
+                            BusinessDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day),
                             IsUsed = "N",
                             CreateUserId = questResultEntity.TesteeId,
-                            CreateTime = timeNow,
+                            CreateTime = currentTime,
                             ModifyUserId = null,
                             ModifyTime = null,
                         };
@@ -255,7 +260,14 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                //TODO
+                object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-{uid}", null, false);
+                RiskEvaluationDO riskEvaDO = cache as RiskEvaluationDO;
+                if (riskEvaDO == null)
+                {
+                    throw new InvalidOperationException("riskEvaDO not found");
+                }
+
+                riskEvaEntity = ConvertRiskEvaluationDO(riskEvaDO);
             }
             catch (Exception e)
             {
@@ -263,6 +275,33 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
             return riskEvaEntity;
+        }
+
+
+        /// <summary>
+        /// 轉換投資風險評估結果資料物件
+        /// </summary>
+        /// <param name="riskEvaDO">投資風險評估結果資料物件</param>
+        /// <returns>投資風險評估結果</returns>
+        private RiskEvaluationEntity ConvertRiskEvaluationDO(RiskEvaluationDO riskEvaDO)
+        {
+            return new RiskEvaluationEntity()
+            {
+                Uid = riskEvaDO.Uid,
+                RiskEvaId = riskEvaDO.RiskEvaId,
+                QuestAnswerId = riskEvaDO.QuestAnswerId,
+                CliId = riskEvaDO.CliId,
+                RiskResult = riskEvaDO.RiskResult,
+                RiskScore = riskEvaDO.RiskScore,
+                RiskAttribute = riskEvaDO.RiskAttribute,
+                EvaluationDate = riskEvaDO.EvaluationDate,
+                BusinessDate = riskEvaDO.BusinessDate,
+                IsUsed = riskEvaDO.IsUsed,
+                CreateUserId = riskEvaDO.CreateUserId,
+                CreateTime = riskEvaDO.CreateTime,
+                ModifyUserId = riskEvaDO.ModifyUserId,
+                ModifyTime = riskEvaDO.ModifyTime,
+            };
         }
 
         /// <summary>
@@ -415,7 +454,6 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("riskEvaResult not found");
                 }
 
-
                 RiskEvaluationDAO riskEvaluationDAO = new RiskEvaluationDAO();
 
                 RiskEvaluationDO riskEvaluation = riskEvaluationDAO
@@ -424,35 +462,49 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 if (riskEvaluation == null)
                 {
-                    if (riskEvaResult.RiskEvaluationEntity == null)
+                    riskEvaluation = GetRiskEvaluationDO(riskEvaResult, "add");
+                    riskEvaluationDAO.Insert(riskEvaluation);
+                }
+                else
+                {
+                    bool riskEvaluationInCuttimeRange = false;
+
+                    if (riskEvaluation != null)
                     {
-                        throw new InvalidOperationException(
-                            "riskEvaResult.RiskEvaluationEntity not found");
+                        IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                        if (cuttimeRange == null)
+                        {
+                            throw new InvalidOperationException("cuttimeRange not found");
+                        }
+
+                        if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                            (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
+                        {
+                            riskEvaluationInCuttimeRange = true;
+                        }
                     }
 
-                    RiskEvaluationDO riskEvaDO = 
-                        ConvertRiskEvaResultDTO(riskEvaResult.RiskEvaluationEntity);
+                    if (riskEvaluationInCuttimeRange)
+                    {
 
-                    riskEvaluationDAO.Insert(riskEvaDO);
+                        if (riskEvaluation.IsUsed == "N")
+                        {
+                            riskEvaluation = GetRiskEvaluationDO(riskEvaResult, "update", riskEvaluation);
+                            riskEvaluationDAO.Update(riskEvaluation);
+                        }
+                        else if (riskEvaluation.IsUsed == "Y")
+                        {
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("riskEvaluation.IsUsed not found");
+                        }
+                    }
                 }
 
-                //bool riskEvaluationInCuttimeRange = false;
-
-                //if (riskEvaluation != null)
-                //{
-                //    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
-
-                //    if (cuttimeRange == null)
-                //    {
-                //        throw new InvalidOperationException("cuttimeRange not found");
-                //    }
-
-                //    if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
-                //        (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
-                //    {
-                //        riskEvaluationInCuttimeRange = true;
-                //    }
-                //}
+                CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-" +
+                            $"{riskEvaResult.QuestionnaireResultEntity.QuestAnswerId}", riskEvaluation, true);
             }
             catch (Exception e)
             {
@@ -461,29 +513,75 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 轉換投資風險評估結果
+        /// 取得投資風險評估結果資料
         /// </summary>
-        /// <param name="riskEvaluationEntity">投資風險評估結果</param>
+        /// <param name="riskEvaResult">投資風險等級評估結果</param>
+        /// <param name="action">操作動作</param>
         /// <returns>投資風險評估結果資料</returns>
-        private RiskEvaluationDO ConvertRiskEvaResultDTO(RiskEvaluationEntity riskEvaluationEntity)
+        private RiskEvaluationDO GetRiskEvaluationDO(RiskEvaResultDTO riskEvaResult, string action,
+            RiskEvaluationDO riskEvaluation = null)
         {
-            return new RiskEvaluationDO()
+            RiskEvaluationDO result = null;
+
+            RiskEvaluationEntity riskEvaEntity = riskEvaResult.RiskEvaluationEntity;
+            if (riskEvaEntity == null)
             {
-                Uid               =riskEvaluationEntity.Uid           ,
-                RiskEvaId         =riskEvaluationEntity.RiskEvaId     ,
-                QuestAnswerId     =riskEvaluationEntity.QuestAnswerId ,
-                CliId             =riskEvaluationEntity.CliId         ,
-                RiskResult        =riskEvaluationEntity.RiskResult    ,
-                RiskScore         =riskEvaluationEntity.RiskScore     ,
-                RiskAttribute     =riskEvaluationEntity.RiskAttribute ,
-                EvaluationDate    =riskEvaluationEntity.EvaluationDate,
-                BusinessDate      =riskEvaluationEntity.BusinessDate  ,
-                IsUsed            =riskEvaluationEntity.IsUsed        ,
-                CreateUserId      =riskEvaluationEntity.CreateUserId  ,
-                CreateTime        =riskEvaluationEntity.CreateTime    ,
-                ModifyUserId      =riskEvaluationEntity.ModifyUserId  ,
-                ModifyTime        =riskEvaluationEntity.ModifyTime,
-            };
+                throw new InvalidOperationException("riskEvaEntity not found");
+            }
+
+
+            DateTime currentTime = DateTime.Now;
+            string userId = riskEvaEntity.CliId;
+            DateTime datetimeFormat =
+                new DateTime(currentTime.Year, currentTime.Month, currentTime.Day);
+
+
+            if (action == "add")
+            {
+                result = new RiskEvaluationDO()
+                {
+                    Uid = Guid.NewGuid(),
+                    RiskEvaId = "FNDINV",
+                    QuestAnswerId = riskEvaEntity.QuestAnswerId,
+                    CliId = userId,
+                    RiskResult = riskEvaEntity.RiskResult,
+                    RiskScore = riskEvaEntity.RiskScore,
+                    RiskAttribute = riskEvaEntity.RiskAttribute,
+                    EvaluationDate = datetimeFormat,
+                    BusinessDate = (currentTime.Hour < 16) ? datetimeFormat : datetimeFormat.AddDays(1),
+                    IsUsed = "N",
+                    CreateUserId = userId,
+                    CreateTime = currentTime,
+                    ModifyUserId = null,
+                    ModifyTime = null,
+                };
+            }
+            else if (action == "update")
+            {
+                result = new RiskEvaluationDO()
+                {
+                    Uid = riskEvaluation.Uid,
+                    RiskEvaId = riskEvaluation.RiskEvaId,
+                    QuestAnswerId = riskEvaEntity.QuestAnswerId,
+                    CliId = riskEvaluation.CliId,
+                    RiskResult = riskEvaEntity.RiskResult,
+                    RiskScore = riskEvaEntity.RiskScore,
+                    RiskAttribute = riskEvaEntity.RiskAttribute,
+                    EvaluationDate = datetimeFormat,
+                    BusinessDate = (currentTime.Hour < 16) ? datetimeFormat : datetimeFormat.AddDays(1),
+                    IsUsed = "N",
+                    CreateUserId = riskEvaluation.CreateUserId,
+                    CreateTime = riskEvaluation.CreateTime,
+                    ModifyUserId = userId,
+                    ModifyTime = datetimeFormat,
+                };
+            }
+            else
+            {
+                throw new InvalidOperationException("action not found");
+            }
+
+            return result;
         }
 
 

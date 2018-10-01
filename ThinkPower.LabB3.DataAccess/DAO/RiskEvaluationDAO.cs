@@ -219,8 +219,7 @@ INSERT INTO RiskEvaluation
 VALUES 
     (@Uid, @RiskEvaId, @QuestAnswerId, @CliId, @RiskResult, @RiskScore, @RiskAttribute,
     @EvaluationDate, @BusinessDate, @IsUsed, @CreateUserId, @CreateTime,
-    @ModifyUserId, @ModifyTime)
-";
+    @ModifyUserId, @ModifyTime);";
 
                 using (SqlConnection connection = DbConnection)
                 {
@@ -237,6 +236,64 @@ VALUES
                     command.Parameters.Add(new SqlParameter("@IsUsed", SqlDbType.VarChar) { Value = riskEvaluation.IsUsed ?? Convert.DBNull });
                     command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = riskEvaluation.CreateUserId ?? Convert.DBNull });
                     command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = riskEvaluation.CreateTime ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = riskEvaluation.ModifyUserId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = riskEvaluation.ModifyTime ?? Convert.DBNull });
+
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+
+                    command = null;
+
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+        }
+
+        /// <summary>
+        /// 更新投資風險評估結果
+        /// </summary>
+        /// <param name="riskEvaluation">投資風險評估結果資料</param>
+        public void Update(RiskEvaluationDO riskEvaluation)
+        {
+            if (riskEvaluation == null)
+            {
+                throw new ArgumentNullException("riskEvaluation");
+            }
+
+            try
+            {
+                string query = @"
+UPDATE [RiskEvaluation]
+    SET [QuestAnswerId] = @QuestAnswerId,
+        [RiskResult] = @RiskResult,
+        [RiskScore] = @RiskScore,
+        [RiskAttribute] = @RiskAttribute,
+        [EvaluationDate] = @EvaluationDate,
+        [BusinessDate] = @BusinessDate,
+        [IsUsed] = @IsUsed,
+        [ModifyUserId] = @ModifyUserId,
+        [ModifyTime] = @ModifyTime
+ WHERE [Uid] = @Uid;";
+
+                using (SqlConnection connection = DbConnection)
+                {
+                    SqlCommand command = new SqlCommand(query, connection);
+                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = riskEvaluation.Uid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar) { Value = riskEvaluation.QuestAnswerId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@RiskResult", SqlDbType.VarChar) { Value = riskEvaluation.RiskResult });
+                    command.Parameters.Add(new SqlParameter("@RiskScore", SqlDbType.Int) { Value = riskEvaluation.RiskScore ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@RiskAttribute", SqlDbType.VarChar) { Value = riskEvaluation.RiskAttribute ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@EvaluationDate", SqlDbType.DateTime) { Value = riskEvaluation.EvaluationDate ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@BusinessDate", SqlDbType.DateTime) { Value = riskEvaluation.BusinessDate ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@IsUsed", SqlDbType.VarChar) { Value = riskEvaluation.IsUsed ?? Convert.DBNull });
                     command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = riskEvaluation.ModifyUserId ?? Convert.DBNull });
                     command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = riskEvaluation.ModifyTime ?? Convert.DBNull });
 
