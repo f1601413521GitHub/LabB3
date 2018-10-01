@@ -370,7 +370,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
                 else if (questDefine.CountScoreType == "4")
                 {
-                    questionScoreList.Add((int)Math.Round(questScoreList.Average()));
+                    questionScoreList.Add((int)Math.Round(questScoreList.Average(), 0, MidpointRounding.AwayFromZero));
                 }
             }
 
