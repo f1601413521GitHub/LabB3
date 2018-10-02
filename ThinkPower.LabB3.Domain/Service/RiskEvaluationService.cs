@@ -311,7 +311,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns>風險評估問卷資料</returns>
         public RiskEvaQuestionnaireEntity GetRiskQuestionnaire(string questId)
         {
-            RiskEvaQuestionnaireEntity riskEvaQuest = null;
+            RiskEvaQuestionnaireEntity result = null;
 
             if (String.IsNullOrEmpty(questId))
             {
@@ -327,8 +327,10 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 if (questAnswer == null)
                 {
-                    throw new InvalidOperationException(
-                        $"questAnswer not found,activeQuestUid={activeQuest.Uid}");
+                    var ex = new InvalidOperationException("questAnswer not found");
+                    ex.Data["ActiveQuestionnaire-Uid"] = activeQuest.Uid;
+
+                    throw ex;
                 }
 
                 RiskEvaluationDO riskEvaluation =
@@ -352,7 +354,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
                 }
 
-                riskEvaQuest = new RiskEvaQuestionnaireEntity()
+                result = new RiskEvaQuestionnaireEntity()
                 {
                     QuestionnaireEntity = activeQuest,
                     CanUseRiskEvaluation = !riskEvaluationInCuttimeRange,
@@ -363,7 +365,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return riskEvaQuest;
+            return result;
         }
 
         /// <summary>
@@ -373,15 +375,12 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public RiskEvaResultDTO GetRiskResult(string key)
         {
-            object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaResultDTO}-{key}", null, false);
-            RiskEvaResultDTO riskEvaResult = (cache as RiskEvaResultDTO);
+            object riskEvaResultCache = CacheProvider.
+                GetCache($"{_cacheKeyRiskEvaResultDTO}-{key}", null, false);
 
-            if (riskEvaResult == null)
-            {
-                throw new InvalidOperationException("riskEvaResult not found");
-            }
+            RiskEvaResultDTO riskEvaResultDto = (riskEvaResultCache as RiskEvaResultDTO);
 
-            return riskEvaResult;
+            return riskEvaResultDto;
         }
 
         /// <summary>

@@ -45,17 +45,17 @@ namespace ThinkPower.LabB3.Web.Controllers
             }
         }
 
-        [HttpGet]
         /// <summary>
-        /// 確認接受投資風險評估結果
+        /// 進行投資風險評估問卷填答
         /// </summary>
-        /// <param name="actionModel">投資風險評估資料</param>
-        /// <returns></returns>
-        public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
+        /// <param name="actionModel">來源資料</param>
+        /// <returns>投資風險評估問卷頁面</returns>
+        [HttpGet]
+        public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
             HttpStatusCode? statusCode = null;
-            RiskEvaluationEntity riskEvaEntity = null;
-            EvaluationRankViewModel evaRankViewModel = null;
+            EvaQuestViewModel viewModel = null;
+
 
             try
             {
@@ -63,26 +63,35 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     statusCode = HttpStatusCode.NotFound;
                 }
-
-                RiskService.SaveRiskRank(actionModel.QuestAnswerId);
-                riskEvaEntity = RiskService.Get(actionModel.QuestAnswerId);
-
-                if (riskEvaEntity == null)
+                else if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
                 {
-                    throw new InvalidOperationException("riskEvaEntity not found");
-                }
+                    Domain.DTO.RiskEvaResultDTO riskEvaResult = RiskService.
+                        GetRiskResult(actionModel.QuestAnswerId);
 
-                if (riskEvaEntity.IsUsed == "N")
-                {
-                    evaRankViewModel = new EvaluationRankViewModel
+                    if (riskEvaResult == null)
                     {
-                        QuestionnaireResultEntity = new QuestionnaireResultEntity()
-                        {
-                            QuestionnaireMessage = "風險評估結果儲存成功",
-                        }
+                        var exception = new InvalidOperationException("riskEvaResult not found");
+                        exception.Data["QuestAnswerId"] = actionModel.QuestAnswerId;
+
+                        throw exception;
+                    }
+
+                    viewModel = new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = riskEvaResult.RiskEvaQuestionnaire,
+                        QuestionnaireResultEntity = riskEvaResult.QuestionnaireResultEntity,
                     };
                 }
+                else
+                {
+                    RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.
+                        GetRiskQuestionnaire(actionModel.questId);
 
+                    viewModel = new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaire = riskEvaQuestEntity,
+                    };
+                }
             }
             catch (Exception e)
             {
@@ -90,25 +99,27 @@ namespace ThinkPower.LabB3.Web.Controllers
                 statusCode = HttpStatusCode.InternalServerError;
             }
 
+
             if (statusCode != null)
             {
-                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
-                    "造成不便敬請見諒。");
+                ModelState.AddModelError("",
+                    "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
             }
-            else if (riskEvaEntity.IsUsed == "Y")
+            else if (!viewModel.RiskEvaQuestionnaire.CanUseRiskEvaluation)
             {
                 ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
 
-            return View("EvaluationRank", evaRankViewModel);
+
+            return View(viewModel);
         }
 
-        [HttpPost]
         /// <summary>
         /// 執行評估投資風險等級
         /// </summary>
         /// <param name="answer">投資風險評估問卷填答資料</param>
         /// <returns>評估投資風險等級頁面</returns>
+        [HttpPost]
         public ActionResult EvaluationRank(FormCollection answer)
         {
             HttpStatusCode? statusCode = null;
@@ -193,6 +204,70 @@ namespace ThinkPower.LabB3.Web.Controllers
         }
 
         /// <summary>
+        /// 確認接受投資風險評估結果
+        /// </summary>
+        /// <param name="actionModel">投資風險評估資料</param>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
+        {
+            HttpStatusCode? statusCode = null;
+            RiskEvaluationEntity riskEvaEntity = null;
+            EvaluationRankViewModel evaRankViewModel = null;
+
+            try
+            {
+                if (actionModel == null)
+                {
+                    statusCode = HttpStatusCode.NotFound;
+                }
+
+                RiskService.SaveRiskRank(actionModel.QuestAnswerId);
+                riskEvaEntity = RiskService.Get(actionModel.QuestAnswerId);
+
+                if (riskEvaEntity == null)
+                {
+                    throw new InvalidOperationException("riskEvaEntity not found");
+                }
+
+                if (riskEvaEntity.IsUsed == "N")
+                {
+                    evaRankViewModel = new EvaluationRankViewModel
+                    {
+                        QuestionnaireResultEntity = new QuestionnaireResultEntity()
+                        {
+                            QuestionnaireMessage = "風險評估結果儲存成功",
+                        }
+                    };
+                }
+
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                statusCode = HttpStatusCode.InternalServerError;
+            }
+
+            if (statusCode != null)
+            {
+                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
+                    "造成不便敬請見諒。");
+            }
+            else if (riskEvaEntity.IsUsed == "Y")
+            {
+                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
+            }
+
+            return View("EvaluationRank", evaRankViewModel);
+        }
+
+
+
+
+
+
+
+        /// <summary>
         /// 取得問卷答案明細集合
         /// </summary>
         /// <param name="answer">問卷填答字典</param>
@@ -267,66 +342,6 @@ namespace ThinkPower.LabB3.Web.Controllers
             }
 
             return answerDetailEntities;
-        }
-
-        [HttpGet]
-        /// <summary>
-        /// 進行投資風險評估問卷填答
-        /// </summary>
-        /// <param name="actionModel">來源資料</param>
-        /// <returns>投資風險評估問卷頁面</returns>
-        public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
-        {
-            HttpStatusCode? statusCode = null;
-            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
-            EvaQuestViewModel evaQuestVM = null;
-
-
-            try
-            {
-                if (actionModel == null)
-                {
-                    statusCode = HttpStatusCode.NotFound;
-                }
-                else if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
-                {
-                    Domain.DTO.RiskEvaResultDTO riskResult =
-                        RiskService.GetRiskResult(actionModel.QuestAnswerId);
-
-                    evaQuestVM = new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaire = riskResult.RiskEvaQuestionnaire,
-                        QuestionnaireResultEntity = riskResult.QuestionnaireResultEntity,
-                    };
-                }
-                else
-                {
-                    riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(actionModel.questId);
-
-                    evaQuestVM = new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaire = riskEvaQuestEntity,
-                    };
-                }
-            }
-            catch (Exception e)
-            {
-                //TODO 提供詳細的錯誤資訊
-                logger.Error(e);
-                statusCode = HttpStatusCode.InternalServerError;
-            }
-
-            if (statusCode != null)
-            {
-                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
-                    "造成不便敬請見諒。");
-            }
-            else if (!evaQuestVM.RiskEvaQuestionnaire.CanUseRiskEvaluation)
-            {
-                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
-            }
-
-            return View(evaQuestVM);
         }
     }
 }

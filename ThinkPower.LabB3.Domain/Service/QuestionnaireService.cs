@@ -627,7 +627,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns>有效的問卷資料</returns>
         public QuestionnaireEntity GetActiveQuestionnaire(string id)
         {
-            QuestionnaireEntity questEntity = null;
+            QuestionnaireEntity result = null;
 
             if (String.IsNullOrEmpty(id))
             {
@@ -636,21 +636,25 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                QuestionnaireDO quest = new QuestionnaireDAO().GetActiveQuestionniare(id);
+                QuestionnaireDO questionnaire = new QuestionnaireDAO().GetActiveQuestionniare(id);
 
-                if (quest == null)
+                if (questionnaire == null)
                 {
-                    throw new InvalidOperationException($"quest not found, id={id}");
+                    var ex = new InvalidOperationException($"questionnaire not found");
+                    ex.Data["id"] = id;
+
+                    throw ex;
                 }
 
-                IEnumerable<QuestionDefineDO> questDefineList =
-                    new QuestionDefineDAO().GetQuestionDefineList(quest.Uid);
+                IEnumerable<QuestionDefineDO> questDefineList = new QuestionDefineDAO().
+                    GetQuestionDefineList(questionnaire.Uid);
 
-                if ((questDefineList == null) ||
-                    (questDefineList.Count() == 0))
+                if ((questDefineList == null) || (questDefineList.Count() == 0))
                 {
-                    throw new InvalidOperationException(
-                        $"questDefineList not found,questUid={quest.Uid}");
+                    var ex = new InvalidOperationException($"questDefineList not found");
+                    ex.Data["questUid"] = questionnaire.Uid;
+
+                    throw ex;
                 }
 
                 List<QuestDefineEntity> questDefineEntities =
@@ -658,7 +662,6 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
                 IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
-
 
                 foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
                 {
@@ -668,8 +671,10 @@ namespace ThinkPower.LabB3.Domain.Service
                     if ((tempAnswerDefineList == null) ||
                         (tempAnswerDefineList.Count() == 0))
                     {
-                        throw new InvalidOperationException(
-                            $"answerDefineList not found, questDefineEntityUid={questDefineEntity.Uid}");
+                        var ex = new InvalidOperationException($"answerDefineList not found");
+                        ex.Data["questDefineEntityUid"] = questDefineEntity.Uid;
+
+                        throw ex;
                     }
 
                     questDefineEntity.AnswerDefineEntities =
@@ -678,26 +683,26 @@ namespace ThinkPower.LabB3.Domain.Service
                     tempAnswerDefineList = null;
                 }
 
-                questEntity = new QuestionnaireEntity()
+                result = new QuestionnaireEntity()
                 {
-                    Uid = quest.Uid,
-                    QuestId = quest.QuestId,
-                    Version = quest.Version,
-                    Kind = quest.Kind,
-                    Name = quest.Name,
-                    Memo = quest.Memo,
-                    Ondate = quest.Ondate,
-                    Offdate = quest.Offdate,
-                    NeedScore = quest.NeedScore,
-                    QuestScore = quest.QuestScore,
-                    ScoreKind = quest.ScoreKind,
-                    HeadBackgroundImg = quest.HeadBackgroundImg,
-                    HeadDescription = quest.HeadDescription,
-                    FooterDescription = quest.FooterDescription,
-                    CreateUserId = quest.CreateUserId,
-                    CreateTime = quest.CreateTime,
-                    ModifyUserId = quest.ModifyUserId,
-                    ModifyTime = quest.ModifyTime,
+                    Uid = questionnaire.Uid,
+                    QuestId = questionnaire.QuestId,
+                    Version = questionnaire.Version,
+                    Kind = questionnaire.Kind,
+                    Name = questionnaire.Name,
+                    Memo = questionnaire.Memo,
+                    Ondate = questionnaire.Ondate,
+                    Offdate = questionnaire.Offdate,
+                    NeedScore = questionnaire.NeedScore,
+                    QuestScore = questionnaire.QuestScore,
+                    ScoreKind = questionnaire.ScoreKind,
+                    HeadBackgroundImg = questionnaire.HeadBackgroundImg,
+                    HeadDescription = questionnaire.HeadDescription,
+                    FooterDescription = questionnaire.FooterDescription,
+                    CreateUserId = questionnaire.CreateUserId,
+                    CreateTime = questionnaire.CreateTime,
+                    ModifyUserId = questionnaire.ModifyUserId,
+                    ModifyTime = questionnaire.ModifyTime,
 
                     QuestDefineEntities = questDefineEntities,
                 };
@@ -707,14 +712,14 @@ namespace ThinkPower.LabB3.Domain.Service
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
 
-            return questEntity;
+            return result;
         }
 
         /// <summary>
-        /// 轉換問卷答案定義資料物件成為問卷答案定義類別
+        /// 轉換問卷答案項目資料
         /// </summary>
-        /// <param name="answerDefineList">問卷答案定義資料物件</param>
-        /// <returns>問卷答案定義類別</returns>
+        /// <param name="answerDefineList">問卷答案項目資料</param>
+        /// <returns>問卷答案定義資料</returns>
         private IEnumerable<AnswerDefineEntity> ConvertAnswerDefineEntity(
             IEnumerable<QuestionAnswerDefineDO> answerDefineList)
         {
@@ -737,10 +742,10 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 轉換問卷題目定義資料成為問卷題目定義實體
+        /// 轉換問卷題目資料
         /// </summary>
-        /// <param name="questDefineList">問卷題目定義資料</param>
-        /// <returns>問卷題目定義實體</returns>
+        /// <param name="questDefineList">問卷題目資料</param>
+        /// <returns>問卷題目定義資料</returns>
         private IEnumerable<QuestDefineEntity> ConvertQuestDefineEntity(
             IEnumerable<QuestionDefineDO> questDefineList)
         {
@@ -788,7 +793,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 if (quest == null || quest.Ondate >= timeNow ||
                     quest.Offdate != null && quest.Offdate <= timeNow)
                 {
-                    throw new InvalidOperationException($"quest not found, uid={uid}");
+                    throw new InvalidOperationException($"questionnaire not found, uid={uid}");
                 }
 
                 IEnumerable<QuestionDefineDO> questDefineList =
