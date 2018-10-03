@@ -150,7 +150,6 @@ VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @
 
                 using (SqlConnection connection = DbConnection)
                 {
-
                     SqlCommand command = new SqlCommand(query, connection);
                     command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDO.Uid.ToString() });
                     command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.VarChar) { Value = questAnswerDO.QuestUid.ToString() });
