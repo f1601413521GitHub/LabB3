@@ -1,4 +1,5 @@
-﻿using ThinkPower.LabB3.Domain.Entity.Question;
+﻿using System.Collections.Generic;
+using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
 
 namespace ThinkPower.LabB3.Domain.DTO
@@ -22,5 +23,11 @@ namespace ThinkPower.LabB3.Domain.DTO
         /// 投資風險評估結果
         /// </summary>
         public RiskEvaluationEntity RiskEvaluationEntity { get; set; }
+
+
+        /// <summary>
+        /// 投資風險等級資料集合
+        /// </summary>
+        public IEnumerable<RiskRankEntity> RiskRankEntities { get; set; }
     }
 }
