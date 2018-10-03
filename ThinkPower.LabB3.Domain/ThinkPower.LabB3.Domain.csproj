@@ -62,6 +62,7 @@
     <Compile Include="Entity\Question\QuestionnaireAnswerEntity.cs" />
     <Compile Include="Entity\Question\QuestionnaireEntity.cs" />
     <Compile Include="Entity\Question\QuestionnaireResultEntity.cs" />
+    <Compile Include="Entity\RiskRankDetailEntity.cs" />
     <Compile Include="Entity\Risk\RiskEvaAnswerEntity.cs" />
     <Compile Include="Entity\Risk\RiskEvaluationEntity.cs" />
     <Compile Include="Entity\Risk\RiskEvaQuestionnaireEntity.cs" />
