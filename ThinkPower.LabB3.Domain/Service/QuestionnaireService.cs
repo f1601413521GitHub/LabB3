@@ -51,174 +51,60 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("問卷資料不存在或沒有有效的問卷資料");
                 }
 
-                Dictionary<string, string> validates = new Dictionary<string, string>();
-                string message = null;
-
-                foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
-                {
-                    IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
-                        .Where(x => x.QuestionId == questDefine.QuestionId);
-
-                    message = null;
-
-                    //TODO: TEST
-                    //questDefine.MinMultipleAnswers = 2;
-                    //questDefine.MaxMultipleAnswers = 3;
-
-                    if (!ValidateNeedAnswer(questDefine, questAnswerDetailList, answer.AnswerDetailEntities))
-                    {
-                        message = $"此題必須填答!";
-                    }
-                    else if (!ValidateMinMultipleAnswers(questDefine, questAnswerDetailList))
-                    {
-                        message = $"此題至少須勾選{questDefine.MinMultipleAnswers}個項目!";
-                    }
-                    else if (!ValidateMaxMultipleAnswers(questDefine, questAnswerDetailList))
-                    {
-                        message = $"此題至多僅能勾選{questDefine.MaxMultipleAnswers}個項目!";
-                    }
-                    else if (!ValidateSingleAnswerCondition(questDefine, questAnswerDetailList,
-                        answer.AnswerDetailEntities))
-                    {
-                        message = $"此題僅能勾選1個項目!";
-                    }
-                    else if (!ValidateOtherAnswer(questDefine, questAnswerDetailList))
-                    {
-                        message = $"請輸入其他說明文字!";
-                    }
-
-                    if (message != null)
-                    {
-                        validates.Add(questDefine.QuestionId, message);
-                    }
-                }
+                Dictionary<string, string> validates = ValidateRule(answer, questEntity);
 
                 Dictionary<string, string> riskResult = new Dictionary<string, string>();
                 string questionnaireMessage = "";
 
                 if (validates.Count == 0)
                 {
-                    if (questEntity.NeedScore == "Y")
+
+                    CalculateScoreEntity calculateResult = CalculateScore(answer, questEntity);
+
+                    var questionAnswerInfoList = calculateResult.FullAnswerDetailList.
+                        Select(x => new { x.QuestionId, x.AnswerCode });
+
+
+                    foreach (string questionId in questionAnswerInfoList.Select(x => x.QuestionId).Distinct())
                     {
-                        CalculateScoreEntity calculateResult =
-                            CalculateScore(answer, questEntity);
-
-                        var anonymousList = calculateResult.FullAnswerDetailList
-                            .Select(x => new { x.QuestionId, x.AnswerCode });
-
-
-                        foreach (string questionId in anonymousList.Select(x => x.QuestionId).Distinct())
-                        {
-                            riskResult[questionId] = String.Join(",", anonymousList
-                                .Where(x => x.QuestionId == questionId &&
-                                    !String.IsNullOrEmpty(x.AnswerCode)).Select(x => x.AnswerCode));
-                        }
-
-                        DateTime timeNow = DateTime.Now;
-                        string userId = timeNow.ToString("yyyymm");
-                        Guid questionAnswerUid = Guid.NewGuid();
-
-                        using (TransactionScope scope = new TransactionScope())
-                        {
-                            try
-                            {
-                                questionnaireAnswerDO = new QuestionnaireAnswerDO()
-                                {
-                                    Uid = questionAnswerUid,
-                                    QuestUid = questEntity.Uid,
-                                    QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
-                                    TesteeId = userId,
-                                    QuestScore = questEntity.QuestScore,
-                                    ActualScore = calculateResult.ActualScore,
-                                    TesteeSource = "LabB3",
-                                    CreateUserId = userId,
-                                    CreateTime = timeNow,
-                                    ModifyUserId = null,
-                                    ModifyTime = null,
-                                };
-
-                                new QuestionnaireAnswerDAO().Insert(questionnaireAnswerDO);
-
-
-
-                                QuestionnaireAnswerDetailDAO questAnswerDetailDAO =
-                                    new QuestionnaireAnswerDetailDAO();
-
-                                QuestionnaireAnswerDetailDO questAnswerDetailDO = null;
-
-                                foreach (AnswerDetailEntity answerDetail in calculateResult.FullAnswerDetailList)
-                                {
-                                    timeNow = DateTime.Now;
-                                    userId = timeNow.ToString("yyyymm");
-
-                                    questAnswerDetailDO = new QuestionnaireAnswerDetailDO()
-                                    {
-                                        Uid = Guid.NewGuid(),
-                                        AnswerUid = questionAnswerUid,
-                                        QuestionUid = answerDetail.QuestionUid,
-                                        AnswerCode = answerDetail.AnswerCode,
-                                        OtherAnswer = answerDetail.OtherAnswer,
-                                        Score = answerDetail.Score,
-                                        CreateUserId = userId,
-                                        CreateTime = timeNow,
-                                        ModifyUserId = null,
-                                        ModifyTime = null,
-                                    };
-
-                                    questAnswerDetailDAO.Insert(questAnswerDetailDO);
-                                }
-
-                                scope.Complete();
-                            }
-                            catch (Exception e)
-                            {
-                                ExceptionDispatchInfo.Capture(e).Throw();
-                            }
-                        }
+                        riskResult[questionId] = String.Join(",", questionAnswerInfoList.
+                            Where(x => !String.IsNullOrEmpty(x.AnswerCode) &&
+                            (x.QuestionId == questionId)).Select(x => x.AnswerCode));
                     }
-                    else
+
+                    questionnaireAnswerDO = RecordQuestionnaireAnswerDetail(questEntity, calculateResult);
+
+                    if (questEntity.NeedScore != "Y")
                     {
                         questionnaireMessage = "您的問卷己填答完畢，謝謝您的參與";
                     }
                 }
 
+
+                result = new QuestionnaireResultEntity()
+                {
+                    ValidateFailInfo = validates,
+                    ValidateFailQuestId = questEntity.QuestId,
+                    AnswerDetailEntities = answer.AnswerDetailEntities,
+                    RiskResult = riskResult,
+
+                    QuestionnaireMessage = questionnaireMessage,
+                    QuestionnaireEntity = questEntity,
+                };
+
                 if (questionnaireAnswerDO != null)
                 {
-                    result = new QuestionnaireResultEntity()
-                    {
-                        Uid = questionnaireAnswerDO.Uid,
-                        QuestUid = questionnaireAnswerDO.QuestUid,
-                        QuestAnswerId = questionnaireAnswerDO.QuestAnswerId,
-                        TesteeId = questionnaireAnswerDO.TesteeId,
-                        QuestScore = questionnaireAnswerDO.QuestScore,
-                        ActualScore = questionnaireAnswerDO.ActualScore,
-                        TesteeSource = questionnaireAnswerDO.TesteeSource,
-                        CreateUserId = questionnaireAnswerDO.CreateUserId,
-                        CreateTime = questionnaireAnswerDO.CreateTime,
-                        ModifyUserId = questionnaireAnswerDO.ModifyUserId,
-                        ModifyTime = questionnaireAnswerDO.ModifyTime,
-
-                        ValidateFailInfo = validates,
-                        ValidateFailQuestId = questEntity.QuestId,
-                        AnswerDetailEntities = answer.AnswerDetailEntities,
-                        RiskResult = riskResult,
-
-                        QuestionnaireMessage = questionnaireMessage,
-                        QuestionnaireEntity = questEntity,
-                    };
-                }
-                else
-                {
-                    result = new QuestionnaireResultEntity()
-                    {
-                        ValidateFailInfo = validates,
-                        ValidateFailQuestId = questEntity.QuestId,
-                        AnswerDetailEntities = answer.AnswerDetailEntities,
-                        RiskResult = riskResult,
-
-                        QuestionnaireMessage = questionnaireMessage,
-                        QuestionnaireEntity = questEntity,
-                    };
+                    result.Uid = questionnaireAnswerDO.Uid;
+                    result.QuestUid = questionnaireAnswerDO.QuestUid;
+                    result.QuestAnswerId = questionnaireAnswerDO.QuestAnswerId;
+                    result.TesteeId = questionnaireAnswerDO.TesteeId;
+                    result.QuestScore = questionnaireAnswerDO.QuestScore;
+                    result.ActualScore = questionnaireAnswerDO.ActualScore;
+                    result.TesteeSource = questionnaireAnswerDO.TesteeSource;
+                    result.CreateUserId = questionnaireAnswerDO.CreateUserId;
+                    result.CreateTime = questionnaireAnswerDO.CreateTime;
+                    result.ModifyUserId = questionnaireAnswerDO.ModifyUserId;
+                    result.ModifyTime = questionnaireAnswerDO.ModifyTime;
                 }
             }
             catch (Exception e)
@@ -230,12 +116,129 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
+        /// 紀錄問卷填答資料至問卷答題主檔與答題明細
+        /// </summary>
+        /// <param name="questEntity">問卷資料</param>
+        /// <param name="calculateResult">問卷得分與填答資料</param>
+        /// <returns>問卷答題資料</returns>
+        private QuestionnaireAnswerDO RecordQuestionnaireAnswerDetail(
+            QuestionnaireEntity questEntity, CalculateScoreEntity calculateResult)
+        {
+            QuestionnaireAnswerDO questionnaireAnswerDO = null;
+
+            DateTime timeNow = DateTime.Now;
+            string userId = timeNow.ToString("yyyymm");
+
+            using (TransactionScope scope = new TransactionScope())
+            {
+                try
+                {
+                    questionnaireAnswerDO = new QuestionnaireAnswerDO()
+                    {
+                        Uid = Guid.NewGuid(),
+                        QuestUid = questEntity.Uid,
+                        QuestAnswerId = timeNow.ToString("yyMMddHHmmssfff"),
+                        TesteeId = userId,
+                        QuestScore = questEntity.QuestScore,
+                        ActualScore = calculateResult.ActualScore,
+                        TesteeSource = "LabB3",
+                        CreateUserId = userId,
+                        CreateTime = timeNow,
+                        ModifyUserId = null,
+                        ModifyTime = null,
+                    };
+
+                    IEnumerable<QuestionnaireAnswerDetailDO> questAnswerDetailList =
+                        calculateResult.FullAnswerDetailList.Select(answerDetail =>
+                        new QuestionnaireAnswerDetailDO()
+                        {
+                            Uid = Guid.NewGuid(),
+                            AnswerUid = questionnaireAnswerDO.Uid,
+                            QuestionUid = answerDetail.QuestionUid,
+                            AnswerCode = answerDetail.AnswerCode,
+                            OtherAnswer = answerDetail.OtherAnswer,
+                            Score = answerDetail.Score,
+                            CreateUserId = userId,
+                            CreateTime = timeNow,
+                            ModifyUserId = null,
+                            ModifyTime = null,
+                        });
+
+                    new QuestionnaireAnswerDAO().Insert(questionnaireAnswerDO);
+                    new QuestionnaireAnswerDetailDAO().Insert(questAnswerDetailList);
+
+                    scope.Complete();
+                }
+                catch (Exception e)
+                {
+                    ExceptionDispatchInfo.Capture(e).Throw();
+                }
+            }
+
+            return questionnaireAnswerDO;
+        }
+
+        /// <summary>
+        /// 驗證問卷填答規則
+        /// </summary>
+        /// <param name="answer">問卷填答資料</param>
+        /// <param name="questEntity">問卷資料</param>
+        /// <returns>驗證結果</returns>
+        public Dictionary<string, string> ValidateRule(QuestionnaireAnswerEntity answer,
+            QuestionnaireEntity questEntity)
+        {
+            Dictionary<string, string> validates = new Dictionary<string, string>();
+            string message = null;
+
+            foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
+            {
+                IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
+                    .Where(x => x.QuestionId == questDefine.QuestionId);
+
+                message = null;
+
+                //TODO: TEST
+                //questDefine.MinMultipleAnswers = 2;
+                //questDefine.MaxMultipleAnswers = 3;
+
+                if (!ValidateNeedAnswer(questDefine, questAnswerDetailList, answer.AnswerDetailEntities))
+                {
+                    message = $"此題必須填答!";
+                }
+                else if (!ValidateMinMultipleAnswers(questDefine, questAnswerDetailList))
+                {
+                    message = $"此題至少須勾選{questDefine.MinMultipleAnswers}個項目!";
+                }
+                else if (!ValidateMaxMultipleAnswers(questDefine, questAnswerDetailList))
+                {
+                    message = $"此題至多僅能勾選{questDefine.MaxMultipleAnswers}個項目!";
+                }
+                else if (!ValidateSingleAnswerCondition(questDefine, questAnswerDetailList,
+                    answer.AnswerDetailEntities))
+                {
+                    message = $"此題僅能勾選1個項目!";
+                }
+                else if (!ValidateOtherAnswer(questDefine, questAnswerDetailList))
+                {
+                    message = $"請輸入其他說明文字!";
+                }
+
+                if (message != null)
+                {
+                    validates.Add(questDefine.QuestionId, message);
+                }
+            }
+
+            return validates;
+        }
+
+        /// <summary>
         /// 計算問卷得分，回傳問卷得分類別
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
         /// <param name="questEntity">問卷定義資料</param>
         /// <returns>問卷得分類別</returns>
-        private CalculateScoreEntity CalculateScore(QuestionnaireAnswerEntity answer,
+        public CalculateScoreEntity CalculateScore(QuestionnaireAnswerEntity answer,
             QuestionnaireEntity questEntity)
         {
             List<AnswerDetailEntity> answerFullDetailList = new List<AnswerDetailEntity>();

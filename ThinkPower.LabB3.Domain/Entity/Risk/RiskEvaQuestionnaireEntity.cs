@@ -20,6 +20,6 @@ namespace ThinkPower.LabB3.Domain.Entity.Risk
         /// <summary>
         /// 可否進行風險評估問卷填答
         /// </summary>
-        public bool CanUseRiskEvaluation { get; set; }
+        public bool CanRiskEvaluation { get; set; }
     }
 }

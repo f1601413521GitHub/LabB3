@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ThinkPower.LabB3.DataAccess.DAO;
 using ThinkPower.LabB3.DataAccess.DO;
 using ThinkPower.LabB3.Domain.DTO;
+using ThinkPower.LabB3.Domain.Entity;
 using ThinkPower.LabB3.Domain.Entity.Question;
 using ThinkPower.LabB3.Domain.Entity.Risk;
 using ThinkPower.LabB3.Domain.Resources;
@@ -36,11 +37,6 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 評估投資風險等級結果的暫存鍵值
         /// </summary>
         private readonly string _cacheKeyRiskEvaResultDTO = "RiskEvaResultDTO";
-
-        /// <summary>
-        /// 投資風險評估結果的暫存鍵值
-        /// </summary>
-        private readonly string _cacheKeyRiskEvaluation = "RiskEvaluation";
 
         /// <summary>
         /// 投資風險評估結果DO物件的暫存鍵值
@@ -82,6 +78,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new ArgumentNullException("answer");
                 }
 
+                //TODO 1003 邏輯有嚴重問題!!
                 riskEvaQuestEntity = CheckLatestRiskEvaluation(answer.QuestionnaireAnswerEntity.QuestUid);
 
                 if (riskEvaQuestEntity == null)
@@ -89,7 +86,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("riskEvaQuestEntity not found");
                 }
 
-                if (!riskEvaQuestEntity.CanUseRiskEvaluation)
+                if (!riskEvaQuestEntity.CanRiskEvaluation)
                 {
                     result = new RiskEvaResultDTO()
                     {
@@ -144,6 +141,7 @@ namespace ThinkPower.LabB3.Domain.Service
                             throw new InvalidOperationException("riskRankDetailDOList not found");
                         }
 
+                        //TODO 1003 check BusinessDate 跟作業期間有關係
                         DateTime currentTime = DateTime.Now;
                         riskEvaluationEntity = new RiskEvaluationEntity()
                         {
@@ -162,11 +160,6 @@ namespace ThinkPower.LabB3.Domain.Service
                             ModifyUserId = null,
                             ModifyTime = null,
                         };
-
-
-                        CacheProvider.GetCache($"{_cacheKeyRiskEvaluation}-{questResultEntity.QuestAnswerId}",
-                            riskEvaluationEntity, true);
-
                     }
                 }
 
@@ -175,9 +168,11 @@ namespace ThinkPower.LabB3.Domain.Service
                     QuestionnaireResultEntity = questResultEntity,
                     RiskEvaQuestionnaire = riskEvaQuestEntity,
                     RiskEvaluationEntity = riskEvaluationEntity,
+                    RiskRankEntities = GetRiskRankEntities(),
                 };
 
-                CacheProvider.GetCache($"{_cacheKeyRiskEvaResultDTO}-{questResultEntity.QuestAnswerId}",
+                //TODO 1003 cache
+                CacheProvider.SetCache($"{_cacheKeyRiskEvaResultDTO}-{questResultEntity.QuestAnswerId}",
                     result, true);
 
             }
@@ -187,6 +182,74 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// 取出投資風險等級與等級明細
+        /// </summary>
+        /// <returns>投資風險等級資料</returns>
+        private IEnumerable<RiskRankEntity> GetRiskRankEntities()
+        {
+            IEnumerable<RiskRankEntity> result = CacheProvider.GetCache("riskRankEntityList")
+                as IEnumerable<RiskRankEntity>;
+
+            if ((result == null) ||
+                (result.Count() == 0))
+            {
+                IEnumerable<RiskRankDO> riskRankList = CacheProvider.
+                    GetCache("riskRankList") as IEnumerable<RiskRankDO>;
+
+                if ((riskRankList == null) ||
+                    (riskRankList.Count() == 0))
+                {
+                    riskRankList = CacheProvider.SetCache("riskRankList", new RiskRankDAO().
+                        ReadAll("FNDINV")) as IEnumerable<RiskRankDO>;
+                }
+
+                IEnumerable<RiskRankDetailDO> riskRankDetailList = CacheProvider.
+                    GetCache("riskRankDetailList") as IEnumerable<RiskRankDetailDO>;
+
+                if ((riskRankDetailList == null) ||
+                    (riskRankDetailList.Count() == 0))
+                {
+                    riskRankDetailList = CacheProvider.SetCache("riskRankDetailList", new RiskRankDetailDAO().
+                        ReadAll()) as IEnumerable<RiskRankDetailDO>;
+                }
+
+                List<RiskRankEntity> riskRankEntityList = new List<RiskRankEntity>();
+                foreach (RiskRankDO riskRank in riskRankList.OrderBy(x => x.MinScore))
+                {
+                    riskRankEntityList.Add(new RiskRankEntity()
+                    {
+                        RiskEvaId = riskRank.RiskEvaId,
+                        MinScore = riskRank.MinScore,
+                        MaxScore = riskRank.MaxScore,
+                        RiskRankKind = riskRank.RiskRankKind,
+                        RiskRankDetailEntities = ConvertRiskRankDetailDO(riskRankDetailList.Where(x => x.RiskRankUid == riskRank.Uid)),
+                    });
+                }
+
+                result = CacheProvider.SetCache("riskRankEntityList", riskRankEntityList)
+                    as IEnumerable<RiskRankEntity>;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 轉換投資風險等級明細資料物件
+        /// </summary>
+        /// <param name="riskRankDetailDOList">投資風險等級明細資料集合</param>
+        /// <returns>投資風險等級明細</returns>
+        private IEnumerable<RiskRankDetailEntity> ConvertRiskRankDetailDO(
+            IEnumerable<RiskRankDetailDO> riskRankDetailDOList)
+        {
+            return riskRankDetailDOList.Select(x => new RiskRankDetailEntity()
+            {
+                RiskRankUid = x.RiskRankUid,
+                ProfitRiskRank = x.ProfitRiskRank,
+                IsEffective = x.IsEffective,
+            });
         }
 
         /// <summary>
@@ -217,6 +280,8 @@ namespace ThinkPower.LabB3.Domain.Service
             RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO()
                 .GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
 
+
+            //TODO 1003 後面這段沒問題
             bool riskEvaluationInCuttimeRange = false;
 
             if (riskEvaluation != null)
@@ -238,7 +303,7 @@ namespace ThinkPower.LabB3.Domain.Service
             riskEvaQuestEntity = new RiskEvaQuestionnaireEntity()
             {
                 QuestionnaireEntity = questEntity,
-                CanUseRiskEvaluation = !riskEvaluationInCuttimeRange,
+                CanRiskEvaluation = !riskEvaluationInCuttimeRange,
             };
 
             return riskEvaQuestEntity;
@@ -260,7 +325,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
             try
             {
-                object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-{uid}", null, false);
+                object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-{uid}");
                 RiskEvaluationDO riskEvaDO = cache as RiskEvaluationDO;
                 if (riskEvaDO == null)
                 {
@@ -357,7 +422,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 result = new RiskEvaQuestionnaireEntity()
                 {
                     QuestionnaireEntity = activeQuest,
-                    CanUseRiskEvaluation = !riskEvaluationInCuttimeRange,
+                    CanRiskEvaluation = !riskEvaluationInCuttimeRange,
                 };
             }
             catch (Exception e)
@@ -375,8 +440,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public RiskEvaResultDTO GetRiskResult(string key)
         {
-            object riskEvaResultCache = CacheProvider.
-                GetCache($"{_cacheKeyRiskEvaResultDTO}-{key}", null, false);
+            object riskEvaResultCache = CacheProvider.GetCache($"{_cacheKeyRiskEvaResultDTO}-{key}");
 
             RiskEvaResultDTO riskEvaResultDto = (riskEvaResultCache as RiskEvaResultDTO);
 
@@ -390,50 +454,13 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public IEnumerable<string> RiskRank(string riskRankKind)
         {
-            List<string> result = new List<string>();
+            IEnumerable<string> result = new List<string>();
 
-            List<RiskRankDO> riskRankList = new RiskRankDAO().ReadAll("FNDINV");
-            List<RiskRankDetailDO> riskRankDetailList = new RiskRankDetailDAO().ReadAll();
+            RiskRankEntity riskRankEntity = GetRiskRankEntities().
+                First(x => x.RiskRankKind == riskRankKind);
 
-            string riskState = "";
-            string riskTile = "";
-            string riskAttribute = "";
-            string riskLevel = "";
-
-            foreach (RiskRankDO riskRank in riskRankList.OrderBy(x => x.MinScore))
-            {
-                IEnumerable<RiskRankDetailDO> rankDetailList = riskRankDetailList
-                    .Where(x => x.RiskRankUid == riskRank.Uid).OrderBy(x => x.ProfitRiskRank);
-
-
-                riskState = (riskRank.RiskRankKind == riskRankKind) ? "■" : "□";
-                riskTile = "";
-                riskAttribute = "";
-                riskLevel = String.Join("、", rankDetailList.Select(x => x.ProfitRiskRank));
-
-                switch (riskRank.RiskRankKind)
-                {
-                    case "L":
-                        riskTile = $"{riskState}{riskRank.MaxScore}分以下";
-                        riskAttribute = "低(保守)";
-                        break;
-
-                    case "M":
-                        riskTile = $"{riskState}{riskRank.MinScore}~{riskRank.MaxScore}分以下";
-                        riskAttribute = "中(穩健)";
-                        break;
-
-                    case "H":
-                        riskTile = $"{riskState}{riskRank.MaxScore ?? riskRank.MinScore}分(含)以上";
-                        riskAttribute = "高(成長)";
-                        break;
-
-                    default:
-                        break;
-                }
-
-                result.Add(String.Join("|", riskTile, riskAttribute, riskLevel));
-            }
+            result = riskRankEntity.RiskRankDetailEntities.OrderBy(x => x.ProfitRiskRank).
+                Select(x => x.ProfitRiskRank);
 
             return result;
         }
@@ -502,7 +529,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     }
                 }
 
-                CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-" +
+                CacheProvider.SetCache($"{_cacheKeyRiskEvaluationDO}-" +
                             $"{riskEvaResult.QuestionnaireResultEntity.QuestAnswerId}", riskEvaluation, true);
             }
             catch (Exception e)

@@ -105,7 +105,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("",
                     "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
             }
-            else if (!viewModel.RiskEvaQuestionnaire.CanUseRiskEvaluation)
+            else if (!viewModel.RiskEvaQuestionnaire.CanRiskEvaluation)
             {
                 ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
@@ -161,21 +161,18 @@ namespace ThinkPower.LabB3.Web.Controllers
                             QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
                         });
                     }
-                    else if (evaluateResult.RiskEvaluationEntity != null)
-                    {
-                        evaRankViewModel = new EvaluationRankViewModel()
-                        {
-                            RiskEvaluationResult = evaluateResult.RiskEvaluationEntity,
-                            RiskRankEntryList = RiskService.RiskRank(evaluateResult.RiskEvaluationEntity.RiskAttribute),
-                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
-                        };
-                    }
                     else
                     {
                         evaRankViewModel = new EvaluationRankViewModel()
                         {
                             QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
                         };
+
+                        if (evaluateResult.RiskEvaluationEntity != null)
+                        {
+                            evaRankViewModel.RiskEvaluationResult = evaluateResult.RiskEvaluationEntity;
+                            evaRankViewModel.RiskRankEntities = evaluateResult.RiskRankEntities;
+                        }
                     }
                 }
                 else
@@ -195,7 +192,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
                     "造成不便敬請見諒。");
             }
-            else if (!evaluateResult.RiskEvaQuestionnaire.CanUseRiskEvaluation)
+            else if (!evaluateResult.RiskEvaQuestionnaire.CanRiskEvaluation)
             {
                 ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
             }
