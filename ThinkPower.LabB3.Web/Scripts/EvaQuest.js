@@ -1,14 +1,10 @@
 ﻿$(document).ready(function () {
 
-    showLog(true, 'ready', null, null);
-
     hideTip();
     binding();
 });
 
 function hideTip() {
-
-    showLog(true, 'hideTip', null, null);
 
     $('[id*=footer]').each(function () {
         $(this).hide();
@@ -20,8 +16,6 @@ function hideTip() {
 
 function removeTip() {
 
-    showLog(true, 'removeTip', null, null);
-
     $('[id*=footer]').each(function () {
         $(this).find('span').html('');
         $(this).hide();
@@ -30,24 +24,24 @@ function removeTip() {
 
 function binding() {
 
-    showLog(true, 'binding', null, null);
-
     $('#done').on('click', function () {
-        validate();
+
+        if (validate()) {
+            $('#evaQuestForm').submit();
+        }
     });
 }
 
 function validate() {
 
-    showLog(true, 'validate', null, null);
-
     removeTip();
 
-    let questionList = getQuestionList();
-    validateRule(questionList);
+    let questionList = getAnswerDetailList();
+
+    return validateRule(questionList);
 }
 
-function getQuestionList() {
+function getAnswerDetailList() {
 
     let questionList = $('[id*=question]').map(function () {
 
@@ -71,22 +65,16 @@ function getQuestionList() {
         };
     });
 
-    showLog(true, 'getQuestionList', null, { questionList: questionList });
-
     return questionList;
 }
 
 function validateRule(questionList) {
+
     let validateFailCount = 0;
     questionList.each(function () {
 
         let question = this;
         let message = '';
-
-        showLog(true, question.datas.questionId, {
-            questionId: question.datas.questionId,
-            question: question
-        }, null);
 
         if (!validateNeedAnswer(question, questionList)) {
             message = "此題必須填答!";
@@ -110,21 +98,17 @@ function validateRule(questionList) {
         }
     });
 
-    if (validateFailCount === 0) {
-
-        //let totalScore = getScore(questionList);
-        //if (totalScore == 0) {
-        //    let msg = '您的問卷己填答完畢，謝謝您的參與';
-        //}
-
-        $('#evaQuestForm').submit();
-    }
+    return (validateFailCount === 0);
 }
 
 function validateNeedAnswer(question, questionList) {
 
     let validate = false;
-    if (question.datas.needAnswer === "Y") {
+
+    if (getAnswerCodeList(question).length > 0) {
+
+        validate = true;
+    } else if (question.datas.needAnswer === "Y") {
 
         let allowNaCondition = false;
         if (question.datas.allowNaCondition !== '') {
@@ -143,11 +127,6 @@ function validateNeedAnswer(question, questionList) {
 
                 condition.answerCodeList = getAnswerCodeList(condition.quetion);
 
-                showLog(true, 'allowNaCondition', {
-                    condition: condition,
-                    questionId: question.datas.questionId,
-                }, null);
-
                 let result = compareSameArray(condition.object.AnswerCode, condition.answerCodeList);
                 conditionValidateResultList.push(result);
 
@@ -159,16 +138,13 @@ function validateNeedAnswer(question, questionList) {
             }
         }
 
-        if ((allowNaCondition === true) ||
-            (getAnswerCodeList(question).length > 0)) {
+        if (allowNaCondition) {
             validate = true;
         }
     }
     else {
         validate = true;
     }
-
-    showLog(true, 'validateNeedAnswer', null, { validate: validate });
 
     return validate;
 }
@@ -187,8 +163,6 @@ function validateMinMultipleAnswers(question) {
         validate = true;
     }
 
-    showLog(true, 'validateMinMultipleAnswers', null, { validate: validate });
-
     return validate;
 }
 
@@ -205,8 +179,6 @@ function validateMaxMultipleAnswers(question) {
     } else {
         validate = true;
     }
-
-    showLog(true, 'validateMaxMultipleAnswers', null, { validate: validate });
 
     return validate;
 }
@@ -230,11 +202,6 @@ function validateSingleAnswerCondition(question, questionList) {
 
             condition.answerCodeList = getAnswerCodeList(condition.quetion);
 
-            showLog(true, 'singleAnswerCondition', {
-                condition: condition,
-                questionId: question.datas.questionId,
-            }, null);
-
             let result = compareSingleAnswerCondition(condition.object.AnswerCode, condition.answerCodeList);
             conditionValidateResultList.push(result);
 
@@ -247,8 +214,6 @@ function validateSingleAnswerCondition(question, questionList) {
     else {
         validate = true;
     }
-
-    showLog(true, 'validateSingleAnswerCondition', null, { validate: validate });
 
     return validate;
 }
@@ -278,8 +243,6 @@ function validateOtherAnswer(question) {
     if (hasOtherAnswerCondition === 0) {
         validate = true;
     }
-
-    showLog(true, 'validateOtherAnswerResult', { question: question }, { validate: validate });
 
     return validate;
 }
@@ -311,8 +274,6 @@ function getAnswerCodeList(quetion) {
             answerCodeList.push(answerCode.toString());
         }
     });
-
-    showLog(true, 'getAnswerCodeList', null, { answerCodeList: answerCodeList });
 
     return answerCodeList;
 }
@@ -346,8 +307,6 @@ function getAnswerScoreList(quetion) {
         }
     });
 
-    showLog(true, 'getAnswerScoreList', null, { answerScoreList: answerScoreList });
-
     return answerScoreList;
 }
 
@@ -356,92 +315,6 @@ function showTip(footer, msg) {
     footer.show();
     footer.find('span').html(msg);
 }
-
-function showLog(show, method, information, result) {
-
-    if (show === true) {
-        let log = {
-            show: show,
-            method: method,
-            information: information,
-            result: result,
-        };
-        console.log(log);
-    }
-}
-
-function getScore(questionList) {
-
-    let totalScore = 0;
-    let questEntity = {
-        element: $('[id*=questEntity]'),
-    };
-
-    questEntity.datas = questEntity.element.data();
-
-    let scoreList = [];
-    if (questEntity.datas.needScore === "Y") {
-
-        questionList.each(function () {
-
-            let question = this;
-            let answerScoreList = getAnswerScoreList(question);
-            let answerScore;
-
-            showLog(true, 'Math', null, {
-                sum: sum(answerScoreList),
-                max: Math.max.apply(Math, answerScoreList),
-                min: Math.min.apply(Math, answerScoreList),
-                avg: avg(sum(answerScoreList), answerScoreList.length),
-            });
-
-            if (question.datas.countScoreType === 1) {
-                answerScore = sum(answerScoreList);
-            }
-            else if (question.datas.countScoreType === 2) {
-                answerScore = Math.max.apply(Math, answerScoreList);
-            }
-            else if (question.datas.countScoreType === 3) {
-                answerScore = Math.min.apply(Math, answerScoreList);
-            }
-            else if (question.datas.countScoreType === 4) {
-                answerScore = avg(sum(answerScoreList), answerScoreList.length);
-            }
-
-            scoreList.push(answerScore);
-        });
-        showLog(true, 'scoreList', null, scoreList);
-
-        if (questEntity.datas.scoreKind === 1) {
-            totalScore = sum(scoreList);
-        }
-        showLog(true, 'questScore', null, questEntity.datas.questScore);
-
-        if (totalScore > questEntity.datas.questScore) {
-            totalScore = questEntity.datas.questScore;
-        }
-        showLog(true, 'totalScore', null, scoreList);
-    }
-
-    showLog(true, 'getScore', { questEntity, questEntity }, { totalScore: totalScore });
-
-    return totalScore;
-}
-
-function sum(values) {
-
-    let number = 0;
-    $.each(values, function () {
-        number += parseInt(this);
-    });
-    return number;
-}
-
-function avg(sum, length) {
-    return (length > 0) ? (sum / length) : 0;
-}
-
-
 
 function compareSameArray(conditionAnswerCodeList, answerCodeList) {
 
@@ -458,11 +331,6 @@ function compareSameArray(conditionAnswerCodeList, answerCodeList) {
         (answerCodeInArray.length === answerCodeList.length)) {
         validate = true;
     }
-
-    showLog(true, compareSameArray, {
-        conditionAnswerCodeList: conditionAnswerCodeList,
-        answerCodeList: answerCodeList,
-    }, { validate: validate });
 
     return validate;
 }
@@ -487,43 +355,5 @@ function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
         }
     }
 
-    showLog(true, 'compareSingleAnswerCondition', {
-        conditionAnswerCodeList: conditionAnswerCodeList,
-        answerCodeList: answerCodeList,
-    }, { validate: validate });
-
     return validate;
-}
-
-
-
-
-
-function compareArrayHasCommonValue(conditionAnswerCodeList, answerCodeList) {
-
-    let validate = false;
-
-    $.each(conditionAnswerCodeList, function (index, answerCode) {
-
-        if ($.inArray(answerCode, answerCodeList) > -1) {
-            validate = true;
-        }
-    });
-
-    showLog({
-        method: 'compareArrayHasCommonValue',
-        information: {
-            conditionAnswerCodeList: conditionAnswerCodeList,
-            answerCodeList: answerCodeList,
-            validate: validate
-        }
-    });
-    return validate;
-}
-
-function testValueState() {
-    var values = ['', 0, NaN, undefined, null, 1, ' '];
-    $(values).each(function (idx, val) {
-        console.log(idx, val, val ? true : false);
-    });
 }

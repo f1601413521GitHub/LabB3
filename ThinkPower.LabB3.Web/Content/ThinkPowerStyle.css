@@ -78,23 +78,24 @@ input[type=button], input[type=submit] {
 }
 
 .question-answer {
-    display: inline-block;
+    /*display: inline-table;*/
+    display:inline-block;
 }
 
 .question-answer-code {
-    display: inline-block;
+    display: inline;
 }
 
 .question-answer-descript {
-    display: inline-block;
+    display: inline;
 }
 
 /*footer*/
 .question-footer {
 }
 
-.question-footer-descript{
-    margin:15px;
+.question-footer-descript {
+    margin: 15px;
 }
 
 .question-footer-submit {
