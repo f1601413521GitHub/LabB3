@@ -19,5 +19,10 @@ namespace ThinkPower.LabB3.Web
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
         }
+
+        protected void Session_Start(Object send, EventArgs e)
+        {
+            Session["id"] = DateTime.Now.ToString("yyyydd");
+        }
     }
 }

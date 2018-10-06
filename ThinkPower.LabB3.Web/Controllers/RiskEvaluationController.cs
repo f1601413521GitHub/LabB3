@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.ExceptionServices;
 using System.Web;
 using System.Web.Mvc;
 using ThinkPower.LabB3.Domain.Entity.Question;
@@ -71,6 +72,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         {
             EvaQuestViewModel viewModel = null;
             string validationSummary = String.Empty;
+            string userId = Session["id"] as string;
 
             try
             {
@@ -101,17 +103,28 @@ namespace ThinkPower.LabB3.Web.Controllers
                 }
                 else
                 {
+                    RiskService.UserId = userId;
+                    RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(
+                        actionModel.QuestId);
+
+                    if (riskEvaQuestEntity == null)
+                    {
+                        var ex = new InvalidOperationException("riskEvaQuestEntity not found");
+                        ex.Data["QuestId"] = actionModel.QuestId;
+                        throw ex;
+                    }
+
                     viewModel = new EvaQuestViewModel()
                     {
-                        RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(actionModel.QuestId),
+                        RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
                     };
                 }
 
-                //TODO review
-                if (!viewModel.RiskEvaQuestionnaireEntity.CanRiskEvaluation)
-                {
-                    validationSummary = _existEffectiveAnRiskEvaluationMsg;
-                }
+                //TODO review property CanRiskEvaluation
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
             }
             catch (Exception e)
             {
@@ -276,6 +289,32 @@ namespace ThinkPower.LabB3.Web.Controllers
 
 
 
+
+
+
+
+        /// <summary>
+        /// 轉換提示訊息(不可重做風險評估問卷、例外錯誤狀況)
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        private string ConvertValidateMsgByRiskEvaluation(InvalidOperationException e)
+        {
+            string validationSummary = String.Empty;
+            bool? canUsedRiskEvaluation = e.Data["canUsedRiskEvaluation"] as bool?;
+
+            if ((canUsedRiskEvaluation == null) || canUsedRiskEvaluation.Value)
+            {
+                logger.Error(e);
+                validationSummary = _systemErrorMsg;
+            }
+            else if (!canUsedRiskEvaluation.Value)
+            {
+                validationSummary = _existEffectiveAnRiskEvaluationMsg;
+            }
+
+            return validationSummary;
+        }
 
         /// <summary>
         /// 取得問卷答案明細集合

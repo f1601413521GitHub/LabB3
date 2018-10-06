@@ -59,6 +59,11 @@ namespace ThinkPower.LabB3.Domain.Service
             }
         }
 
+        /// <summary>
+        /// 用戶ID
+        /// </summary>
+        public string UserId { get; set; }
+
 
 
 
@@ -205,21 +210,15 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new ArgumentNullException("uid");
             }
 
-            try
-            {
-                object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-{uid}");
-                RiskEvaluationDO riskEvaDO = cache as RiskEvaluationDO;
-                if (riskEvaDO == null)
-                {
-                    throw new InvalidOperationException("riskEvaDO not found");
-                }
 
-                riskEvaEntity = ConvertRiskEvaluationDO(riskEvaDO);
-            }
-            catch (Exception e)
+            object cache = CacheProvider.GetCache($"{_cacheKeyRiskEvaluationDO}-{uid}");
+            RiskEvaluationDO riskEvaDO = cache as RiskEvaluationDO;
+            if (riskEvaDO == null)
             {
-                ExceptionDispatchInfo.Capture(e).Throw();
+                throw new InvalidOperationException("riskEvaDO not found");
             }
+
+            riskEvaEntity = ConvertRiskEvaluationDO(riskEvaDO);
 
             return riskEvaEntity;
         }
@@ -246,42 +245,29 @@ namespace ThinkPower.LabB3.Domain.Service
                 ex.Data["questId"] = questId;
                 throw ex;
             }
-            //TODO @A@
-            QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(
-                activeQuestionnaire.Uid);
 
-            if (questAnswerDO == null)
+
+            QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().
+                GetLatestQuestionnaireAnswer(activeQuestionnaire.Uid, UserId);
+
+            if (questAnswerDO != null)
             {
-                var ex = new InvalidOperationException("questAnswerDO not found");
-                ex.Data["ActiveQuestionnaireUid"] = activeQuestionnaire.Uid;
-                throw ex;
-            }
+                RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
+                    GetLatestRiskEvaluation(questAnswerDO.QuestAnswerId);
 
-            RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO().GetLatestUsedRiskEvaluation(
-                questAnswerDO.QuestAnswerId);
+                bool canUsedRiskEvaluation = CheckRiskEvaCondition(riskEvaluationDO);
 
-            bool riskEvaluationInCuttimeRange = false;
-
-            if (riskEvaluation != null)
-            {
-                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
-
-                if (cuttimeRange == null)
+                if (!canUsedRiskEvaluation)
                 {
-                    throw new InvalidOperationException("cuttimeRange not found");
-                }
-
-                if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
-                    (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
-                {
-                    riskEvaluationInCuttimeRange = true;
+                    var ex = new InvalidOperationException("Not can used risk evaluation");
+                    ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
+                    throw ex;
                 }
             }
 
             result = new RiskEvaQuestionnaireEntity()
             {
                 QuestionnaireEntity = activeQuestionnaire,
-                CanRiskEvaluation = !riskEvaluationInCuttimeRange,
             };
 
             return result;
@@ -395,6 +381,95 @@ namespace ThinkPower.LabB3.Domain.Service
 
 
 
+
+
+
+
+
+
+
+
+
+        /// <summary>
+        /// 判斷可否重做風險評估問卷
+        /// </summary>
+        /// <param name="riskEvaluationDO">風險評估紀錄</param>
+        /// <returns></returns>
+        public bool CheckRiskEvaCondition(RiskEvaluationDO riskEvaluationDO)
+        {
+            bool canUsedRiskEvaluation = true;
+
+            if (riskEvaluationDO != null)
+            {
+                bool inCuttimeRange = false;
+
+                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                if (cuttimeRange == null)
+                {
+                    throw new InvalidOperationException("cuttimeRange not found");
+                }
+
+                if ((riskEvaluationDO.EvaluationDate < cuttimeRange.Max()) &&
+                    (riskEvaluationDO.EvaluationDate >= cuttimeRange.Min()))
+                {
+                    inCuttimeRange = true;
+                }
+
+                if (inCuttimeRange && (riskEvaluationDO.IsUsed == "Y"))
+                {
+                    canUsedRiskEvaluation = false;
+                }
+            }
+
+            return canUsedRiskEvaluation;
+        }
+
+        /// <summary>
+        /// 取得投資風險評估切點時間範圍
+        /// </summary>
+        /// <returns>投資風險評估切點時間範圍</returns>
+        private IEnumerable<DateTime> GetRiskEvaCuttime()
+        {
+            List<DateTime> cuttimeRange = null;
+
+            string riskEvaCuttime = ConfigurationManager.AppSettings["risk.evaluation.cuttime"];
+
+            string[] cuttimeArray = String.IsNullOrEmpty(riskEvaCuttime) ? null :
+                riskEvaCuttime.Split(',');
+
+            if (cuttimeArray != null)
+            {
+                List<DateTime> cuttimes = new List<DateTime>();
+
+                foreach (string cuttime in cuttimeArray)
+                {
+                    if (!String.IsNullOrEmpty(cuttime) &&
+                        (DateTime.TryParse(cuttime, out DateTime tempCuttime)))
+                    {
+                        cuttimes.Add(tempCuttime);
+                    }
+                }
+
+                if (cuttimes.Count > 0)
+                {
+                    DateTime timeNow = DateTime.Now;
+                    DateTime cuttimesMax = cuttimes.Max();
+                    DateTime cuttimesMin = cuttimes.Min();
+
+                    cuttimes.Add(cuttimesMax.AddDays(-1));
+                    cuttimes.Add(cuttimesMin.AddDays(1));
+
+                    cuttimeRange = new List<DateTime>()
+                    {
+                        cuttimes.Where(x => x < timeNow).Max(),
+                        cuttimes.Where(x => x > timeNow).Min()
+                    };
+                }
+            }
+
+            return cuttimeRange;
+        }
 
 
 
@@ -622,51 +697,5 @@ namespace ThinkPower.LabB3.Domain.Service
             return result;
         }
 
-        /// <summary>
-        /// 取得投資風險評估切點時間範圍
-        /// </summary>
-        /// <returns>投資風險評估切點時間範圍</returns>
-        private IEnumerable<DateTime> GetRiskEvaCuttime()
-        {
-            List<DateTime> cuttimeRange = null;
-
-            string riskEvaCuttime = ConfigurationManager.AppSettings["risk.evaluation.cuttime"];
-
-            string[] cuttimeArray = !String.IsNullOrEmpty(riskEvaCuttime) ?
-                riskEvaCuttime.Split(',') :
-                null;
-
-            if (cuttimeArray != null)
-            {
-                List<DateTime> cuttimes = new List<DateTime>();
-
-                foreach (string cuttime in cuttimeArray)
-                {
-                    if (!String.IsNullOrEmpty(cuttime) &&
-                        (DateTime.TryParse(cuttime, out DateTime tempCuttime)))
-                    {
-                        cuttimes.Add(tempCuttime);
-                    }
-                }
-
-                if (cuttimes.Count > 0)
-                {
-                    DateTime timeNow = DateTime.Now;
-                    DateTime cuttimesMax = cuttimes.Max();
-                    DateTime cuttimesMin = cuttimes.Min();
-
-                    cuttimes.Add(cuttimesMax.AddDays(-1));
-                    cuttimes.Add(cuttimesMin.AddDays(1));
-
-                    cuttimeRange = new List<DateTime>()
-                    {
-                        cuttimes.Where(x => x < timeNow).Max(),
-                        cuttimes.Where(x => x > timeNow).Min()
-                    };
-                }
-            }
-
-            return cuttimeRange;
-        }
     }
 }

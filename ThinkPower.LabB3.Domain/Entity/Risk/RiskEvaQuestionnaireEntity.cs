@@ -16,10 +16,6 @@ namespace ThinkPower.LabB3.Domain.Entity.Risk
         /// 問卷類別
         /// </summary>
         public QuestionnaireEntity QuestionnaireEntity { get; set; }
-
-        /// <summary>
-        /// 可否進行風險評估問卷填答
-        /// </summary>
-        public bool CanRiskEvaluation { get; set; }
+        public bool CanRiskEvaluation { get; internal set; }
     }
 }

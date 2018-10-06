@@ -42,7 +42,6 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Actual
             Dictionary<string, string> actual = new QuestionnaireService().ValidateRule(_answer, _questionnaire);
 
-
             //Assert
             CollectionAssert.AreEqual(expected, actual);
         }

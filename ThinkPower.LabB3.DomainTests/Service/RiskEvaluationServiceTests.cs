@@ -70,5 +70,45 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Assert
             CollectionAssert.AreEqual(expected, actual);
         }
+
+        [TestMethod()]
+        public void CheckRiskEvaConditionTest_Faile()
+        {
+            //Arrange
+            var currentTime = DateTime.Now;
+            var riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
+                10, 30, 01),
+                IsUsed = "Y",
+            };
+            bool expected = false;
+
+            //Actual
+            bool actual = new RiskEvaluationService().CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void CheckRiskEvaConditionTest_Success()
+        {
+            //Arrange
+            var currentTime = DateTime.Now;
+            var riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
+                10, 29, 59),
+                IsUsed = "Y",
+            };
+            bool expected = true;
+
+            //Actual
+            bool actual = new RiskEvaluationService().CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
     }
 }

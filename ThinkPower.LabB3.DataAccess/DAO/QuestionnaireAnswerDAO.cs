@@ -41,6 +41,9 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             return count;
         }
 
+
+
+
         /// <summary>
         /// 取得問卷答題資料
         /// </summary>
@@ -96,6 +99,80 @@ ORDER BY CreateTime DESC;";
 
             return questAnswerDO;
         }
+
+        /// <summary>
+        /// 取得最新一筆用戶問卷答題資料
+        /// </summary>
+        /// <param name="uid">問卷主檔紀錄識別碼</param>
+        /// <param name="userId">用戶ID</param>
+        /// <returns>問卷答題資料</returns>
+        public QuestionnaireAnswerDO GetLatestQuestionnaireAnswer(Guid uid, string userId)
+        {
+            QuestionnaireAnswerDO questAnswerDO = null;
+
+            if (uid == Guid.Empty)
+            {
+                throw new ArgumentNullException("questAnswerId");
+            }
+            else if (String.IsNullOrEmpty(userId))
+            {
+                throw new ArgumentNullException("userId");
+            }
+
+            string query = @"
+SELECT TOP 1
+    [Uid],[QuestUid],[QuestAnswerId],[TesteeId],
+    [QuestScore],[ActualScore],[TesteeSource],[CreateUserId],
+    [CreateTime],[ModifyUserId],[ModifyTime]
+FROM QuestionnaireAnswer
+WHERE QuestUid = @QuestUid
+    AND TesteeId = @TesteeId
+ORDER BY CreateTime DESC;";
+
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
+                {
+                    Value = uid,
+                });
+                command.Parameters.Add(new SqlParameter("@TesteeId", SqlDbType.VarChar)
+                {
+                    Value = userId,
+                });
+
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count == 1)
+                {
+                    questAnswerDO = ConvertQuestionnaireAnswerDO(dt.Rows[0]);
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return questAnswerDO;
+        }
+
+
+
+
+
+
+
+
 
         /// <summary>
         /// 轉換問卷答題資料
@@ -172,5 +249,11 @@ VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @
                 ExceptionDispatchInfo.Capture(e).Throw();
             }
         }
+
+        public QuestionnaireAnswerDO GetQuestionnaireAnswerUidList(Guid uid)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 }
