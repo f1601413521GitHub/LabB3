@@ -142,6 +142,16 @@ input[type=button], input[type=submit] {
         width: 12px;
     }
 
+.layout-body-left-item {
+    background-color: #D9D9D9;
+    border-top: 1px solid white;
+}
+
+    .layout-body-left-item a {
+        color: #7C7C7C;
+        font-weight: bold;
+    }
+
 .layout-body-right {
 }
 
@@ -149,4 +159,37 @@ input[type=button], input[type=submit] {
     text-align: center;
     background-color: #A6A6A6;
     padding: 5px;
+}
+
+
+
+
+
+/*EvaluationRank*/
+.eva-rank-container {
+    padding: 5%;
+}
+
+.eva-rank-title {
+    text-align: center;
+    font-weight: bold;
+}
+
+.eva-rank-table {
+    width: 100%;
+    table-layout: fixed;
+    background-color: #F2F2F2;
+    border-collapse: collapse;
+}
+
+    .eva-rank-table tr td {
+        border: 1px solid black;
+    }
+
+.eva-rank-table-header {
+    line-height: 0;
+}
+
+.eva-rank-table-header-marker {
+    font-size: 30px;
 }
