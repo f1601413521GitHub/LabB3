@@ -141,7 +141,7 @@
 
                                                             <div class="row">
 
-                                                                <div class="col-md-1 question-answer-code">
+                                                                <div class="col-md-auto question-answer-code">
 
                                                                     @if (questDefine.AnswerType == "S")
                                                                     {
@@ -179,12 +179,12 @@
                                                                         if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.AnswerCode))
                                                                         {
                                                                             @Html.TextBox($"answer-{questDefine.QuestionId}-code",
-                                                                                answerDetail.AnswerCode, new { });
+                                                                                answerDetail.AnswerCode, new { placeholder = $"請輸入資料。" });
                                                                         }
                                                                         else
                                                                         {
                                                                             @Html.TextBox($"answer-{questDefine.QuestionId}-code",
-                                                                                null, new { });
+                                                                                null, new { placeholder = $"請輸入資料。" });
                                                                         }
                                                                     }
 
@@ -196,19 +196,19 @@
                                                                     </span>
                                                                 </div>
 
-                                                                <div class="question-answer-other">
+                                                                <div class="col-md-auto question-answer-other">
                                                                     @if (questDefine.AnswerType != "F" &&
                                                                         answerDefine.HaveOtherAnswer == "Y")
                                                                     {
                                                                         if (answerDetail != null && !String.IsNullOrEmpty(answerDetail.OtherAnswer))
                                                                         {
                                                                             @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
-                                                                                answerDetail.OtherAnswer, new { });
+                                                                                answerDetail.OtherAnswer, new { placeholder = $"請輸入{answerDefine.AnswerContent}說明。" });
                                                                         }
                                                                         else
                                                                         {
                                                                             @Html.TextBox($"answer-{questDefine.QuestionId}-other-{answerDefine.AnswerCode}",
-                                                                                null, new { });
+                                                                                null, new { placeholder = $"請輸入{answerDefine.AnswerContent}說明。" });
                                                                         }
                                                                     }
                                                                 </div>
