@@ -5,7 +5,7 @@ using ThinkPower.LabB3.Domain.Entity.Risk;
 namespace ThinkPower.LabB3.Domain.DTO
 {
     /// <summary>
-    /// 評估投資風險等級結果類別
+    /// 評估投資風險等級評估結果類別
     /// </summary>
     public class RiskEvaResultDTO
     {

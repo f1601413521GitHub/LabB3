@@ -29,6 +29,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// </summary>
         private RiskEvaluationService _riskService;
 
+
         /// <summary>
         /// 投資風險評估服務
         /// </summary>
@@ -46,6 +47,21 @@ namespace ThinkPower.LabB3.Web.Controllers
         }
 
         /// <summary>
+        /// 系統錯誤提示訊息
+        /// </summary>
+        private readonly string _systemErrorMsg = "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。";
+
+        /// <summary>
+        /// 己有生效的投資風險評估紀錄提示訊息
+        /// </summary>
+        private readonly string _existEffectiveAnRiskEvaluationMsg = "您己有生效的投資風險評估紀錄，無法重新進行風險評估。";
+
+
+
+
+
+
+        /// <summary>
         /// 進行投資風險評估問卷填答
         /// </summary>
         /// <param name="actionModel">來源資料</param>
@@ -53,17 +69,18 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpGet]
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
-            HttpStatusCode? statusCode = null;
             EvaQuestViewModel viewModel = null;
-
+            string validationSummary = String.Empty;
 
             try
             {
                 if (actionModel == null)
                 {
-                    statusCode = HttpStatusCode.NotFound;
+                    throw new ArgumentNullException("actionModel");
                 }
-                else if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
+
+                //TODO review
+                if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
                 {
                     Domain.DTO.RiskEvaResultDTO riskEvaResult = RiskService.
                         GetRiskResult(actionModel.QuestAnswerId);
@@ -78,38 +95,34 @@ namespace ThinkPower.LabB3.Web.Controllers
 
                     viewModel = new EvaQuestViewModel()
                     {
-                        RiskEvaQuestionnaire = riskEvaResult.RiskEvaQuestionnaire,
+                        RiskEvaQuestionnaireEntity = riskEvaResult.RiskEvaQuestionnaire,
                         QuestionnaireResultEntity = riskEvaResult.QuestionnaireResultEntity,
                     };
                 }
                 else
                 {
-                    RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.
-                        GetRiskQuestionnaire(actionModel.questId);
-
                     viewModel = new EvaQuestViewModel()
                     {
-                        RiskEvaQuestionnaire = riskEvaQuestEntity,
+                        RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(actionModel.QuestId),
                     };
+                }
+
+                //TODO review
+                if (!viewModel.RiskEvaQuestionnaireEntity.CanRiskEvaluation)
+                {
+                    validationSummary = _existEffectiveAnRiskEvaluationMsg;
                 }
             }
             catch (Exception e)
             {
                 logger.Error(e);
-                statusCode = HttpStatusCode.InternalServerError;
+                validationSummary = _systemErrorMsg;
             }
 
-
-            if (statusCode != null)
+            if (!String.IsNullOrEmpty(validationSummary))
             {
-                ModelState.AddModelError("",
-                    "系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。");
+                ModelState.AddModelError("", validationSummary);
             }
-            else if (!viewModel.RiskEvaQuestionnaire.CanRiskEvaluation)
-            {
-                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
-            }
-
 
             return View(viewModel);
         }
@@ -157,7 +170,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     {
                         return View("EvaQuest", new EvaQuestViewModel()
                         {
-                            RiskEvaQuestionnaire = evaluateResult.RiskEvaQuestionnaire,
+                            RiskEvaQuestionnaireEntity = evaluateResult.RiskEvaQuestionnaire,
                             QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
                         });
                     }

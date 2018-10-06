@@ -4,8 +4,8 @@
 @{
     ViewBag.Title = "EvaQuest";
 
-    var questEntity = (Model != null && Model.RiskEvaQuestionnaire != null) ?
-            Model.RiskEvaQuestionnaire.QuestionnaireEntity : null;
+    var questEntity = (Model != null && Model.RiskEvaQuestionnaireEntity != null) ?
+            Model.RiskEvaQuestionnaireEntity.QuestionnaireEntity : null;
 
     var questDefineEntities = (questEntity != null) ? questEntity.QuestDefineEntities : null;
 

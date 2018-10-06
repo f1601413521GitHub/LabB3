@@ -55,9 +55,7 @@ namespace ThinkPower.LabB3.DataAccess.DAO
                 throw new ArgumentNullException("questAnswerId");
             }
 
-            try
-            {
-                string query = @"
+            string query = @"
 SELECT TOP 1
     [Uid],[QuestUid],[QuestAnswerId],[TesteeId],
     [QuestScore],[ActualScore],[TesteeSource],[CreateUserId],
@@ -66,50 +64,45 @@ FROM QuestionnaireAnswer
 WHERE QuestUid =@QuestUid
 ORDER BY CreateTime DESC;";
 
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-
-                    command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
-                    {
-                        Value = uid,
-                    });
-
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-                    if (dt.Rows.Count == 1)
-                    {
-                        questAnswerDO = ConvertQuestionnaireAnswer(dt.Rows[0]);
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
+            using (SqlConnection connection = DbConnection)
             {
-                ExceptionDispatchInfo.Capture(e).Throw();
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
+                {
+                    Value = uid,
+                });
+
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count == 1)
+                {
+                    questAnswerDO = ConvertQuestionnaireAnswerDO(dt.Rows[0]);
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
             return questAnswerDO;
         }
 
         /// <summary>
-        /// 轉換問卷答題資料成為問卷答題資料物件
+        /// 轉換問卷答題資料
         /// </summary>
         /// <param name="questAnswer">問卷答題資料</param>
-        /// <returns>問卷答題資料物件</returns>
-        private QuestionnaireAnswerDO ConvertQuestionnaireAnswer(DataRow questAnswer)
+        /// <returns>問卷答題資料</returns>
+        private QuestionnaireAnswerDO ConvertQuestionnaireAnswerDO(DataRow questAnswer)
         {
             return new QuestionnaireAnswerDO()
             {

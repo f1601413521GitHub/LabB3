@@ -45,19 +45,17 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// 取得問卷題目資料
         /// </summary>
         /// <param name="uid">問卷識別碼</param>
-        /// <returns>問卷題目資料</returns>
+        /// <returns>問卷題目資料集合</returns>
         public IEnumerable<QuestionDefineDO> GetQuestionDefineList(Guid uid)
         {
-            List<QuestionDefineDO> questDefineList = null;
+            List<QuestionDefineDO> questionDefineList = null;
 
             if (uid == Guid.Empty)
             {
                 throw new ArgumentNullException("uid");
             }
 
-            try
-            {
-                string query = @"
+            string query = @"
 SELECT 
     [Uid] ,[QuestUid] ,[QuestionId] ,[QuestionContent] ,[NeedAnswer] ,
     [AllowNaCondition] ,[AnswerType] ,[MinMultipleAnswers] ,[MaxMultipleAnswers] ,
@@ -67,75 +65,74 @@ FROM QuestionDefine
 WHERE QuestUid = @QuestUid 
 ORDER BY OrderSn ASC";
 
-                using (SqlConnection connection = DbConnection)
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
                 {
-                    SqlCommand command = new SqlCommand(query, connection);
+                    Value = uid,
+                });
 
-                    command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count > 0)
+                {
+                    questionDefineList = new List<QuestionDefineDO>();
+
+                    QuestionDefineDO questionDefineDO = null;
+
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        Value = uid,
-                    });
-
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-                    if (dt.Rows.Count > 0)
-                    {
-                        questDefineList = new List<QuestionDefineDO>();
-
-                        foreach (DataRow dr in dt.Rows)
-                        {
-                            questDefineList.Add(GetQuestionDefineDO(dr));
-                        }
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
+                        questionDefineDO = null;
+                        questionDefineDO = ConvertQuestionDefineDO(dr);
+                        questionDefineList.Add(questionDefineDO);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
-            return questDefineList;
+            return questionDefineList;
         }
 
         /// <summary>
-        /// 轉換問卷題目資料成為問卷題目資料物件
+        /// 轉換問卷題目資料
         /// </summary>
-        /// <param name="questDefine">問卷題目資料</param>
-        /// <returns>問卷題目資料物件</returns>
-        private QuestionDefineDO GetQuestionDefineDO(DataRow questDefine)
+        /// <param name="questionDefine">問卷題目資料</param>
+        /// <returns>問卷題目資料</returns>
+        private QuestionDefineDO ConvertQuestionDefineDO(DataRow questionDefine)
         {
             return new QuestionDefineDO()
             {
-                Uid = questDefine.Field<Guid>("Uid"),
-                QuestUid = questDefine.Field<Guid>("QuestUid"),
-                QuestionId = questDefine.Field<string>("QuestionId"),
-                QuestionContent = questDefine.Field<string>("QuestionContent"),
-                NeedAnswer = questDefine.Field<string>("NeedAnswer"),
-                AllowNaCondition = questDefine.Field<string>("AllowNaCondition"),
-                AnswerType = questDefine.Field<string>("AnswerType"),
-                MinMultipleAnswers = questDefine.Field<int?>("MinMultipleAnswers"),
-                MaxMultipleAnswers = questDefine.Field<int?>("MaxMultipleAnswers"),
-                SingleAnswerCondition = questDefine.Field<string>("SingleAnswerCondition"),
-                CountScoreType = questDefine.Field<string>("CountScoreType"),
-                Memo = questDefine.Field<string>("Memo"),
-                OrderSn = questDefine.Field<int?>("OrderSn"),
-                CreateUserId = questDefine.Field<string>("CreateUserId"),
-                CreateTime = questDefine.Field<DateTime?>("CreateTime"),
-                ModifyUserId = questDefine.Field<string>("ModifyUserId"),
-                ModifyTime = questDefine.Field<DateTime?>("ModifyTime"),
+                Uid = questionDefine.Field<Guid>("Uid"),
+                QuestUid = questionDefine.Field<Guid>("QuestUid"),
+                QuestionId = questionDefine.Field<string>("QuestionId"),
+                QuestionContent = questionDefine.Field<string>("QuestionContent"),
+                NeedAnswer = questionDefine.Field<string>("NeedAnswer"),
+                AllowNaCondition = questionDefine.Field<string>("AllowNaCondition"),
+                AnswerType = questionDefine.Field<string>("AnswerType"),
+                MinMultipleAnswers = questionDefine.Field<int?>("MinMultipleAnswers"),
+                MaxMultipleAnswers = questionDefine.Field<int?>("MaxMultipleAnswers"),
+                SingleAnswerCondition = questionDefine.Field<string>("SingleAnswerCondition"),
+                CountScoreType = questionDefine.Field<string>("CountScoreType"),
+                Memo = questionDefine.Field<string>("Memo"),
+                OrderSn = questionDefine.Field<int?>("OrderSn"),
+                CreateUserId = questionDefine.Field<string>("CreateUserId"),
+                CreateTime = questionDefine.Field<DateTime?>("CreateTime"),
+                ModifyUserId = questionDefine.Field<string>("ModifyUserId"),
+                ModifyTime = questionDefine.Field<DateTime?>("ModifyTime"),
             };
         }
     }

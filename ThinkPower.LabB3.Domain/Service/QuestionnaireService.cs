@@ -26,6 +26,13 @@ namespace ThinkPower.LabB3.Domain.Service
         /// </summary>
         private Logger logger = LogManager.GetCurrentClassLogger();
 
+
+
+
+
+
+
+
         /// <summary>
         /// 計算問卷填答得分
         /// </summary>
@@ -116,6 +123,189 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
+        /// 取得有效的問卷資料
+        /// </summary>
+        /// <param name="id">問卷編號</param>
+        /// <returns>有效的問卷資料</returns>
+        public QuestionnaireEntity GetActiveQuestionnaire(string id)
+        {
+            QuestionnaireEntity questionnaireEntity = null;
+
+            if (String.IsNullOrEmpty(id))
+            {
+                throw new ArgumentNullException("id");
+            }
+
+            QuestionnaireDO questionnaireDO = new QuestionnaireDAO().GetActiveQuestionniare(id);
+
+            if (questionnaireDO == null)
+            {
+                var ex = new InvalidOperationException($"questionnaireDO not found");
+                ex.Data["id"] = id;
+                throw ex;
+            }
+
+            IEnumerable<QuestionDefineDO> questDefineList = new QuestionDefineDAO().
+                GetQuestionDefineList(questionnaireDO.Uid);
+
+            if ((questDefineList == null) ||
+                (questDefineList.Count() == 0))
+            {
+                var ex = new InvalidOperationException($"questDefineList not found");
+                ex.Data["questionnaireUid"] = questionnaireDO.Uid;
+                throw ex;
+            }
+
+            List<QuestDefineEntity> questDefineEntities = ConvertQuestDefineEntity(questDefineList).
+                ToList();
+
+            QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
+
+            IEnumerable<QuestionAnswerDefineDO> answerDefineList = null;
+
+            foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
+            {
+                answerDefineList = null;
+                answerDefineList = answerDefineDAO.GetAnswerDefineList(questDefineEntity.Uid);
+
+                if ((answerDefineList == null) ||
+                    (answerDefineList.Count() == 0))
+                {
+                    var ex = new InvalidOperationException($"answerDefineList not found");
+                    ex.Data["questDefineUid"] = questDefineEntity.Uid;
+                    throw ex;
+                }
+
+                questDefineEntity.AnswerDefineEntities = ConvertAnswerDefineEntity(answerDefineList);
+            }
+
+            questionnaireEntity = new QuestionnaireEntity()
+            {
+                Uid = questionnaireDO.Uid,
+                QuestId = questionnaireDO.QuestId,
+                Version = questionnaireDO.Version,
+                Kind = questionnaireDO.Kind,
+                Name = questionnaireDO.Name,
+                Memo = questionnaireDO.Memo,
+                Ondate = questionnaireDO.Ondate,
+                Offdate = questionnaireDO.Offdate,
+                NeedScore = questionnaireDO.NeedScore,
+                QuestScore = questionnaireDO.QuestScore,
+                ScoreKind = questionnaireDO.ScoreKind,
+                HeadBackgroundImg = questionnaireDO.HeadBackgroundImg,
+                HeadDescription = questionnaireDO.HeadDescription,
+                FooterDescription = questionnaireDO.FooterDescription,
+                CreateUserId = questionnaireDO.CreateUserId,
+                CreateTime = questionnaireDO.CreateTime,
+                ModifyUserId = questionnaireDO.ModifyUserId,
+                ModifyTime = questionnaireDO.ModifyTime,
+
+                QuestDefineEntities = questDefineEntities,
+            };
+
+            return questionnaireEntity;
+        }
+
+        /// <summary>
+        /// 取得問卷資料
+        /// </summary>
+        /// <param name="uid">問卷識別碼</param>
+        /// <returns>問卷資料</returns>
+        public QuestionnaireEntity GetQuestionnaire(string uid)
+        {
+            QuestionnaireEntity questEntity = null;
+
+            if (String.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentNullException("uid");
+            }
+
+            try
+            {
+                QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
+                DateTime timeNow = DateTime.Now;
+
+                if (quest == null || quest.Ondate >= timeNow ||
+                    quest.Offdate != null && quest.Offdate <= timeNow)
+                {
+                    throw new InvalidOperationException($"questionnaireDO not found, uid={uid}");
+                }
+
+                IEnumerable<QuestionDefineDO> questDefineList =
+                    new QuestionDefineDAO().GetQuestionDefineList(quest.Uid);
+
+                if ((questDefineList == null) ||
+                    (questDefineList.Count() == 0))
+                {
+                    throw new InvalidOperationException(
+                        $"questDefineList not found,questUid={quest.Uid}");
+                }
+
+                List<QuestDefineEntity> questDefineEntities =
+                    ConvertQuestDefineEntity(questDefineList).ToList();
+
+                QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
+                IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
+
+
+                foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
+                {
+                    tempAnswerDefineList = answerDefineDAO.
+                        GetAnswerDefineList(questDefineEntity.Uid);
+
+                    if ((tempAnswerDefineList == null) ||
+                        (tempAnswerDefineList.Count() == 0))
+                    {
+                        throw new InvalidOperationException(
+                            $"answerDefineList not found, questDefineEntityUid={questDefineEntity.Uid}");
+                    }
+
+                    questDefineEntity.AnswerDefineEntities =
+                        ConvertAnswerDefineEntity(tempAnswerDefineList);
+
+                    tempAnswerDefineList = null;
+                }
+
+                questEntity = new QuestionnaireEntity()
+                {
+                    Uid = quest.Uid,
+                    QuestId = quest.QuestId,
+                    Version = quest.Version,
+                    Kind = quest.Kind,
+                    Name = quest.Name,
+                    Memo = quest.Memo,
+                    Ondate = quest.Ondate,
+                    Offdate = quest.Offdate,
+                    NeedScore = quest.NeedScore,
+                    QuestScore = quest.QuestScore,
+                    ScoreKind = quest.ScoreKind,
+                    HeadBackgroundImg = quest.HeadBackgroundImg,
+                    HeadDescription = quest.HeadDescription,
+                    FooterDescription = quest.FooterDescription,
+                    CreateUserId = quest.CreateUserId,
+                    CreateTime = quest.CreateTime,
+                    ModifyUserId = quest.ModifyUserId,
+                    ModifyTime = quest.ModifyTime,
+
+                    QuestDefineEntities = questDefineEntities,
+                };
+            }
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Capture(e).Throw();
+            }
+
+            return questEntity;
+        }
+
+
+
+
+
+
+
+
+        /// <summary>
         /// 紀錄問卷填答資料至問卷答題主檔與答題明細
         /// </summary>
         /// <param name="questEntity">問卷資料</param>
@@ -179,60 +369,6 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 驗證問卷填答規則
-        /// </summary>
-        /// <param name="answer">問卷填答資料</param>
-        /// <param name="questEntity">問卷資料</param>
-        /// <returns>驗證結果</returns>
-        public Dictionary<string, string> ValidateRule(QuestionnaireAnswerEntity answer,
-            QuestionnaireEntity questEntity)
-        {
-            Dictionary<string, string> validates = new Dictionary<string, string>();
-            string message = null;
-
-            foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
-            {
-                IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
-                    .Where(x => x.QuestionId == questDefine.QuestionId);
-
-                message = null;
-
-                //TODO: TEST
-                //questDefine.MinMultipleAnswers = 2;
-                //questDefine.MaxMultipleAnswers = 3;
-
-                if (!ValidateNeedAnswer(questDefine, questAnswerDetailList, answer.AnswerDetailEntities))
-                {
-                    message = $"此題必須填答!";
-                }
-                else if (!ValidateMinMultipleAnswers(questDefine, questAnswerDetailList))
-                {
-                    message = $"此題至少須勾選{questDefine.MinMultipleAnswers}個項目!";
-                }
-                else if (!ValidateMaxMultipleAnswers(questDefine, questAnswerDetailList))
-                {
-                    message = $"此題至多僅能勾選{questDefine.MaxMultipleAnswers}個項目!";
-                }
-                else if (!ValidateSingleAnswerCondition(questDefine, questAnswerDetailList,
-                    answer.AnswerDetailEntities))
-                {
-                    message = $"此題僅能勾選1個項目!";
-                }
-                else if (!ValidateOtherAnswer(questDefine, questAnswerDetailList))
-                {
-                    message = $"請輸入其他說明文字!";
-                }
-
-                if (message != null)
-                {
-                    validates.Add(questDefine.QuestionId, message);
-                }
-            }
-
-            return validates;
-        }
-
-        /// <summary>
         /// 計算問卷得分，回傳問卷得分類別
         /// </summary>
         /// <param name="answer">問卷填答資料</param>
@@ -256,7 +392,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                     if (answerDetailList.Count() == 0)
                     {
-                        throw new InvalidOperationException("answerCode not found");
+                        continue;
                     }
                     else if (answerDetailList.Count() > 1)
                     {
@@ -394,6 +530,60 @@ namespace ThinkPower.LabB3.Domain.Service
                 ActualScore = questionScoreResult,
                 FullAnswerDetailList = answerFullDetailList,
             };
+        }
+
+        /// <summary>
+        /// 驗證問卷填答規則
+        /// </summary>
+        /// <param name="answer">問卷填答資料</param>
+        /// <param name="questEntity">問卷資料</param>
+        /// <returns>驗證結果</returns>
+        public Dictionary<string, string> ValidateRule(QuestionnaireAnswerEntity answer,
+            QuestionnaireEntity questEntity)
+        {
+            Dictionary<string, string> validates = new Dictionary<string, string>();
+            string message = null;
+
+            foreach (QuestDefineEntity questDefine in questEntity.QuestDefineEntities)
+            {
+                IEnumerable<AnswerDetailEntity> questAnswerDetailList = answer.AnswerDetailEntities
+                    .Where(x => x.QuestionId == questDefine.QuestionId);
+
+                message = null;
+
+                //TODO: TEST
+                //questDefine.MinMultipleAnswers = 2;
+                //questDefine.MaxMultipleAnswers = 3;
+
+                if (!ValidateNeedAnswer(questDefine, questAnswerDetailList, answer.AnswerDetailEntities))
+                {
+                    message = $"此題必須填答!";
+                }
+                else if (!ValidateMinMultipleAnswers(questDefine, questAnswerDetailList))
+                {
+                    message = $"此題至少須勾選{questDefine.MinMultipleAnswers}個項目!";
+                }
+                else if (!ValidateMaxMultipleAnswers(questDefine, questAnswerDetailList))
+                {
+                    message = $"此題至多僅能勾選{questDefine.MaxMultipleAnswers}個項目!";
+                }
+                else if (!ValidateSingleAnswerCondition(questDefine, questAnswerDetailList,
+                    answer.AnswerDetailEntities))
+                {
+                    message = $"此題僅能勾選1個項目!";
+                }
+                else if (!ValidateOtherAnswer(questDefine, questAnswerDetailList))
+                {
+                    message = $"請輸入其他說明文字!";
+                }
+
+                if (message != null)
+                {
+                    validates.Add(questDefine.QuestionId, message);
+                }
+            }
+
+            return validates;
         }
 
         /// <summary>
@@ -624,105 +814,10 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 取得有效的問卷資料
-        /// </summary>
-        /// <param name="id">問卷編號</param>
-        /// <returns>有效的問卷資料</returns>
-        public QuestionnaireEntity GetActiveQuestionnaire(string id)
-        {
-            QuestionnaireEntity result = null;
-
-            if (String.IsNullOrEmpty(id))
-            {
-                throw new ArgumentNullException("id");
-            }
-
-            try
-            {
-                QuestionnaireDO questionnaire = new QuestionnaireDAO().GetActiveQuestionniare(id);
-
-                if (questionnaire == null)
-                {
-                    var ex = new InvalidOperationException($"questionnaire not found");
-                    ex.Data["id"] = id;
-
-                    throw ex;
-                }
-
-                IEnumerable<QuestionDefineDO> questDefineList = new QuestionDefineDAO().
-                    GetQuestionDefineList(questionnaire.Uid);
-
-                if ((questDefineList == null) || (questDefineList.Count() == 0))
-                {
-                    var ex = new InvalidOperationException($"questDefineList not found");
-                    ex.Data["questUid"] = questionnaire.Uid;
-
-                    throw ex;
-                }
-
-                List<QuestDefineEntity> questDefineEntities =
-                    ConvertQuestDefineEntity(questDefineList).ToList();
-
-                QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
-                IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
-
-                foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
-                {
-                    tempAnswerDefineList = answerDefineDAO.
-                        GetQuestionAnswerDefineList(questDefineEntity.Uid);
-
-                    if ((tempAnswerDefineList == null) ||
-                        (tempAnswerDefineList.Count() == 0))
-                    {
-                        var ex = new InvalidOperationException($"answerDefineList not found");
-                        ex.Data["questDefineEntityUid"] = questDefineEntity.Uid;
-
-                        throw ex;
-                    }
-
-                    questDefineEntity.AnswerDefineEntities =
-                        ConvertAnswerDefineEntity(tempAnswerDefineList);
-
-                    tempAnswerDefineList = null;
-                }
-
-                result = new QuestionnaireEntity()
-                {
-                    Uid = questionnaire.Uid,
-                    QuestId = questionnaire.QuestId,
-                    Version = questionnaire.Version,
-                    Kind = questionnaire.Kind,
-                    Name = questionnaire.Name,
-                    Memo = questionnaire.Memo,
-                    Ondate = questionnaire.Ondate,
-                    Offdate = questionnaire.Offdate,
-                    NeedScore = questionnaire.NeedScore,
-                    QuestScore = questionnaire.QuestScore,
-                    ScoreKind = questionnaire.ScoreKind,
-                    HeadBackgroundImg = questionnaire.HeadBackgroundImg,
-                    HeadDescription = questionnaire.HeadDescription,
-                    FooterDescription = questionnaire.FooterDescription,
-                    CreateUserId = questionnaire.CreateUserId,
-                    CreateTime = questionnaire.CreateTime,
-                    ModifyUserId = questionnaire.ModifyUserId,
-                    ModifyTime = questionnaire.ModifyTime,
-
-                    QuestDefineEntities = questDefineEntities,
-                };
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// 轉換問卷答案項目資料
         /// </summary>
         /// <param name="answerDefineList">問卷答案項目資料</param>
-        /// <returns>問卷答案定義資料</returns>
+        /// <returns>問卷答案定義資料集合</returns>
         private IEnumerable<AnswerDefineEntity> ConvertAnswerDefineEntity(
             IEnumerable<QuestionAnswerDefineDO> answerDefineList)
         {
@@ -747,12 +842,12 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <summary>
         /// 轉換問卷題目資料
         /// </summary>
-        /// <param name="questDefineList">問卷題目資料</param>
+        /// <param name="questionDefineList">問卷題目資料</param>
         /// <returns>問卷題目定義資料</returns>
-        private IEnumerable<QuestDefineEntity> ConvertQuestDefineEntity(
-            IEnumerable<QuestionDefineDO> questDefineList)
+        private IEnumerable<QuestDefineEntity> ConvertQuestDefineEntity(IEnumerable<QuestionDefineDO>
+            questionDefineList)
         {
-            return questDefineList.Select(x => new QuestDefineEntity
+            return questionDefineList.Select(x => new QuestDefineEntity
             {
                 Uid = x.Uid,
                 QuestUid = x.QuestUid,
@@ -774,96 +869,5 @@ namespace ThinkPower.LabB3.Domain.Service
             });
         }
 
-        /// <summary>
-        /// 取得問卷資料
-        /// </summary>
-        /// <param name="uid">問卷識別碼</param>
-        /// <returns>問卷資料</returns>
-        public QuestionnaireEntity GetQuestionnaire(string uid)
-        {
-            QuestionnaireEntity questEntity = null;
-
-            if (String.IsNullOrEmpty(uid))
-            {
-                throw new ArgumentNullException("uid");
-            }
-
-            try
-            {
-                QuestionnaireDO quest = new QuestionnaireDAO().GetQuestionnaire(uid);
-                DateTime timeNow = DateTime.Now;
-
-                if (quest == null || quest.Ondate >= timeNow ||
-                    quest.Offdate != null && quest.Offdate <= timeNow)
-                {
-                    throw new InvalidOperationException($"questionnaire not found, uid={uid}");
-                }
-
-                IEnumerable<QuestionDefineDO> questDefineList =
-                    new QuestionDefineDAO().GetQuestionDefineList(quest.Uid);
-
-                if ((questDefineList == null) ||
-                    (questDefineList.Count() == 0))
-                {
-                    throw new InvalidOperationException(
-                        $"questDefineList not found,questUid={quest.Uid}");
-                }
-
-                List<QuestDefineEntity> questDefineEntities =
-                    ConvertQuestDefineEntity(questDefineList).ToList();
-
-                QuestionAnswerDefineDAO answerDefineDAO = new QuestionAnswerDefineDAO();
-                IEnumerable<QuestionAnswerDefineDO> tempAnswerDefineList = null;
-
-
-                foreach (QuestDefineEntity questDefineEntity in questDefineEntities)
-                {
-                    tempAnswerDefineList = answerDefineDAO.
-                        GetQuestionAnswerDefineList(questDefineEntity.Uid);
-
-                    if ((tempAnswerDefineList == null) ||
-                        (tempAnswerDefineList.Count() == 0))
-                    {
-                        throw new InvalidOperationException(
-                            $"answerDefineList not found, questDefineEntityUid={questDefineEntity.Uid}");
-                    }
-
-                    questDefineEntity.AnswerDefineEntities =
-                        ConvertAnswerDefineEntity(tempAnswerDefineList);
-
-                    tempAnswerDefineList = null;
-                }
-
-                questEntity = new QuestionnaireEntity()
-                {
-                    Uid = quest.Uid,
-                    QuestId = quest.QuestId,
-                    Version = quest.Version,
-                    Kind = quest.Kind,
-                    Name = quest.Name,
-                    Memo = quest.Memo,
-                    Ondate = quest.Ondate,
-                    Offdate = quest.Offdate,
-                    NeedScore = quest.NeedScore,
-                    QuestScore = quest.QuestScore,
-                    ScoreKind = quest.ScoreKind,
-                    HeadBackgroundImg = quest.HeadBackgroundImg,
-                    HeadDescription = quest.HeadDescription,
-                    FooterDescription = quest.FooterDescription,
-                    CreateUserId = quest.CreateUserId,
-                    CreateTime = quest.CreateTime,
-                    ModifyUserId = quest.ModifyUserId,
-                    ModifyTime = quest.ModifyTime,
-
-                    QuestDefineEntities = questDefineEntities,
-                };
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-
-            return questEntity;
-        }
     }
 }

@@ -44,20 +44,18 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得問卷答案定義資料
         /// </summary>
-        /// <param name="uid">問卷識別碼</param>
-        /// <returns>問卷答案定義資料</returns>
-        public IEnumerable<QuestionAnswerDefineDO> GetQuestionAnswerDefineList(Guid uid)
+        /// <param name="uid">問卷題目識別碼</param>
+        /// <returns>問卷答案定義資料集合</returns>
+        public IEnumerable<QuestionAnswerDefineDO> GetAnswerDefineList(Guid uid)
         {
-            List<QuestionAnswerDefineDO> answerDefineDOList = null;
+            List<QuestionAnswerDefineDO> answerDefineList = null;
 
             if (uid == Guid.Empty)
             {
                 throw new ArgumentNullException("uid");
             }
 
-            try
-            {
-                string query = @"
+            string query = @"
 SELECT [Uid],[QuestionUid],[AnswerCode],[AnswerContent],[Memo],
     [HaveOtherAnswer],[NeedOtherAnswer],[Score],[OrderSn],[CreateUserId],
     [CreateTime],[ModifyUserId],[ModifyTime] 
@@ -65,73 +63,70 @@ FROM QuestionAnswerDefine
 WHERE QuestionUid = @QuestionUid 
 ORDER BY OrderSn ASC";
 
-                using (SqlConnection connection = DbConnection)
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@QuestionUid", SqlDbType.UniqueIdentifier)
                 {
-                    SqlCommand command = new SqlCommand(query, connection);
+                    Value = uid,
+                });
 
-                    command.Parameters.Add(new SqlParameter("@QuestionUid",
-                        SqlDbType.UniqueIdentifier)
-                        {
-                            Value = uid,
-                        });
+                connection.Open();
 
-                    connection.Open();
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
 
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
+                if (dt.Rows.Count > 0)
+                {
+                    answerDefineList = new List<QuestionAnswerDefineDO>();
 
-                    if (dt.Rows.Count > 0)
+                    QuestionAnswerDefineDO answerDefineDO = null;
+
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        answerDefineDOList = new List<QuestionAnswerDefineDO>();
-
-                        foreach (DataRow dr in dt.Rows)
-                        {
-                            answerDefineDOList.Add(ConvertQuestionAnswerDefine(dr));
-                        }
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
+                        answerDefineDO = null;
+                        answerDefineDO = ConvertAnswerDefineDO(dr);
+                        answerDefineList.Add(answerDefineDO);
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
-            return answerDefineDOList;
+            return answerDefineList;
         }
 
         /// <summary>
-        /// 轉換問卷答案定義資料為問卷答案定義資料物件
+        /// 轉換問卷答案定義資料
         /// </summary>
-        /// <param name="questionAnswerDefine">問卷答案定義資料</param>
-        /// <returns>問卷答案定義資料物件</returns>
-        private QuestionAnswerDefineDO ConvertQuestionAnswerDefine(
-            DataRow questionAnswerDefine)
+        /// <param name="answerDefine">問卷答案定義資料</param>
+        /// <returns>問卷答案定義資料</returns>
+        private QuestionAnswerDefineDO ConvertAnswerDefineDO(DataRow answerDefine)
         {
             return new QuestionAnswerDefineDO()
             {
-                Uid = questionAnswerDefine.Field<Guid>("Uid"),
-                QuestionUid = questionAnswerDefine.Field<Guid>("QuestionUid"),
-                AnswerCode = questionAnswerDefine.Field<string>("AnswerCode"),
-                AnswerContent = questionAnswerDefine.Field<string>("AnswerContent"),
-                Memo = questionAnswerDefine.Field<string>("Memo"),
-                HaveOtherAnswer = questionAnswerDefine.Field<string>("HaveOtherAnswer"),
-                NeedOtherAnswer = questionAnswerDefine.Field<string>("NeedOtherAnswer"),
-                Score = questionAnswerDefine.Field<int?>("Score"),
-                OrderSn = questionAnswerDefine.Field<int?>("OrderSn"),
-                CreateUserId = questionAnswerDefine.Field<string>("CreateUserId"),
-                CreateTime = questionAnswerDefine.Field<DateTime?>("CreateTime"),
-                ModifyUserId = questionAnswerDefine.Field<string>("ModifyUserId"),
-                ModifyTime = questionAnswerDefine.Field<DateTime?>("ModifyTime")
+                Uid = answerDefine.Field<Guid>("Uid"),
+                QuestionUid = answerDefine.Field<Guid>("QuestionUid"),
+                AnswerCode = answerDefine.Field<string>("AnswerCode"),
+                AnswerContent = answerDefine.Field<string>("AnswerContent"),
+                Memo = answerDefine.Field<string>("Memo"),
+                HaveOtherAnswer = answerDefine.Field<string>("HaveOtherAnswer"),
+                NeedOtherAnswer = answerDefine.Field<string>("NeedOtherAnswer"),
+                Score = answerDefine.Field<int?>("Score"),
+                OrderSn = answerDefine.Field<int?>("OrderSn"),
+                CreateUserId = answerDefine.Field<string>("CreateUserId"),
+                CreateTime = answerDefine.Field<DateTime?>("CreateTime"),
+                ModifyUserId = answerDefine.Field<string>("ModifyUserId"),
+                ModifyTime = answerDefine.Field<DateTime?>("ModifyTime")
             };
         }
     }

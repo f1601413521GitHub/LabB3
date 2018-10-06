@@ -7,11 +7,8 @@
     {
         /// <summary>
         /// 問卷編號
-        /// 問卷1:FNDRE001
-        /// 問卷2:FNDRE002
         /// </summary>
-        public string questId { get; set; }
-
+        public string QuestId { get; set; }
 
         /// <summary> 
         ///問卷答題編號 

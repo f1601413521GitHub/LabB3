@@ -59,6 +59,13 @@ namespace ThinkPower.LabB3.Domain.Service
             }
         }
 
+
+
+
+
+
+
+
         /// <summary>
         /// 評估投資風險等級
         /// </summary>
@@ -185,131 +192,6 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 取出投資風險等級與等級明細
-        /// </summary>
-        /// <returns>投資風險等級資料</returns>
-        private IEnumerable<RiskRankEntity> GetRiskRankEntities()
-        {
-            IEnumerable<RiskRankEntity> result = CacheProvider.GetCache("riskRankEntityList")
-                as IEnumerable<RiskRankEntity>;
-
-            if ((result == null) ||
-                (result.Count() == 0))
-            {
-                IEnumerable<RiskRankDO> riskRankList = CacheProvider.
-                    GetCache("riskRankList") as IEnumerable<RiskRankDO>;
-
-                if ((riskRankList == null) ||
-                    (riskRankList.Count() == 0))
-                {
-                    riskRankList = CacheProvider.SetCache("riskRankList", new RiskRankDAO().
-                        ReadAll("FNDINV")) as IEnumerable<RiskRankDO>;
-                }
-
-                IEnumerable<RiskRankDetailDO> riskRankDetailList = CacheProvider.
-                    GetCache("riskRankDetailList") as IEnumerable<RiskRankDetailDO>;
-
-                if ((riskRankDetailList == null) ||
-                    (riskRankDetailList.Count() == 0))
-                {
-                    riskRankDetailList = CacheProvider.SetCache("riskRankDetailList", new RiskRankDetailDAO().
-                        ReadAll()) as IEnumerable<RiskRankDetailDO>;
-                }
-
-                List<RiskRankEntity> riskRankEntityList = new List<RiskRankEntity>();
-                foreach (RiskRankDO riskRank in riskRankList.OrderBy(x => x.MinScore))
-                {
-                    riskRankEntityList.Add(new RiskRankEntity()
-                    {
-                        RiskEvaId = riskRank.RiskEvaId,
-                        MinScore = riskRank.MinScore,
-                        MaxScore = riskRank.MaxScore,
-                        RiskRankKind = riskRank.RiskRankKind,
-                        RiskRankDetailEntities = ConvertRiskRankDetailDO(riskRankDetailList.Where(x => x.RiskRankUid == riskRank.Uid)),
-                    });
-                }
-
-                result = CacheProvider.SetCache("riskRankEntityList", riskRankEntityList)
-                    as IEnumerable<RiskRankEntity>;
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 轉換投資風險等級明細資料物件
-        /// </summary>
-        /// <param name="riskRankDetailDOList">投資風險等級明細資料集合</param>
-        /// <returns>投資風險等級明細</returns>
-        private IEnumerable<RiskRankDetailEntity> ConvertRiskRankDetailDO(
-            IEnumerable<RiskRankDetailDO> riskRankDetailDOList)
-        {
-            return riskRankDetailDOList.Select(x => new RiskRankDetailEntity()
-            {
-                RiskRankUid = x.RiskRankUid,
-                ProfitRiskRank = x.ProfitRiskRank,
-                IsEffective = x.IsEffective,
-            });
-        }
-
-        /// <summary>
-        /// 檢查是否己有生效的風險評估紀錄
-        /// </summary>
-        /// <param name="questUid">問卷識別碼</param>
-        /// <returns>投資風險評估問卷</returns>
-        private RiskEvaQuestionnaireEntity CheckLatestRiskEvaluation(string questUid)
-        {
-            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
-
-            QuestionnaireEntity questEntity = QuestService.GetQuestionnaire(questUid);
-
-            if (questEntity == null)
-            {
-                throw new InvalidOperationException("questEntity not found");
-            }
-
-            QuestionnaireAnswerDO questAnswer = new QuestionnaireAnswerDAO()
-                .GetQuestionnaireAnswer(questEntity.Uid);
-
-            if (questAnswer == null)
-            {
-                throw new InvalidOperationException(
-                    $"questAnswer not found,activeQuestUid={questEntity.Uid}");
-            }
-
-            RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO()
-                .GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
-
-
-            //TODO 1003 後面這段沒問題
-            bool riskEvaluationInCuttimeRange = false;
-
-            if (riskEvaluation != null)
-            {
-                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
-
-                if (cuttimeRange == null)
-                {
-                    throw new InvalidOperationException("cuttimeRange not found");
-                }
-
-                if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
-                    (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
-                {
-                    riskEvaluationInCuttimeRange = true;
-                }
-            }
-
-            riskEvaQuestEntity = new RiskEvaQuestionnaireEntity()
-            {
-                QuestionnaireEntity = questEntity,
-                CanRiskEvaluation = !riskEvaluationInCuttimeRange,
-            };
-
-            return riskEvaQuestEntity;
-        }
-
-        /// <summary>
         /// 依紀錄識別碼取得風險評估資料
         /// </summary>
         /// <param name="uid">紀錄識別碼</param>
@@ -342,33 +224,6 @@ namespace ThinkPower.LabB3.Domain.Service
             return riskEvaEntity;
         }
 
-
-        /// <summary>
-        /// 轉換投資風險評估結果資料物件
-        /// </summary>
-        /// <param name="riskEvaDO">投資風險評估結果資料物件</param>
-        /// <returns>投資風險評估結果</returns>
-        private RiskEvaluationEntity ConvertRiskEvaluationDO(RiskEvaluationDO riskEvaDO)
-        {
-            return new RiskEvaluationEntity()
-            {
-                Uid = riskEvaDO.Uid,
-                RiskEvaId = riskEvaDO.RiskEvaId,
-                QuestAnswerId = riskEvaDO.QuestAnswerId,
-                CliId = riskEvaDO.CliId,
-                RiskResult = riskEvaDO.RiskResult,
-                RiskScore = riskEvaDO.RiskScore,
-                RiskAttribute = riskEvaDO.RiskAttribute,
-                EvaluationDate = riskEvaDO.EvaluationDate,
-                BusinessDate = riskEvaDO.BusinessDate,
-                IsUsed = riskEvaDO.IsUsed,
-                CreateUserId = riskEvaDO.CreateUserId,
-                CreateTime = riskEvaDO.CreateTime,
-                ModifyUserId = riskEvaDO.ModifyUserId,
-                ModifyTime = riskEvaDO.ModifyTime,
-            };
-        }
-
         /// <summary>
         /// 取得風險評估問卷資料
         /// </summary>
@@ -383,52 +238,51 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new ArgumentNullException("questId");
             }
 
-            try
+            QuestionnaireEntity activeQuestionnaire = QuestService.GetActiveQuestionnaire(questId);
+
+            if (activeQuestionnaire == null)
             {
-                QuestionnaireEntity activeQuest = QuestService.GetActiveQuestionnaire(questId);
+                var ex = new InvalidOperationException("activeQuestionnaire not found");
+                ex.Data["questId"] = questId;
+                throw ex;
+            }
+            //TODO @A@
+            QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(
+                activeQuestionnaire.Uid);
 
-                QuestionnaireAnswerDO questAnswer =
-                    new QuestionnaireAnswerDAO().GetQuestionnaireAnswer(activeQuest.Uid);
+            if (questAnswerDO == null)
+            {
+                var ex = new InvalidOperationException("questAnswerDO not found");
+                ex.Data["ActiveQuestionnaireUid"] = activeQuestionnaire.Uid;
+                throw ex;
+            }
 
-                if (questAnswer == null)
+            RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO().GetLatestUsedRiskEvaluation(
+                questAnswerDO.QuestAnswerId);
+
+            bool riskEvaluationInCuttimeRange = false;
+
+            if (riskEvaluation != null)
+            {
+                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                if (cuttimeRange == null)
                 {
-                    var ex = new InvalidOperationException("questAnswer not found");
-                    ex.Data["ActiveQuestionnaire-Uid"] = activeQuest.Uid;
-
-                    throw ex;
+                    throw new InvalidOperationException("cuttimeRange not found");
                 }
 
-                RiskEvaluationDO riskEvaluation =
-                    new RiskEvaluationDAO().GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
-
-                bool riskEvaluationInCuttimeRange = false;
-
-                if (riskEvaluation != null)
+                if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                    (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
                 {
-                    IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
-
-                    if (cuttimeRange == null)
-                    {
-                        throw new InvalidOperationException("cuttimeRange not found");
-                    }
-
-                    if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
-                        (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
-                    {
-                        riskEvaluationInCuttimeRange = true;
-                    }
+                    riskEvaluationInCuttimeRange = true;
                 }
+            }
 
-                result = new RiskEvaQuestionnaireEntity()
-                {
-                    QuestionnaireEntity = activeQuest,
-                    CanRiskEvaluation = !riskEvaluationInCuttimeRange,
-                };
-            }
-            catch (Exception e)
+            result = new RiskEvaQuestionnaireEntity()
             {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
+                QuestionnaireEntity = activeQuestionnaire,
+                CanRiskEvaluation = !riskEvaluationInCuttimeRange,
+            };
 
             return result;
         }
@@ -538,6 +392,164 @@ namespace ThinkPower.LabB3.Domain.Service
             }
         }
 
+
+
+
+
+
+
+
+        /// <summary>
+        /// 取出投資風險等級與等級明細
+        /// </summary>
+        /// <returns>投資風險等級資料</returns>
+        private IEnumerable<RiskRankEntity> GetRiskRankEntities()
+        {
+            IEnumerable<RiskRankEntity> result = CacheProvider.GetCache("riskRankEntityList")
+                as IEnumerable<RiskRankEntity>;
+
+            if ((result == null) ||
+                (result.Count() == 0))
+            {
+                IEnumerable<RiskRankDO> riskRankList = CacheProvider.
+                    GetCache("riskRankList") as IEnumerable<RiskRankDO>;
+
+                if ((riskRankList == null) ||
+                    (riskRankList.Count() == 0))
+                {
+                    riskRankList = CacheProvider.SetCache("riskRankList", new RiskRankDAO().
+                        ReadAll("FNDINV")) as IEnumerable<RiskRankDO>;
+                }
+
+                IEnumerable<RiskRankDetailDO> riskRankDetailList = CacheProvider.
+                    GetCache("riskRankDetailList") as IEnumerable<RiskRankDetailDO>;
+
+                if ((riskRankDetailList == null) ||
+                    (riskRankDetailList.Count() == 0))
+                {
+                    riskRankDetailList = CacheProvider.SetCache("riskRankDetailList", new RiskRankDetailDAO().
+                        ReadAll()) as IEnumerable<RiskRankDetailDO>;
+                }
+
+                List<RiskRankEntity> riskRankEntityList = new List<RiskRankEntity>();
+                foreach (RiskRankDO riskRank in riskRankList.OrderBy(x => x.MinScore))
+                {
+                    riskRankEntityList.Add(new RiskRankEntity()
+                    {
+                        RiskEvaId = riskRank.RiskEvaId,
+                        MinScore = riskRank.MinScore,
+                        MaxScore = riskRank.MaxScore,
+                        RiskRankKind = riskRank.RiskRankKind,
+                        RiskRankDetailEntities = ConvertRiskRankDetailDO(riskRankDetailList.Where(x => x.RiskRankUid == riskRank.Uid)),
+                    });
+                }
+
+                result = CacheProvider.SetCache("riskRankEntityList", riskRankEntityList)
+                    as IEnumerable<RiskRankEntity>;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 轉換投資風險等級明細資料物件
+        /// </summary>
+        /// <param name="riskRankDetailDOList">投資風險等級明細資料集合</param>
+        /// <returns>投資風險等級明細</returns>
+        private IEnumerable<RiskRankDetailEntity> ConvertRiskRankDetailDO(
+            IEnumerable<RiskRankDetailDO> riskRankDetailDOList)
+        {
+            return riskRankDetailDOList.Select(x => new RiskRankDetailEntity()
+            {
+                RiskRankUid = x.RiskRankUid,
+                ProfitRiskRank = x.ProfitRiskRank,
+                IsEffective = x.IsEffective,
+            });
+        }
+
+        /// <summary>
+        /// 檢查是否己有生效的風險評估紀錄
+        /// </summary>
+        /// <param name="questUid">問卷識別碼</param>
+        /// <returns>投資風險評估問卷</returns>
+        private RiskEvaQuestionnaireEntity CheckLatestRiskEvaluation(string questUid)
+        {
+            RiskEvaQuestionnaireEntity riskEvaQuestEntity = null;
+
+            QuestionnaireEntity questEntity = QuestService.GetQuestionnaire(questUid);
+
+            if (questEntity == null)
+            {
+                throw new InvalidOperationException("questEntity not found");
+            }
+
+            QuestionnaireAnswerDO questAnswer = new QuestionnaireAnswerDAO()
+                .GetQuestionnaireAnswer(questEntity.Uid);
+
+            if (questAnswer == null)
+            {
+                throw new InvalidOperationException(
+                    $"questAnswerDO not found,activeQuestUid={questEntity.Uid}");
+            }
+
+            RiskEvaluationDO riskEvaluation = new RiskEvaluationDAO()
+                .GetLatestUsedRiskEvaluation(questAnswer.QuestAnswerId);
+
+
+            //TODO 1003 後面這段沒問題
+            bool riskEvaluationInCuttimeRange = false;
+
+            if (riskEvaluation != null)
+            {
+                IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+
+                if (cuttimeRange == null)
+                {
+                    throw new InvalidOperationException("cuttimeRange not found");
+                }
+
+                if ((riskEvaluation.EvaluationDate < cuttimeRange.Max()) &&
+                    (riskEvaluation.EvaluationDate >= cuttimeRange.Min()))
+                {
+                    riskEvaluationInCuttimeRange = true;
+                }
+            }
+
+            riskEvaQuestEntity = new RiskEvaQuestionnaireEntity()
+            {
+                QuestionnaireEntity = questEntity,
+                CanRiskEvaluation = !riskEvaluationInCuttimeRange,
+            };
+
+            return riskEvaQuestEntity;
+        }
+
+        /// <summary>
+        /// 轉換投資風險評估結果資料物件
+        /// </summary>
+        /// <param name="riskEvaDO">投資風險評估結果資料物件</param>
+        /// <returns>投資風險評估結果</returns>
+        private RiskEvaluationEntity ConvertRiskEvaluationDO(RiskEvaluationDO riskEvaDO)
+        {
+            return new RiskEvaluationEntity()
+            {
+                Uid = riskEvaDO.Uid,
+                RiskEvaId = riskEvaDO.RiskEvaId,
+                QuestAnswerId = riskEvaDO.QuestAnswerId,
+                CliId = riskEvaDO.CliId,
+                RiskResult = riskEvaDO.RiskResult,
+                RiskScore = riskEvaDO.RiskScore,
+                RiskAttribute = riskEvaDO.RiskAttribute,
+                EvaluationDate = riskEvaDO.EvaluationDate,
+                BusinessDate = riskEvaDO.BusinessDate,
+                IsUsed = riskEvaDO.IsUsed,
+                CreateUserId = riskEvaDO.CreateUserId,
+                CreateTime = riskEvaDO.CreateTime,
+                ModifyUserId = riskEvaDO.ModifyUserId,
+                ModifyTime = riskEvaDO.ModifyTime,
+            };
+        }
+
         /// <summary>
         /// 取得投資風險評估結果資料
         /// </summary>
@@ -609,8 +621,6 @@ namespace ThinkPower.LabB3.Domain.Service
 
             return result;
         }
-
-
 
         /// <summary>
         /// 取得投資風險評估切點時間範圍

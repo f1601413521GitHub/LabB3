@@ -48,16 +48,14 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <returns>有效的問卷資料</returns>
         public QuestionnaireDO GetActiveQuestionniare(string id)
         {
-            QuestionnaireDO questDO = null;
+            QuestionnaireDO questionnaireDO = null;
 
             if (String.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException("id");
             }
 
-            try
-            {
-                string query = @"
+            string query = @"
 SELECT TOP 1 
     [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
     [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
@@ -65,53 +63,48 @@ SELECT TOP 1
 FROM Questionnaire 
 WHERE QuestId = @QuestId 
     AND Ondate < @DateTimeNow 
-    AND ((Offdate > @DateTimeNow) OR (Offdate is null)) 
-ORDER BY Version DESC";
+    AND ((Offdate > @DateTimeNow) OR (Offdate is NULL)) 
+ORDER BY Version DESC;";
 
-                using (SqlConnection connection = DbConnection)
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@QuestId", SqlDbType.VarChar) { Value = id });
+                command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
                 {
-                    SqlCommand command = new SqlCommand(query, connection);
+                    Value = DateTime.Now.Date,
+                });
 
-                    command.Parameters.Add(new SqlParameter("@QuestId", SqlDbType.VarChar) { Value = id });
-                    command.Parameters.Add(new SqlParameter("@DateTimeNow", SqlDbType.DateTime)
-                    {
-                        Value = DateTime.Now.Date,
-                    });
+                connection.Open();
 
-                    connection.Open();
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
 
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
+                if (dt.Rows.Count == 1)
+                {
+                    questionnaireDO = ConvertQuestionnaireDO(dt.Rows[0]);
+                }
 
-                    if (dt.Rows.Count == 1)
-                    {
-                        questDO = ConvertQuestionnaireDO(dt.Rows[0]);
-                    }
+                adapter = null;
+                dt = null;
+                command = null;
 
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
                 }
             }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
 
-            return questDO;
+            return questionnaireDO;
         }
 
         /// <summary>
-        /// 轉換問卷資料成為問卷資料物件
+        /// 轉換問卷資料
         /// </summary>
         /// <param name="questionnaire">問卷資料</param>
-        /// <returns>問卷資料物件</returns>
+        /// <returns>問卷資料</returns>
         private QuestionnaireDO ConvertQuestionnaireDO(DataRow questionnaire)
         {
             return new QuestionnaireDO()
