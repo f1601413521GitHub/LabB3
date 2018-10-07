@@ -5,8 +5,6 @@
     /// </summary>
     public class SaveRankActionModel
     {
-
-
         /// <summary> 
         ///問卷答題編號 
         /// </summary> 

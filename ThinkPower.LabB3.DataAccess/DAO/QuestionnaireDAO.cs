@@ -101,6 +101,58 @@ ORDER BY Version DESC;";
         }
 
         /// <summary>
+        /// 取得問卷資料
+        /// </summary>
+        /// <param name="uid">問卷識別碼</param>
+        /// <returns>問卷資料</returns>
+        public QuestionnaireDO GetQuestionnaire(string uid)
+        {
+            QuestionnaireDO questionDO = null;
+
+            if (String.IsNullOrEmpty(uid))
+            {
+                throw new ArgumentNullException("uid");
+            }
+
+            string query = @"
+SELECT 
+    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
+    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
+    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
+FROM Questionnaire 
+WHERE Uid = @Uid";
+
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = uid });
+
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count == 1)
+                {
+                    questionDO = ConvertQuestionnaireDO(dt.Rows[0]);
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return questionDO;
+        }
+
+        /// <summary>
         /// 轉換問卷資料
         /// </summary>
         /// <param name="questionnaire">問卷資料</param>
@@ -128,64 +180,6 @@ ORDER BY Version DESC;";
                 ModifyUserId = questionnaire.Field<string>("ModifyUserId"),
                 ModifyTime = questionnaire.Field<DateTime?>("ModifyTime"),
             };
-        }
-
-        /// <summary>
-        /// 取得問卷資料
-        /// </summary>
-        /// <param name="uid">問卷識別碼</param>
-        /// <returns>問卷資料</returns>
-        public QuestionnaireDO GetQuestionnaire(string uid)
-        {
-            QuestionnaireDO questDO = null;
-
-            if (String.IsNullOrEmpty(uid))
-            {
-                throw new ArgumentNullException("uid");
-            }
-
-            try
-            {
-                string query = @"
-SELECT 
-    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
-    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
-    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
-FROM Questionnaire 
-WHERE Uid = @Uid";
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-
-                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = uid });
-
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-                    if (dt.Rows.Count == 1)
-                    {
-                        questDO = ConvertQuestionnaireDO(dt.Rows[0]);
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-
-            return questDO;
         }
     }
 }

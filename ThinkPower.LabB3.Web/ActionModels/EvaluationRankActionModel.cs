@@ -9,10 +9,5 @@
         /// 問卷編號
         /// </summary>
         public string QuestId { get; set; }
-
-        /// <summary> 
-        ///問卷答題編號 
-        /// </summary> 
-        public string QuestAnswerId { get; set; }
     }
 }

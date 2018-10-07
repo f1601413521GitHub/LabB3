@@ -42,59 +42,6 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         }
 
         /// <summary>
-        /// 新增問卷填答資料至問卷答題明細
-        /// </summary>
-        /// <param name="questAnswerDetailDO">問卷答題明細</param>
-        /// <returns></returns>
-        public void Insert(QuestionnaireAnswerDetailDO questAnswerDetailDO)
-        {
-            if (questAnswerDetailDO == null)
-            {
-                throw new ArgumentNullException("questAnswerDetailDO");
-            }
-
-            try
-            {
-                string query = @"
-INSERT INTO [QuestionnaireAnswerDetail]
-    ([Uid] ,[AnswerUid] ,[QuestionUid] ,[AnswerCode] ,[OtherAnswer] ,[Score] ,[CreateUserId] 
-    ,[CreateTime] ,[ModifyUserId] ,[ModifyTime]) 
-VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@CreateUserId 
-    ,@CreateTime ,@ModifyUserId ,@ModifyTime)";
-
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDetailDO.Uid.ToString() });
-                    command.Parameters.Add(new SqlParameter("@AnswerUid", SqlDbType.VarChar) { Value = questAnswerDetailDO.AnswerUid.ToString() });
-                    command.Parameters.Add(new SqlParameter("@QuestionUid", SqlDbType.VarChar) { Value = questAnswerDetailDO.QuestionUid.ToString() });
-                    command.Parameters.Add(new SqlParameter("@AnswerCode", SqlDbType.VarChar) { Value = questAnswerDetailDO.AnswerCode ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@OtherAnswer", SqlDbType.VarChar) { Value = questAnswerDetailDO.OtherAnswer ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@Score", SqlDbType.Int) { Value = questAnswerDetailDO.Score ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDetailDO.CreateUserId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDetailDO.CreateTime ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDetailDO.ModifyUserId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDetailDO.ModifyTime ?? Convert.DBNull });
-
-                    connection.Open();
-                    command.ExecuteNonQuery();
-
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-        }
-
-
-        /// <summary>
         /// 新增多筆問卷填答資料至問卷答題明細
         /// </summary>
         /// <param name="questAnswerDetailList">問卷填答資料</param>
@@ -106,48 +53,41 @@ VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@Crea
                 throw new ArgumentNullException("questAnswerDetailDO");
             }
 
-            try
-            {
-                string query = @"
+            string query = @"
 INSERT INTO [QuestionnaireAnswerDetail]
     ([Uid] ,[AnswerUid] ,[QuestionUid] ,[AnswerCode] ,[OtherAnswer] ,[Score] ,[CreateUserId] 
     ,[CreateTime] ,[ModifyUserId] ,[ModifyTime]) 
 VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@CreateUserId 
     ,@CreateTime ,@ModifyUserId ,@ModifyTime)";
 
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-                    connection.Open();
-
-                    foreach (QuestionnaireAnswerDetailDO questAnswerDetail in questAnswerDetailList)
-                    {
-                        command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDetail.Uid.ToString() });
-                        command.Parameters.Add(new SqlParameter("@AnswerUid", SqlDbType.VarChar) { Value = questAnswerDetail.AnswerUid.ToString() });
-                        command.Parameters.Add(new SqlParameter("@QuestionUid", SqlDbType.VarChar) { Value = questAnswerDetail.QuestionUid.ToString() });
-                        command.Parameters.Add(new SqlParameter("@AnswerCode", SqlDbType.VarChar) { Value = questAnswerDetail.AnswerCode ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@OtherAnswer", SqlDbType.VarChar) { Value = questAnswerDetail.OtherAnswer ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@Score", SqlDbType.Int) { Value = questAnswerDetail.Score ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDetail.CreateUserId ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDetail.CreateTime ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDetail.ModifyUserId ?? Convert.DBNull });
-                        command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDetail.ModifyTime ?? Convert.DBNull });
-
-                        command.ExecuteNonQuery();
-                        command.Parameters.Clear();
-                    }
-
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
+            using (SqlConnection connection = DbConnection)
             {
-                ExceptionDispatchInfo.Capture(e).Throw();
+                SqlCommand command = new SqlCommand(query, connection);
+                connection.Open();
+
+                foreach (QuestionnaireAnswerDetailDO questAnswerDetail in questAnswerDetailList)
+                {
+                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDetail.Uid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@AnswerUid", SqlDbType.VarChar) { Value = questAnswerDetail.AnswerUid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@QuestionUid", SqlDbType.VarChar) { Value = questAnswerDetail.QuestionUid.ToString() });
+                    command.Parameters.Add(new SqlParameter("@AnswerCode", SqlDbType.VarChar) { Value = questAnswerDetail.AnswerCode ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@OtherAnswer", SqlDbType.VarChar) { Value = questAnswerDetail.OtherAnswer ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@Score", SqlDbType.Int) { Value = questAnswerDetail.Score ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDetail.CreateUserId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDetail.CreateTime ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDetail.ModifyUserId ?? Convert.DBNull });
+                    command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDetail.ModifyTime ?? Convert.DBNull });
+
+                    command.ExecuteNonQuery();
+                    command.Parameters.Clear();
+                }
+
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
         }
     }

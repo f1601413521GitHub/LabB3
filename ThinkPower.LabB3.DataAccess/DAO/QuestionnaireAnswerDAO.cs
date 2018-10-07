@@ -41,65 +41,6 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             return count;
         }
 
-
-
-
-        /// <summary>
-        /// 取得問卷答題資料
-        /// </summary>
-        /// <param name="uid">問卷主檔紀錄識別碼</param>
-        /// <returns>問卷答題資料</returns>
-        public QuestionnaireAnswerDO GetQuestionnaireAnswer(Guid uid)
-        {
-            QuestionnaireAnswerDO questAnswerDO = null;
-
-            if (uid == Guid.Empty)
-            {
-                throw new ArgumentNullException("questAnswerId");
-            }
-
-            string query = @"
-SELECT TOP 1
-    [Uid],[QuestUid],[QuestAnswerId],[TesteeId],
-    [QuestScore],[ActualScore],[TesteeSource],[CreateUserId],
-    [CreateTime],[ModifyUserId],[ModifyTime]
-FROM QuestionnaireAnswer
-WHERE QuestUid =@QuestUid
-ORDER BY CreateTime DESC;";
-
-            using (SqlConnection connection = DbConnection)
-            {
-                SqlCommand command = new SqlCommand(query, connection);
-
-                command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.UniqueIdentifier)
-                {
-                    Value = uid,
-                });
-
-                connection.Open();
-
-                DataTable dt = new DataTable();
-                SqlDataAdapter adapter = new SqlDataAdapter(command);
-                adapter.Fill(dt);
-
-                if (dt.Rows.Count == 1)
-                {
-                    questAnswerDO = ConvertQuestionnaireAnswerDO(dt.Rows[0]);
-                }
-
-                adapter = null;
-                dt = null;
-                command = null;
-
-                if (connection.State == ConnectionState.Open)
-                {
-                    connection.Close();
-                }
-            }
-
-            return questAnswerDO;
-        }
-
         /// <summary>
         /// 取得最新一筆用戶問卷答題資料
         /// </summary>
@@ -166,13 +107,51 @@ ORDER BY CreateTime DESC;";
             return questAnswerDO;
         }
 
+        /// <summary>
+        /// 新增問卷填答結果至問卷答題主檔
+        /// </summary>
+        /// <param name="questAnswerDO">問卷填答資料</param>
+        /// <returns></returns>
+        public void Insert(QuestionnaireAnswerDO questAnswerDO)
+        {
+            if (questAnswerDO == null)
+            {
+                throw new ArgumentNullException("questAnswerDO");
+            }
 
+            string query = @"
+INSERT INTO [QuestionnaireAnswer]
+    ([Uid], [QuestUid], [QuestAnswerId], [TesteeId], [QuestScore], [ActualScore], [TesteeSource],
+    [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime]) 
+VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @TesteeSource,
+    @CreateUserId, @CreateTime, @ModifyUserId, @ModifyTime);";
 
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDO.Uid.ToString() });
+                command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.VarChar) { Value = questAnswerDO.QuestUid.ToString() });
+                command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar) { Value = questAnswerDO.QuestAnswerId ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@TesteeId", SqlDbType.VarChar) { Value = questAnswerDO.TesteeId ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@QuestScore", SqlDbType.Int) { Value = questAnswerDO.QuestScore ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@ActualScore", SqlDbType.Int) { Value = questAnswerDO.ActualScore ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@TesteeSource", SqlDbType.VarChar) { Value = questAnswerDO.TesteeSource ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDO.CreateUserId ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDO.CreateTime ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDO.ModifyUserId ?? Convert.DBNull });
+                command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDO.ModifyTime ?? Convert.DBNull });
 
+                connection.Open();
+                command.ExecuteNonQuery();
 
+                command = null;
 
-
-
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+        }
 
         /// <summary>
         /// 轉換問卷答題資料
@@ -196,64 +175,5 @@ ORDER BY CreateTime DESC;";
                 ModifyTime = questAnswer.Field<DateTime?>("ModifyTime"),
             };
         }
-
-        /// <summary>
-        /// 新增問卷填答結果至問卷答題主檔
-        /// </summary>
-        /// <param name="questAnswerDO">問卷填答資料</param>
-        /// <returns></returns>
-        public void Insert(QuestionnaireAnswerDO questAnswerDO)
-        {
-            if (questAnswerDO == null)
-            {
-                throw new ArgumentNullException("questAnswerDO");
-            }
-
-            try
-            {
-                string query = @"
-INSERT INTO [QuestionnaireAnswer]
-    ([Uid], [QuestUid], [QuestAnswerId], [TesteeId], [QuestScore], [ActualScore], [TesteeSource],
-    [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime]) 
-VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @TesteeSource,
-    @CreateUserId, @CreateTime, @ModifyUserId, @ModifyTime);";
-
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-                    command.Parameters.Add(new SqlParameter("@Uid", SqlDbType.VarChar) { Value = questAnswerDO.Uid.ToString() });
-                    command.Parameters.Add(new SqlParameter("@QuestUid", SqlDbType.VarChar) { Value = questAnswerDO.QuestUid.ToString() });
-                    command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar) { Value = questAnswerDO.QuestAnswerId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@TesteeId", SqlDbType.VarChar) { Value = questAnswerDO.TesteeId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@QuestScore", SqlDbType.Int) { Value = questAnswerDO.QuestScore ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@ActualScore", SqlDbType.Int) { Value = questAnswerDO.ActualScore ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@TesteeSource", SqlDbType.VarChar) { Value = questAnswerDO.TesteeSource ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@CreateUserId", SqlDbType.VarChar) { Value = questAnswerDO.CreateUserId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@CreateTime", SqlDbType.DateTime) { Value = questAnswerDO.CreateTime ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@ModifyUserId", SqlDbType.VarChar) { Value = questAnswerDO.ModifyUserId ?? Convert.DBNull });
-                    command.Parameters.Add(new SqlParameter("@ModifyTime", SqlDbType.DateTime) { Value = questAnswerDO.ModifyTime ?? Convert.DBNull });
-
-                    connection.Open();
-                    command.ExecuteNonQuery();
-
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-        }
-
-        public QuestionnaireAnswerDO GetQuestionnaireAnswerUidList(Guid uid)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

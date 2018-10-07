@@ -29,7 +29,7 @@ namespace ThinkPower.LabB3.Domain.Resources
         /// </summary>
         /// <param name="cacheKey">暫存資料提取鍵值</param>
         /// <param name="data">暫存資料</param>
-        /// <param name="overwrite">是否覆蓋</param>
+        /// <param name="overwrite">是否覆蓋暫存資料</param>
         /// <param name="policy">暫存資料回收設定</param>
         /// <returns>暫存資料</returns>
         public static object SetCache(string cacheKey, object data, bool overwrite = false, CacheItemPolicy policy = null)

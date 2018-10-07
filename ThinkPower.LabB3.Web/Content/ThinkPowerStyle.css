@@ -12,6 +12,7 @@ input[type=button], input[type=submit] {
     border: 2px solid #4A7EBB;
     color: white;
 }
+
 ::-webkit-input-placeholder {
     text-align: center;
 }
@@ -84,6 +85,7 @@ input[type=button], input[type=submit] {
 }
 
 .question-subject-footer {
+    padding-left: 30px;
 }
 
 .question-subject-footer-tip > span {
@@ -102,7 +104,7 @@ input[type=button], input[type=submit] {
 
 .question-answer-descript {
     display: inline;
-    padding:0 3px;
+    padding: 0 3px;
 }
 
 .question-answer-other {

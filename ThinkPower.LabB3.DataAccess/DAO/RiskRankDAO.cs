@@ -46,8 +46,9 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// 取得投資風險等級
         /// </summary>
         /// <param name="actualScore">問卷得分</param>
-        /// <returns>投資風險等級資料物件</returns>
-        public RiskRankDO GetRiskRank(int? actualScore)
+        /// <param name="riskEvaId">風險評估項目代號</param>
+        /// <returns>投資風險等級資料</returns>
+        public RiskRankDO GetRiskRank(int? actualScore, string riskEvaId)
         {
             RiskRankDO riskRankDO = null;
 
@@ -55,59 +56,118 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             {
                 throw new ArgumentNullException("actualScore");
             }
-
-            try
+            else if (String.IsNullOrEmpty(riskEvaId))
             {
-                string query = @"
+                throw new ArgumentNullException("riskEvaId");
+            }
+
+            string query = @"
 SELECT 
     [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
     [ModifyUserId], [ModifyTime] 
 FROM [RiskRank] 
-WHERE RiskEvaId = 'FNDINV' 
+WHERE RiskEvaId = @RiskEvaId 
     AND @ActualScore >= MinScore 
     AND(@ActualScore <= MaxScore OR MaxScore IS NUll);";
 
 
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-
-                    command.Parameters.Add(new SqlParameter("@ActualScore", SqlDbType.Int) { Value = (int)actualScore });
-
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-                    if (dt.Rows.Count == 1)
-                    {
-                        riskRankDO = ConvertRiskRankDO(dt.Rows[0]);
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
+            using (SqlConnection connection = DbConnection)
             {
-                ExceptionDispatchInfo.Capture(e).Throw();
+                SqlCommand command = new SqlCommand(query, connection);
+
+                command.Parameters.Add(new SqlParameter("@ActualScore", SqlDbType.Int)
+                {
+                    Value = actualScore.Value,
+                });
+                command.Parameters.Add(new SqlParameter("@RiskEvaId", SqlDbType.VarChar)
+                {
+                    Value = riskEvaId,
+                });
+
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                if (dt.Rows.Count == 1)
+                {
+                    riskRankDO = ConvertRiskRankDO(dt.Rows[0]);
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
             }
 
             return riskRankDO;
         }
 
         /// <summary>
-        /// 轉換投資風險等級資料成投資風險等級資料物件
+        /// 取得所有投資風險等級
+        /// </summary>
+        /// <param name="riskEvaId">風險評估項目代號</param>
+        /// <returns>投資風險等級資料集合</returns>
+        public IEnumerable<RiskRankDO> ReadAll(string riskEvaId)
+        {
+            List<RiskRankDO> riskRankDOList = new List<RiskRankDO>();
+
+            if (String.IsNullOrEmpty(riskEvaId))
+            {
+                throw new ArgumentNullException("riskEvaId");
+            }
+
+            string query = @"
+SELECT 
+    [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
+    [ModifyUserId], [ModifyTime] 
+FROM [RiskRank] 
+WHERE RiskEvaId = @RiskEvaId;";
+
+
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                command.Parameters.Add(new SqlParameter("@RiskEvaId", SqlDbType.VarChar)
+                {
+                    Value = riskEvaId
+                });
+
+
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    riskRankDOList.Add(ConvertRiskRankDO(dr));
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return riskRankDOList;
+        }
+
+        /// <summary>
+        /// 轉換投資風險等級資料
         /// </summary>
         /// <param name="riskRank">投資風險等級資料</param>
-        /// <returns>投資風險等級資料物件</returns>
+        /// <returns>投資風險等級資料</returns>
         private RiskRankDO ConvertRiskRankDO(DataRow riskRank)
         {
             return new RiskRankDO()
@@ -122,65 +182,6 @@ WHERE RiskEvaId = 'FNDINV'
                 ModifyUserId = riskRank.Field<string>("ModifyUserId"),
                 ModifyTime = riskRank.Field<DateTime?>("ModifyTime"),
             };
-        }
-
-        /// <summary>
-        /// 取得所有投資風險等級
-        /// </summary>
-        /// <param name="riskEvaId">風險評估項目代號</param>
-        /// <returns>投資風險等級資料物件的集合</returns>
-        public List<RiskRankDO> ReadAll(string riskEvaId)
-        {
-            List<RiskRankDO> riskRankDOList = new List<RiskRankDO>();
-
-            if (String.IsNullOrEmpty(riskEvaId))
-            {
-                throw new ArgumentNullException("riskEvaId");
-            }
-
-            try
-            {
-                string query = @"
-SELECT 
-    [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
-FROM [RiskRank] 
-WHERE RiskEvaId = @RiskEvaId;";
-
-
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-                    command.Parameters.Add(new SqlParameter("@RiskEvaId", SqlDbType.VarChar) { Value = riskEvaId });
-
-
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        riskRankDOList.Add(ConvertRiskRankDO(dr));
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-
-            return riskRankDOList;
         }
     }
 }

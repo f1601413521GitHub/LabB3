@@ -31,8 +31,9 @@ namespace ThinkPower.LabB3.Domain.Service.Interface
         /// 取得風險評估問卷資料
         /// </summary>
         /// <param name="questId">問卷編號</param>
+        /// <param name="userId">用戶ID</param>
         /// <returns></returns>
-        RiskEvaQuestionnaireEntity GetRiskQuestionnaire(string questId);
+        RiskEvaQuestionnaireEntity GetRiskQuestionnaire(string questId, string userId);
 
         /// <summary>
         /// 取得暫存的風險評估資料

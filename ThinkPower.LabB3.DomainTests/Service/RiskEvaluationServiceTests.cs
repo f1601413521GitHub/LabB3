@@ -14,98 +14,189 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
     [TestClass()]
     public class RiskEvaluationServiceTests
     {
-        [TestMethod()]
-        public void RiskRankTest_When_RiskRankKind_Is_L_Then_Success()
-        {
-            //Arrage
-            string riskRankKind = "L";
-            List<string> expected = new List<string>()
-            {
-                "RR1","RR2",
-            };
-
-
-            //Actual
-            IEnumerable<string> result = new RiskEvaluationService().RiskRank(riskRankKind);
-            List<string> actual = result.ToList();
-
-            //Assert
-            CollectionAssert.AreEqual(expected, actual);
-        }
+        private static RiskEvaluationService _riskService = new RiskEvaluationService();
+        private IEnumerable<DateTime> _cuttime = _riskService.GetRiskEvaCuttime();
 
         [TestMethod()]
-        public void RiskRankTest_When_RiskRankKind_Is_M_Then_Success()
-        {
-            //Arrage
-            string riskRankKind = "M";
-            List<string> expected = new List<string>()
-            {
-                "RR1","RR2","RR3",
-            };
-
-
-            //Actual
-            IEnumerable<string> result = new RiskEvaluationService().RiskRank(riskRankKind);
-            List<string> actual = result.ToList();
-
-            //Assert
-            CollectionAssert.AreEqual(expected, actual);
-        }
-
-        [TestMethod()]
-        public void RiskRankTest_When_RiskRankKind_Is_H_Then_Success()
-        {
-            //Arrage
-            string riskRankKind = "H";
-            List<string> expected = new List<string>()
-            {
-                "RR1","RR2","RR3","RR4","RR5",
-            };
-
-
-            //Actual
-            IEnumerable<string> result = new RiskEvaluationService().RiskRank(riskRankKind);
-            List<string> actual = result.ToList();
-
-            //Assert
-            CollectionAssert.AreEqual(expected, actual);
-        }
-
-        [TestMethod()]
-        public void CheckRiskEvaConditionTest_Faile()
+        public void GetRiskEvaCuttimeTest_Success()
         {
             //Arrange
-            var currentTime = DateTime.Now;
-            var riskEvaluationDO = new RiskEvaluationDO()
-            {
-                EvaluationDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
-                10, 30, 01),
-                IsUsed = "Y",
-            };
-            bool expected = false;
+            bool expected = true;
 
             //Actual
-            bool actual = new RiskEvaluationService().CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = (_cuttime != null && _cuttime.Count() > 0);
+
+            //Aseert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void CheckRiskEvaCondition_When_RiskEvaluationDO_Is_Null_Then_Success()
+        {
+            //Arrange
+            RiskEvaluationDO riskEvaluationDO = null;
+            bool expected = true;
+
+            //Actual
+            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
         }
 
         [TestMethod()]
-        public void CheckRiskEvaConditionTest_Success()
+        public void CheckRiskEvaCondition_When_EvaluationDate_InCuttimeRange_And_IsUsed_Is_Y_Then_Fail()
         {
             //Arrange
-            var currentTime = DateTime.Now;
-            var riskEvaluationDO = new RiskEvaluationDO()
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day,
-                10, 29, 59),
+                EvaluationDate = _cuttime.Min(),
+                IsUsed = "Y",
+            };
+            bool expected = false;
+
+            //Actual
+            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+
+        [TestMethod()]
+        public void CheckRiskEvaCondition_When_EvaluationDate_InCuttimeRange_And_IsUsed_Is_N_Then_Success()
+        {
+            //Arrange
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = _cuttime.Min(),
+                IsUsed = "N",
+            };
+            bool expected = true;
+
+            //Actual
+            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void CheckRiskEvaCondition_When_EvaluationDate_NotInCuttimeRange_And_IsUsed_Is_Y_Then_Success()
+        {
+            //Arrange
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = _cuttime.Min().AddSeconds(-1),
                 IsUsed = "Y",
             };
             bool expected = true;
 
             //Actual
-            bool actual = new RiskEvaluationService().CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+
+        [TestMethod()]
+        public void CheckRiskEvaCondition_When_EvaluationDate_NotInCuttimeRange_And_IsUsed_Is_N_Then_Success()
+        {
+            //Arrange
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = _cuttime.Min().AddSeconds(-1),
+                IsUsed = "N",
+            };
+            bool expected = true;
+
+            //Actual
+            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+
+
+        [TestMethod()]
+        public void CheckInCuttimeRangeTest_When_EvaluationDate_InCuttimeRange_Then_Success()
+        {
+            //Arrage
+            var riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = _cuttime.Min(),
+            };
+
+            var expected = true;
+
+            //Actual
+            var actual = _riskService.CheckInCuttimeRange(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void CheckInCuttimeRangeTest_When_EvaluationDate_NotInCuttimeRange_Then_Fail()
+        {
+            //Arrage
+            var riskEvaluationDO = new RiskEvaluationDO()
+            {
+                EvaluationDate = _cuttime.Min().AddSeconds(-1),
+            };
+
+            var expected = false;
+
+            //Actual
+            var actual = _riskService.CheckInCuttimeRange(riskEvaluationDO);
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void GetTest_Fail()
+        {
+            //Arrange
+            string uid = null;
+            bool? expected = false;
+
+            //Actual
+            bool? actual = null;
+
+            try
+            {
+                _riskService.Get(uid);
+            }
+            catch (NotImplementedException e)
+            {
+                actual = false;
+            }
+
+            //Assert
+            Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void RiskRankTest_Fail()
+        {
+            //Arrange
+            string riskRankKind = null;
+            bool? expected = false;
+
+            //Actual
+            bool? actual = null;
+
+            try
+            {
+                _riskService.RiskRank(riskRankKind);
+            }
+            catch (NotImplementedException e)
+            {
+                actual = false;
+            }
 
             //Assert
             Assert.AreEqual(expected, actual);

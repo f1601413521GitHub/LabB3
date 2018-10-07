@@ -4,9 +4,6 @@
 @{
     ViewBag.Title = "EvaluationRank";
 
-    var riskEvaResult = ((Model != null) && (Model.RiskEvaluationResult != null)) ?
-        Model.RiskEvaluationResult : null;
-
     var questResultEntity = ((Model != null) && (Model.QuestionnaireResultEntity != null)) ?
         Model.QuestionnaireResultEntity : null;
 
@@ -47,17 +44,18 @@
 
 
 
-@if (Model != null && riskEvaResult != null && riskRankEntities != null)
+@if ((Model != null) &&
+    (questResultEntity != null) &&
+    (String.IsNullOrEmpty(questResultEntity.QuestionnaireMessage)))
 {
 
     var riskRankItems = new List<dynamic>();
+
     foreach (var riskRank in riskRankEntities.OrderBy(x => x.MinScore))
     {
-        var rankDetailList = riskRank.RiskRankDetailEntities.
-            OrderBy(x => x.ProfitRiskRank);
+        var rankDetailList = riskRank.RiskRankDetailEntities.OrderBy(x => x.ProfitRiskRank);
 
-
-        var riskState = (riskRank.RiskRankKind == riskEvaResult.RiskAttribute) ? "■" : "□";
+        var riskState = (riskRank.RiskRankKind == questResultEntity.RiskRankKind) ? "■" : "□";
         var riskTile = "";
         var riskAttribute = "";
         var riskLevel = String.Join("、", rankDetailList.Select(x => x.ProfitRiskRank));
@@ -96,16 +94,13 @@
             <h4 class="eva-rank-title">投資風險承受度評估表(僅供參考)</h4>
         </div>
 
-        @if (riskEvaResult != null)
-        {
-            <h5>
-                總分：
-                <span style="text-decoration: underline;">
-                    @riskEvaResult.RiskScore
-                </span>
-                分
-            </h5>
-        }
+        <h5>
+            總分：
+            <span style="text-decoration: underline;">
+                @questResultEntity.ActualScore
+            </span>
+            分
+        </h5>
 
         <table class="table eva-rank-table">
             <thead class="eva-rank-table-header">
@@ -155,24 +150,19 @@
         </div>
     </div>
 
+    <div class="text-hide">
+        @using (Html.BeginForm("AcceptRiskRank", "RiskEvaluation", FormMethod.Get, new { id = "submit-evaluation-form" }))
+        {
+            @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
+        }
+    </div>
 
-    if (Model.QuestionnaireResultEntity != null)
-    {
-        <div class="text-hide">
-            @using (Html.BeginForm("EvaQuest", "RiskEvaluation", FormMethod.Get, new { id = "re-evaluation-form" }))
-            {
-                @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
-            }
-        </div>
-
-
-        <div class="text-hide">
-            @using (Html.BeginForm("AcceptRiskRank", "RiskEvaluation", FormMethod.Get, new { id = "submit-evaluation-form" }))
-            {
-                @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
-            }
-        </div>
-    }
+    <div class="text-hide">
+        @using (Html.BeginForm("EvaQuest", "RiskEvaluation", FormMethod.Get, new { id = "re-evaluation-form" }))
+        {
+            @Html.Hidden("QuestId", Model.QuestionnaireResultEntity.QuestionnaireEntity.QuestId)
+        }
+    </div>
 }
 
 @section scripts{

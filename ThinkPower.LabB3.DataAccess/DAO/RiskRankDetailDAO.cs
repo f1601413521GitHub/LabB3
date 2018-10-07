@@ -102,12 +102,55 @@ WHERE RiskRankUid = @RiskRankUid;";
             return riskRankDetailDOList;
         }
 
+        /// <summary>
+        /// 取得所有投資風險等級明細
+        /// </summary>
+        /// <returns>投資風險等級明細資料集合</returns>
+        public IEnumerable<RiskRankDetailDO> ReadAll()
+        {
+            List<RiskRankDetailDO> riskRankDetailDOList = null;
+
+            string query = @"
+SELECT 
+    [Uid], [RiskRankUid], [ProfitRiskRank], [IsEffective], [CreateUserId], [CreateTime], 
+    [ModifyUserId], [ModifyTime] 
+FROM [RiskRankDetail];";
+
+
+            using (SqlConnection connection = DbConnection)
+            {
+                SqlCommand command = new SqlCommand(query, connection);
+                connection.Open();
+
+                DataTable dt = new DataTable();
+                SqlDataAdapter adapter = new SqlDataAdapter(command);
+                adapter.Fill(dt);
+
+                riskRankDetailDOList = new List<RiskRankDetailDO>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    riskRankDetailDOList.Add(ConvertRiskRankDetailDO(dr));
+                }
+
+                adapter = null;
+                dt = null;
+                command = null;
+
+                if (connection.State == ConnectionState.Open)
+                {
+                    connection.Close();
+                }
+            }
+
+            return riskRankDetailDOList;
+        }
 
         /// <summary>
-        /// 轉換投資風險標的等級明細資料，成為投資風險標的等級明細資料物件
+        /// 轉換投資風險標的等級明細資料
         /// </summary>
         /// <param name="riskRankDetail">投資風險標的等級明細資料</param>
-        /// <returns>投資風險標的等級明細資料物件</returns>
+        /// <returns>投資風險標的等級明細資料</returns>
         private RiskRankDetailDO ConvertRiskRankDetailDO(DataRow riskRankDetail)
         {
             return new RiskRankDetailDO()
@@ -123,55 +166,5 @@ WHERE RiskRankUid = @RiskRankUid;";
             };
         }
 
-        /// <summary>
-        /// 取得所有投資風險等級明細
-        /// </summary>
-        /// <returns>投資風險等級明細資料物件的集合</returns>
-        public List<RiskRankDetailDO> ReadAll()
-        {
-            List<RiskRankDetailDO> riskRankDetailDOList = new List<RiskRankDetailDO>();
-
-            try
-            {
-                string query = @"
-SELECT 
-    [Uid], [RiskRankUid], [ProfitRiskRank], [IsEffective], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
-FROM [RiskRankDetail];";
-
-
-                using (SqlConnection connection = DbConnection)
-                {
-                    SqlCommand command = new SqlCommand(query, connection);
-                    connection.Open();
-
-                    DataTable dt = new DataTable();
-                    SqlDataAdapter adapter = new SqlDataAdapter(command);
-                    adapter.Fill(dt);
-
-
-                    riskRankDetailDOList = new List<RiskRankDetailDO>();
-                    foreach (DataRow dr in dt.Rows)
-                    {
-                        riskRankDetailDOList.Add(ConvertRiskRankDetailDO(dr));
-                    }
-
-                    adapter = null;
-                    dt = null;
-                    command = null;
-
-                    if (connection.State == ConnectionState.Open)
-                    {
-                        connection.Close();
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                ExceptionDispatchInfo.Capture(e).Throw();
-            }
-
-            return riskRankDetailDOList;
-        }
     }
 }

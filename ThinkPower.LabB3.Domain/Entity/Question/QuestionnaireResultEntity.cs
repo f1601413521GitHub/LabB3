@@ -41,20 +41,28 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// </summary> 
         public string TesteeSource { get; set; }
 
-        /// <summary>
-        /// 問卷答題檢核失敗的資訊，包含題目編號與錯誤訊息
-        /// </summary>
-        public Dictionary<string, string> ValidateFailInfo { get; set; }
+
+
+
+
+
+
+
 
         /// <summary>
-        ///  問卷答題檢核失敗的問卷編號
+        /// 問卷類別
         /// </summary>
-        public string ValidateFailQuestId { get; set; }
+        public QuestionnaireEntity QuestionnaireEntity { get; set; }
 
         /// <summary>
         /// 問卷答案明細類別集合
         /// </summary>
         public IEnumerable<AnswerDetailEntity> AnswerDetailEntities { get; set; }
+
+        /// <summary>
+        /// 問卷答題檢核失敗的資訊，包含題目編號與錯誤訊息
+        /// </summary>
+        public Dictionary<string, string> ValidateFailInfo { get; set; }
 
         /// <summary>
         /// 風險問卷填寫結果
@@ -63,13 +71,13 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
 
 
         /// <summary>
-        /// 問卷填答處理訊息
+        /// 問卷填答處理結果提示訊息
         /// </summary>
         public string QuestionnaireMessage { get; set; }
 
-        /// <summary>
-        /// 問卷類別
-        /// </summary>
-        public QuestionnaireEntity QuestionnaireEntity { get; set; }
+        /// <summary> 
+        ///投資屬性類型 
+        /// </summary> 
+        public string RiskRankKind { get; set; }
     }
 }

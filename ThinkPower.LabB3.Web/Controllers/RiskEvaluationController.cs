@@ -20,6 +20,8 @@ namespace ThinkPower.LabB3.Web.Controllers
     /// </summary>
     public class RiskEvaluationController : Controller
     {
+        #region Private property
+
         /// <summary>
         /// NLog Object
         /// </summary>
@@ -57,10 +59,9 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// </summary>
         private readonly string _existEffectiveAnRiskEvaluationMsg = "您己有生效的投資風險評估紀錄，無法重新進行風險評估。";
 
+        #endregion
 
-
-
-
+        #region Public method
 
         /// <summary>
         /// 進行投資風險評估問卷填答
@@ -70,9 +71,8 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpGet]
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
-            EvaQuestViewModel viewModel = null;
+            EvaQuestViewModel evaQuestViewModel = null;
             string validationSummary = String.Empty;
-            string userId = Session["id"] as string;
 
             try
             {
@@ -81,46 +81,20 @@ namespace ThinkPower.LabB3.Web.Controllers
                     throw new ArgumentNullException("actionModel");
                 }
 
-                //TODO review
-                if (!String.IsNullOrEmpty(actionModel.QuestAnswerId))
+                RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(
+                    actionModel.QuestId, Session["id"] as string);
+
+                if (riskEvaQuestEntity == null)
                 {
-                    Domain.DTO.RiskEvaResultDTO riskEvaResult = RiskService.
-                        GetRiskResult(actionModel.QuestAnswerId);
-
-                    if (riskEvaResult == null)
-                    {
-                        var exception = new InvalidOperationException("riskEvaResult not found");
-                        exception.Data["QuestAnswerId"] = actionModel.QuestAnswerId;
-
-                        throw exception;
-                    }
-
-                    viewModel = new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaireEntity = riskEvaResult.RiskEvaQuestionnaire,
-                        QuestionnaireResultEntity = riskEvaResult.QuestionnaireResultEntity,
-                    };
-                }
-                else
-                {
-                    RiskService.UserId = userId;
-                    RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(
-                        actionModel.QuestId);
-
-                    if (riskEvaQuestEntity == null)
-                    {
-                        var ex = new InvalidOperationException("riskEvaQuestEntity not found");
-                        ex.Data["QuestId"] = actionModel.QuestId;
-                        throw ex;
-                    }
-
-                    viewModel = new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
-                    };
+                    var ex = new InvalidOperationException("riskEvaQuestEntity not found");
+                    ex.Data["QuestId"] = actionModel.QuestId;
+                    throw ex;
                 }
 
-                //TODO review property CanRiskEvaluation
+                evaQuestViewModel = new EvaQuestViewModel()
+                {
+                    RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
+                };
             }
             catch (InvalidOperationException e)
             {
@@ -137,7 +111,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", validationSummary);
             }
 
-            return View(viewModel);
+            return View(evaQuestViewModel);
         }
 
         /// <summary>
@@ -148,9 +122,8 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpPost]
         public ActionResult EvaluationRank(FormCollection answer)
         {
-            HttpStatusCode? statusCode = null;
-            Domain.DTO.RiskEvaResultDTO evaluateResult = null;
-            EvaluationRankViewModel evaRankViewModel = null;
+            EvaluationRankViewModel evaluationRankViewModel = null;
+            string validationSummary = String.Empty;
 
             try
             {
@@ -164,66 +137,53 @@ namespace ThinkPower.LabB3.Web.Controllers
                     QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
                     {
                         QuestUid = answer["questEntity.Uid"],
+                        UserId = Session["id"] as string,
                         AnswerDetailEntities = ConvertAnswerDetailList(answer),
                     },
                 };
 
-                evaluateResult = RiskService.EvaluateRiskRank(riskEvaAnswerEntity);
+                Domain.DTO.RiskEvaResultDTO riskEvaResultDTO = RiskService.EvaluateRiskRank(
+                    riskEvaAnswerEntity);
 
-                if (evaluateResult == null)
+                if (riskEvaResultDTO == null)
                 {
-                    throw new InvalidOperationException("evaluateResult not found");
+                    throw new InvalidOperationException("riskEvaResultDTO not found");
                 }
 
-
-
-                if (evaluateResult.QuestionnaireResultEntity != null)
+                if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
+                    (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
-                    if (evaluateResult.QuestionnaireResultEntity.ValidateFailInfo.Count > 0)
+                    return View("EvaQuest", new EvaQuestViewModel()
                     {
-                        return View("EvaQuest", new EvaQuestViewModel()
-                        {
-                            RiskEvaQuestionnaireEntity = evaluateResult.RiskEvaQuestionnaire,
-                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
-                        });
-                    }
-                    else
-                    {
-                        evaRankViewModel = new EvaluationRankViewModel()
-                        {
-                            QuestionnaireResultEntity = evaluateResult.QuestionnaireResultEntity,
-                        };
-
-                        if (evaluateResult.RiskEvaluationEntity != null)
-                        {
-                            evaRankViewModel.RiskEvaluationResult = evaluateResult.RiskEvaluationEntity;
-                            evaRankViewModel.RiskRankEntities = evaluateResult.RiskRankEntities;
-                        }
-                    }
+                        RiskEvaQuestionnaireEntity = riskEvaResultDTO.RiskEvaQuestionnaireEntity,
+                        QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
+                    });
                 }
                 else
                 {
-                    throw new InvalidOperationException("evaluateResult.QuestionnaireResultEntity not found");
+                    evaluationRankViewModel = new EvaluationRankViewModel()
+                    {
+                        QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
+                        RiskRankEntities = riskEvaResultDTO.RiskRankEntities,
+                    };
                 }
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
             }
             catch (Exception e)
             {
-                //TODO 提供詳細的錯誤資訊
                 logger.Error(e);
-                statusCode = HttpStatusCode.InternalServerError;
+                validationSummary = _systemErrorMsg;
             }
 
-            if (statusCode != null)
+            if (!String.IsNullOrEmpty(validationSummary))
             {
-                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
-                    "造成不便敬請見諒。");
-            }
-            else if (!evaluateResult.RiskEvaQuestionnaire.CanRiskEvaluation)
-            {
-                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
+                ModelState.AddModelError("", validationSummary);
             }
 
-            return View(evaRankViewModel);
+            return View(evaluationRankViewModel);
         }
 
         /// <summary>
@@ -234,87 +194,48 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpGet]
         public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
         {
-            HttpStatusCode? statusCode = null;
-            RiskEvaluationEntity riskEvaEntity = null;
             EvaluationRankViewModel evaRankViewModel = null;
+            string validationSummary = String.Empty;
 
             try
             {
                 if (actionModel == null)
                 {
-                    statusCode = HttpStatusCode.NotFound;
+                    throw new ArgumentNullException("actionModel");
                 }
 
                 RiskService.SaveRiskRank(actionModel.QuestAnswerId);
-                riskEvaEntity = RiskService.Get(actionModel.QuestAnswerId);
 
-                if (riskEvaEntity == null)
+                evaRankViewModel = new EvaluationRankViewModel
                 {
-                    throw new InvalidOperationException("riskEvaEntity not found");
-                }
-
-                if (riskEvaEntity.IsUsed == "N")
-                {
-                    evaRankViewModel = new EvaluationRankViewModel
+                    QuestionnaireResultEntity = new QuestionnaireResultEntity()
                     {
-                        QuestionnaireResultEntity = new QuestionnaireResultEntity()
-                        {
-                            QuestionnaireMessage = "風險評估結果儲存成功",
-                        }
-                    };
-                }
+                        QuestionnaireMessage = "風險評估結果儲存成功",
+                    }
+                };
 
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
             }
             catch (Exception e)
             {
                 logger.Error(e);
-                statusCode = HttpStatusCode.InternalServerError;
+                validationSummary = _systemErrorMsg;
             }
 
-            if (statusCode != null)
+            if (!String.IsNullOrEmpty(validationSummary))
             {
-                ModelState.AddModelError("", "系統發生錯誤，請於上班時段來電客服中心0800-015-000，" +
-                    "造成不便敬請見諒。");
-            }
-            else if (riskEvaEntity.IsUsed == "Y")
-            {
-                ModelState.AddModelError("", "您己有生效的投資風險評估紀錄，無法重新進行風險評估。");
+                ModelState.AddModelError("", validationSummary);
             }
 
             return View("EvaluationRank", evaRankViewModel);
         }
 
+        #endregion
 
-
-
-
-
-
-
-
-
-        /// <summary>
-        /// 轉換提示訊息(不可重做風險評估問卷、例外錯誤狀況)
-        /// </summary>
-        /// <param name="e"></param>
-        /// <returns></returns>
-        private string ConvertValidateMsgByRiskEvaluation(InvalidOperationException e)
-        {
-            string validationSummary = String.Empty;
-            bool? canUsedRiskEvaluation = e.Data["canUsedRiskEvaluation"] as bool?;
-
-            if ((canUsedRiskEvaluation == null) || canUsedRiskEvaluation.Value)
-            {
-                logger.Error(e);
-                validationSummary = _systemErrorMsg;
-            }
-            else if (!canUsedRiskEvaluation.Value)
-            {
-                validationSummary = _existEffectiveAnRiskEvaluationMsg;
-            }
-
-            return validationSummary;
-        }
+        #region Private method
 
         /// <summary>
         /// 取得問卷答案明細集合
@@ -392,5 +313,31 @@ namespace ThinkPower.LabB3.Web.Controllers
 
             return answerDetailEntities;
         }
+
+        /// <summary>
+        /// 轉換提示訊息(不可重做風險評估問卷、例外錯誤狀況)
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        private string ConvertValidateMsgByRiskEvaluation(InvalidOperationException e)
+        {
+            string validationSummary = String.Empty;
+            bool? canUsedRiskEvaluation = e.Data["canUsedRiskEvaluation"] as bool?;
+
+            if ((canUsedRiskEvaluation == null) ||
+                canUsedRiskEvaluation.Value)
+            {
+                logger.Error(e);
+                validationSummary = _systemErrorMsg;
+            }
+            else if (!canUsedRiskEvaluation.Value)
+            {
+                validationSummary = _existEffectiveAnRiskEvaluationMsg;
+            }
+
+            return validationSummary;
+        }
+
+        #endregion
     }
 }

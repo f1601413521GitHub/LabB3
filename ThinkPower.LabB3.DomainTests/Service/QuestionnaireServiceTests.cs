@@ -34,7 +34,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_AllRule_Then_Success()
+        public void ValidateRule_When_AllRule_Then_Success()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>();
@@ -47,7 +47,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateNeedAnswer_Then_Fail()
+        public void ValidateRule_When_NeedAnswer_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
@@ -64,7 +64,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateNeedAnswer_AllowNaCondition_Then_Fail()
+        public void ValidateRule_When_NeedAnswer_AllowNaCondition_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
@@ -83,7 +83,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateMinMultipleAnswers_Then_Fail()
+        public void ValidateRule_When_MinMultipleAnswers_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
@@ -100,7 +100,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateMaxMultipleAnswers_Then_Fail()
+        public void ValidateRule_When_MaxMultipleAnswers_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
@@ -117,7 +117,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateSingleAnswerCondition_Then_Fail()
+        public void ValidateRule_When_SingleAnswerCondition_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
@@ -134,7 +134,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         }
 
         [TestMethod()]
-        public void ValidateRuleTest_When_ValidateOtherAnswer_Then_Fail()
+        public void ValidateRule_When_OtherAnswer_Then_Fail()
         {
             //Arrange
             Dictionary<string, string> expected = new Dictionary<string, string>() {
