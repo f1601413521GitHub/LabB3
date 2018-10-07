@@ -16,25 +16,15 @@
 
 @if (questResultEntity != null && !String.IsNullOrEmpty(questResultEntity.QuestionnaireMessage))
 {
-    <!-- Button trigger modal -->
-    <button id="showMsg" type="button" class="text-hide" data-toggle="modal" data-target="#MessageModel"></button>
-
     <!-- Modal -->
-    <div class="modal fade" id="MessageModel" tabindex="-1" role="dialog" aria-labelledby="MessageModelLabel" aria-hidden="true">
+    <div class="modal fade" id="tip-message-modal" tabindex="-1" role="dialog" aria-labelledby="MessageModelLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                @*<div class="modal-header">
-                        <h5 class="modal-title" id="MessageModelLabel">Modal title</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>*@
                 <div class="modal-body">
                     @questResultEntity.QuestionnaireMessage
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
-                    @*<button type="button" class="btn btn-primary">Save changes</button>*@
                 </div>
             </div>
         </div>
