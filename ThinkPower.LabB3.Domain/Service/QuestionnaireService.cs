@@ -767,7 +767,7 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 answerScoreList = answerFullDetailList.
                     Where(x => (x.QuestionId == questDefine.QuestionId) && (x.Score != null)).
-                    Select(x => Convert.ToInt32(x.Score));
+                    Select(x => x.Score.Value);
 
 
                 switch (questDefine.CountScoreType)
