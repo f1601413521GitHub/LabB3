@@ -60,8 +60,8 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             {
                 string query = @"
 SELECT 
-    [Uid], [RiskRankUid], [ProfitRiskRank], [IsEffective], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
+    [Uid],[RiskRankUid],[ProfitRiskRank],[IsEffective],[CreateUserId],[CreateTime],
+    [ModifyUserId],[ModifyTime] 
 FROM [RiskRankDetail] 
 WHERE RiskRankUid = @RiskRankUid;";
 
@@ -112,8 +112,8 @@ WHERE RiskRankUid = @RiskRankUid;";
 
             string query = @"
 SELECT 
-    [Uid], [RiskRankUid], [ProfitRiskRank], [IsEffective], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
+    [Uid],[RiskRankUid],[ProfitRiskRank],[IsEffective],[CreateUserId],[CreateTime],
+    [ModifyUserId],[ModifyTime] 
 FROM [RiskRankDetail];";
 
 

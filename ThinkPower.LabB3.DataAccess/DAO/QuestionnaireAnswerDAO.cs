@@ -121,8 +121,8 @@ ORDER BY CreateTime DESC;";
 
             string query = @"
 INSERT INTO [QuestionnaireAnswer]
-    ([Uid], [QuestUid], [QuestAnswerId], [TesteeId], [QuestScore], [ActualScore], [TesteeSource],
-    [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime]) 
+    ([Uid],[QuestUid],[QuestAnswerId],[TesteeId],[QuestScore],[ActualScore],[TesteeSource],
+    [CreateUserId],[CreateTime],[ModifyUserId],[ModifyTime]) 
 VALUES (@Uid, @QuestUid, @QuestAnswerId, @TesteeId, @QuestScore, @ActualScore, @TesteeSource,
     @CreateUserId, @CreateTime, @ModifyUserId, @ModifyTime);";
 

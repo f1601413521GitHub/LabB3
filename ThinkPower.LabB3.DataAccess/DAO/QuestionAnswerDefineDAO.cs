@@ -56,7 +56,8 @@ namespace ThinkPower.LabB3.DataAccess.DAO
             }
 
             string query = @"
-SELECT [Uid],[QuestionUid],[AnswerCode],[AnswerContent],[Memo],
+SELECT 
+    [Uid],[QuestionUid],[AnswerCode],[AnswerContent],[Memo],
     [HaveOtherAnswer],[NeedOtherAnswer],[Score],[OrderSn],[CreateUserId],
     [CreateTime],[ModifyUserId],[ModifyTime] 
 FROM QuestionAnswerDefine 

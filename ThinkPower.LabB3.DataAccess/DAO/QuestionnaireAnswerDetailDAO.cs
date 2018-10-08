@@ -55,10 +55,10 @@ namespace ThinkPower.LabB3.DataAccess.DAO
 
             string query = @"
 INSERT INTO [QuestionnaireAnswerDetail]
-    ([Uid] ,[AnswerUid] ,[QuestionUid] ,[AnswerCode] ,[OtherAnswer] ,[Score] ,[CreateUserId] 
-    ,[CreateTime] ,[ModifyUserId] ,[ModifyTime]) 
-VALUES (@Uid ,@AnswerUid ,@QuestionUid ,@AnswerCode ,@OtherAnswer ,@Score ,@CreateUserId 
-    ,@CreateTime ,@ModifyUserId ,@ModifyTime)";
+    ([Uid],[AnswerUid],[QuestionUid],[AnswerCode],[OtherAnswer],[Score],[CreateUserId],
+    [CreateTime],[ModifyUserId],[ModifyTime]) 
+VALUES (@Uid, @AnswerUid, @QuestionUid, @AnswerCode, @OtherAnswer, @Score, @CreateUserId,
+    @CreateTime, @ModifyUserId, @ModifyTime)";
 
             using (SqlConnection connection = DbConnection)
             {

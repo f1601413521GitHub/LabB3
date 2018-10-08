@@ -63,8 +63,8 @@ namespace ThinkPower.LabB3.DataAccess.DAO
 
             string query = @"
 SELECT 
-    [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
+    [Uid],[RiskEvaId],[MinScore],[MaxScore],[RiskRankKind],[CreateUserId],[CreateTime],
+    [ModifyUserId],[ModifyTime] 
 FROM [RiskRank] 
 WHERE RiskEvaId = @RiskEvaId 
     AND @ActualScore >= MinScore 
@@ -124,8 +124,8 @@ WHERE RiskEvaId = @RiskEvaId
 
             string query = @"
 SELECT 
-    [Uid], [RiskEvaId], [MinScore], [MaxScore], [RiskRankKind], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime] 
+    [Uid],[RiskEvaId],[MinScore],[MaxScore],[RiskRankKind],[CreateUserId],[CreateTime],
+    [ModifyUserId],[ModifyTime] 
 FROM [RiskRank] 
 WHERE RiskEvaId = @RiskEvaId;";
 

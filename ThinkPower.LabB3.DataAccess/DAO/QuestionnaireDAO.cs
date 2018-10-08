@@ -57,9 +57,9 @@ namespace ThinkPower.LabB3.DataAccess.DAO
 
             string query = @"
 SELECT TOP 1 
-    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
-    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
-    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
+    [Uid], [QuestId], [Version], [Kind], [Name], [Memo], [Ondate],
+    [Offdate], [NeedScore], [QuestScore], [ScoreKind], [HeadBackgroundImg], [HeadDescription],
+    [FooterDescription], [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime] 
 FROM Questionnaire 
 WHERE QuestId = @QuestId 
     AND Ondate < @DateTimeNow 
@@ -116,9 +116,9 @@ ORDER BY Version DESC;";
 
             string query = @"
 SELECT 
-    [Uid] ,[QuestId] ,[Version] ,[Kind] ,[Name] ,[Memo] ,[Ondate] ,
-    [Offdate] ,[NeedScore] ,[QuestScore] ,[ScoreKind] ,[HeadBackgroundImg] ,[HeadDescription] ,
-    [FooterDescription] ,[CreateUserId] ,[CreateTime] ,[ModifyUserId] ,[ModifyTime] 
+    [Uid], [QuestId], [Version], [Kind], [Name], [Memo], [Ondate],
+    [Offdate], [NeedScore], [QuestScore], [ScoreKind], [HeadBackgroundImg], [HeadDescription],
+    [FooterDescription], [CreateUserId], [CreateTime], [ModifyUserId], [ModifyTime] 
 FROM Questionnaire 
 WHERE Uid = @Uid";
 

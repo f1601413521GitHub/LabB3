@@ -111,9 +111,9 @@ ORDER BY EvaluationDate DESC;";
 
             string query = @"
 INSERT INTO RiskEvaluation 
-    ([Uid], [RiskEvaId], [QuestAnswerId], [CliId], [RiskResult], [RiskScore], [RiskAttribute],
-    [EvaluationDate], [BusinessDate], [IsUsed], [CreateUserId], [CreateTime], 
-    [ModifyUserId], [ModifyTime]) 
+    ([Uid],[RiskEvaId],[QuestAnswerId],[CliId],[RiskResult],[RiskScore],[RiskAttribute],
+    [EvaluationDate],[BusinessDate],[IsUsed],[CreateUserId],[CreateTime],
+    [ModifyUserId],[ModifyTime]) 
 VALUES 
     (@Uid, @RiskEvaId, @QuestAnswerId, @CliId, @RiskResult, @RiskScore, @RiskAttribute,
     @EvaluationDate, @BusinessDate, @IsUsed, @CreateUserId, @CreateTime,

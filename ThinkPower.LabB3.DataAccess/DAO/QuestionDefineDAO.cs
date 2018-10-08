@@ -57,10 +57,10 @@ namespace ThinkPower.LabB3.DataAccess.DAO
 
             string query = @"
 SELECT 
-    [Uid] ,[QuestUid] ,[QuestionId] ,[QuestionContent] ,[NeedAnswer] ,
-    [AllowNaCondition] ,[AnswerType] ,[MinMultipleAnswers] ,[MaxMultipleAnswers] ,
-    [SingleAnswerCondition] ,[CountScoreType] ,[Memo] ,[OrderSn] ,[CreateUserId] ,
-    [CreateTime] ,[ModifyUserId] ,[ModifyTime]
+    [Uid],[QuestUid],[QuestionId],[QuestionContent],[NeedAnswer],
+    [AllowNaCondition],[AnswerType],[MinMultipleAnswers],[MaxMultipleAnswers],
+    [SingleAnswerCondition],[CountScoreType],[Memo],[OrderSn],[CreateUserId],
+    [CreateTime],[ModifyUserId],[ModifyTime]
 FROM QuestionDefine 
 WHERE QuestUid = @QuestUid 
 ORDER BY OrderSn ASC";
