@@ -200,6 +200,11 @@ namespace ThinkPower.LabB3.Domain.Service
                             Value = String.Join(",", group.Select(item => item.AnswerCode))
                         }).ToDictionary(x => x.Key, x => x.Value);
 
+                if (riskResult == null)
+                {
+                    throw new InvalidOperationException("riskResult not found");
+                }
+
                 questionAnswerDO = RecordQuestionnaireAnswerDetail(questionEntity, calculateResult,
                     answer.UserId);
 
