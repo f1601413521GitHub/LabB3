@@ -179,7 +179,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new InvalidOperationException("validateResult not found");
             }
 
-            Dictionary<string, string> riskResult = new Dictionary<string, string>();
+            Dictionary<string, string> riskResult = null;
             string dialogMsg = String.Empty;
 
             if (validateResult.Count == 0)
@@ -191,19 +191,14 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("calculateResult not found");
                 }
 
-                var questionAnswerInfoList = calculateResult.FullAnswerDetailList.
+                riskResult = calculateResult.FullAnswerDetailList.
                         Where(x => !String.IsNullOrEmpty(x.AnswerCode)).
                         GroupBy(x => x.QuestionId).
                         Select(group => new
                         {
                             group.Key,
                             Value = String.Join(",", group.Select(item => item.AnswerCode))
-                        });
-
-                foreach (var group in questionAnswerInfoList)
-                {
-                    riskResult[group.Key] = group.Value;
-                }
+                        }).ToDictionary(x => x.Key, x => x.Value);
 
                 questionAnswerDO = RecordQuestionnaireAnswerDetail(questionEntity, calculateResult,
                     answer.UserId);
