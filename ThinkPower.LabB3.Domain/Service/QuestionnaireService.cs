@@ -107,23 +107,12 @@ namespace ThinkPower.LabB3.Domain.Service
 
             QuestionnaireDO questionDO = new QuestionnaireDAO().GetQuestionnaire(uid);
 
-
-            // TODO 1008 OK 抽出去 RiskEva Calculate 
-            //DateTime currentTiem = DateTime.Now;
-
-            if ((questionDO == null)
-                //||
-                //(questionDO.Ondate >= currentTiem) ||
-                //((questionDO.Offdate != null) && (questionDO.Offdate <= currentTiem))
-                )
+            if (questionDO == null)
             {
                 var ex = new InvalidOperationException($"questionnaireDO not found");
                 ex.Data["uid"] = uid;
                 throw ex;
             }
-
-            //IEnumerable<QuestDefineEntity> questDefineEntities = GetQuestDefineEntities(
-            //    questionDO.Uid);
 
             questionEntity = new QuestionnaireEntity()
             {
@@ -167,22 +156,14 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new ArgumentNullException("沒有提供問卷填答資料");
             }
 
-            // TODO 1008 OK 補判斷問卷是否有效(onDate/offDate), 若有效取出完整的問卷題目+答題定義資料
             QuestionnaireEntity questionEntity = GetQuestionnaire(answer.QuestUid);
-
-            if (questionEntity == null)
-            {
-                var ex = new InvalidOperationException("問卷資料不存在或沒有有效的問卷資料");
-                ex.Data["QuestionUis"] = answer.QuestUid;
-                throw ex;
-            }
-
             DateTime currentTime = DateTime.Now;
 
-            if ((questionEntity.Ondate >= currentTime) ||
-                ((questionEntity.Offdate != null) && (questionEntity.Offdate <= currentTime)))
+            if ((questionEntity == null) ||
+                (questionEntity.Ondate >= currentTime) ||
+                (questionEntity.Offdate != null) && (questionEntity.Offdate <= currentTime))
             {
-                var ex = new InvalidOperationException($"問卷資料不存在或沒有有效的問卷資料");
+                var ex = new InvalidOperationException("問卷資料不存在或沒有有效的問卷資料");
                 ex.Data["QuestionUis"] = answer.QuestUid;
                 throw ex;
             }
@@ -197,8 +178,10 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new InvalidOperationException("validateResult not found");
             }
 
+
             Dictionary<string, string> riskResult = null;
-            string dialogMsg = String.Empty;
+            string dialogMsg = null;
+
 
             if (validateResult.Count == 0)
             {
@@ -381,12 +364,12 @@ namespace ThinkPower.LabB3.Domain.Service
         {
             Dictionary<string, string> validateResult = new Dictionary<string, string>();
             IEnumerable<AnswerDetailEntity> answerDetailList = null;
-            string errorMsg = String.Empty;
+            string errorMsg = null;
 
 
             foreach (QuestDefineEntity questDefineEntity in questionEntity.QuestDefineEntities)
             {
-                errorMsg = String.Empty;
+                errorMsg = null;
                 answerDetailList = null;
 
                 answerDetailList = answer.AnswerDetailEntities.

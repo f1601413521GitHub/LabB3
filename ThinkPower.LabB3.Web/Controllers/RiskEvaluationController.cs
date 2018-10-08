@@ -72,7 +72,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult EvaQuest(EvaluationRankActionModel actionModel)
         {
             EvaQuestViewModel evaQuestViewModel = null;
-            string validationSummary = String.Empty;
+            string validationSummary = null;
 
             try
             {
@@ -123,7 +123,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult EvaluationRank(FormCollection answer)
         {
             EvaluationRankViewModel evaluationRankViewModel = null;
-            string validationSummary = String.Empty;
+            string validationSummary = null;
 
             try
             {
@@ -153,10 +153,8 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
                     (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
-                    // TODO 1008 OK 取RiskService.GetRiskQuestionnaire
                     return View("EvaQuest", new EvaQuestViewModel()
                     {
-                        //RiskEvaQuestionnaireEntity = riskEvaResultDTO.RiskEvaQuestionnaireEntity,
                         RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
                             answer["questEntity.QuestId"], Session["id"] as string),
                         QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
@@ -198,7 +196,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         public ActionResult AcceptRiskRank(SaveRankActionModel actionModel)
         {
             EvaluationRankViewModel evaRankViewModel = null;
-            string validationSummary = String.Empty;
+            string validationSummary = null;
 
             try
             {
@@ -324,7 +322,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <returns></returns>
         private string ConvertValidateMsgByRiskEvaluation(InvalidOperationException e)
         {
-            string validationSummary = String.Empty;
+            string validationSummary = null;
             bool? canUsedRiskEvaluation = e.Data["canUsedRiskEvaluation"] as bool?;
 
             if ((canUsedRiskEvaluation == null) ||

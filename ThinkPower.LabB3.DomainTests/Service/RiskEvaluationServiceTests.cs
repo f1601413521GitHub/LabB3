@@ -14,25 +14,27 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
     [TestClass()]
     public class RiskEvaluationServiceTests
     {
-        private RiskEvaluationService _riskService { get; set; }
-        private IEnumerable<DateTime> _currentCuttimeRange { get; set; }
+        private RiskEvaluationService _riskService = null;
+        private IEnumerable<DateTime> _currentCuttimeRange = null;
 
-        //TOOD 1008 OK 移除static 改成唯獨 加入隱藏屬性
-        internal RiskEvaluationService RiskService
+        private RiskEvaluationService RiskService
         {
             get
             {
                 if (_riskService == null)
                 {
-                    _riskService = new RiskEvaluationService();
+                    _riskService = new RiskEvaluationService(new List<DateTime>() {
+                        new DateTime(2018,10,08,10,30,00),
+                        new DateTime(2018,10,08,18,30,00),
+                    });
                 }
 
                 return _riskService;
             }
         }
 
-        //TODO 1008 注入資料確保每次測試基準點相同
-        internal IEnumerable<DateTime> CurrentCuttimeRange
+        //TODO 1008 OK 注入資料確保每次測試基準點相同
+        private IEnumerable<DateTime> CurrentCuttimeRange
         {
             get
             {
@@ -52,7 +54,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             bool expected = true;
 
             //Actual
-            bool actual = (CurrentCuttimeRange != null && CurrentCuttimeRange.Count() > 0);
+            bool actual = (CurrentCuttimeRange.Count() == 2);
 
             //Aseert
             Assert.AreEqual(expected, actual);
