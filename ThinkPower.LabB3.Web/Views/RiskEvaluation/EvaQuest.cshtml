@@ -30,6 +30,7 @@
         @if (questEntity != null)
         {
             @Html.HiddenFor(x => questEntity.Uid)
+            @Html.HiddenFor(x => questEntity.QuestId)
 
             <div class="col question"
                  id="questEntity"

@@ -153,9 +153,12 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
                     (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
+                    // TODO 1008 OK 取RiskService.GetRiskQuestionnaire
                     return View("EvaQuest", new EvaQuestViewModel()
                     {
-                        RiskEvaQuestionnaireEntity = riskEvaResultDTO.RiskEvaQuestionnaireEntity,
+                        //RiskEvaQuestionnaireEntity = riskEvaResultDTO.RiskEvaQuestionnaireEntity,
+                        RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
+                            answer["questEntity.QuestId"], Session["id"] as string),
                         QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
                     });
                 }

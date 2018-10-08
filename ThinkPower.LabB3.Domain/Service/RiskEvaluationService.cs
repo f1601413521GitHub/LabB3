@@ -99,23 +99,27 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
 
-            QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().
-                GetLatestQuestionnaireAnswer(activeQuestionnaire.Uid, userId);
+            //QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().
+            //    GetLatestQuestionnaireAnswer(activeQuestionnaire.Uid, userId);
 
-            if (questAnswerDO != null)
+            //if (questAnswerDO != null)
+            //{
+
+            // TODO 1008 Temp RiskEvaluation判斷 +CheckRiskEvaCondition 抽成一個method
+            // TODO 1008 OK GetLatestRiskEvaluation(UserID)
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
+                GetLatestRiskEvaluation(userId);
+
+            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
+
+            if (!canUsedRiskEvaluation)
             {
-                RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
-                    GetLatestRiskEvaluation(questAnswerDO.QuestAnswerId);
-
-                bool canUsedRiskEvaluation = CheckRiskEvaCondition(riskEvaluationDO);
-
-                if (!canUsedRiskEvaluation)
-                {
-                    var ex = new InvalidOperationException("Not can used risk evaluation");
-                    ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
-                    throw ex;
-                }
+                var ex = new InvalidOperationException("Not can used risk evaluation");
+                ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
+                throw ex;
             }
+
+            //}
 
             result = new RiskEvaQuestionnaireEntity()
             {
@@ -143,34 +147,38 @@ namespace ThinkPower.LabB3.Domain.Service
 
 
 
+            // TODO 1008 OK 不用取
+            //QuestionnaireEntity questEntity = QuestService.GetQuestionnaire(answer.
+            //    QuestionnaireAnswerEntity.QuestUid);
 
-            QuestionnaireEntity questEntity = QuestService.GetQuestionnaire(answer.
-                QuestionnaireAnswerEntity.QuestUid);
+            //if (questEntity == null)
+            //{
+            //    var ex = new InvalidOperationException($"questEntity not found");
+            //    ex.Data["QuestionnaireUid"] = answer.QuestionnaireAnswerEntity.QuestUid;
+            //    throw ex;
+            //}
 
-            if (questEntity == null)
+            // TODO 1008 OK 也不用了,直接用UserId判斷RiskEvaluationDO >> answer.QuestionnaireAnswerEntity.QuestUid 直接傳
+            //QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().
+            //        GetLatestQuestionnaireAnswer(questEntity.Uid, answer.QuestionnaireAnswerEntity.UserId);
+
+            //if (questAnswerDO != null)
+            //{
+
+            // TODO 1008 Temp 修正OK+整合
+            RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
+                GetLatestRiskEvaluation(answer.QuestionnaireAnswerEntity.UserId);
+
+            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
+
+            if (!canUsedRiskEvaluation)
             {
-                var ex = new InvalidOperationException($"questEntity not found");
-                ex.Data["QuestionnaireUid"] = answer.QuestionnaireAnswerEntity.QuestUid;
+                var ex = new InvalidOperationException("Not can used risk evaluation");
+                ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
                 throw ex;
             }
 
-            QuestionnaireAnswerDO questAnswerDO = new QuestionnaireAnswerDAO().
-                GetLatestQuestionnaireAnswer(questEntity.Uid, answer.QuestionnaireAnswerEntity.UserId);
-
-            if (questAnswerDO != null)
-            {
-                RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
-                    GetLatestRiskEvaluation(questAnswerDO.QuestAnswerId);
-
-                bool canUsedRiskEvaluation = CheckRiskEvaCondition(riskEvaluationDO);
-
-                if (!canUsedRiskEvaluation)
-                {
-                    var ex = new InvalidOperationException("Not can used risk evaluation");
-                    ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
-                    throw ex;
-                }
-            }
+            //}
 
 
 
@@ -182,21 +190,24 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new InvalidOperationException("questResultEntity not found");
             }
 
-            if ((questionResultEntity.ValidateFailInfo != null) &&
-                (questionResultEntity.ValidateFailInfo.Count > 0))
-            {
-                riskEvaQuestEntity = GetRiskQuestionnaire(questionResultEntity.QuestionnaireEntity.QuestId,
-                    answer.QuestionnaireAnswerEntity.UserId);
+            // TODO 1008 OK 移到Controller再去取GetRiskQuestionnaire
+            //if ((questionResultEntity.ValidateFailInfo != null) &&
+            //    (questionResultEntity.ValidateFailInfo.Count > 0))
+            //{
+            //    riskEvaQuestEntity = GetRiskQuestionnaire(questionResultEntity.QuestionnaireEntity.QuestId,
+            //        answer.QuestionnaireAnswerEntity.UserId);
 
-                if (riskEvaQuestEntity == null)
-                {
-                    var ex = new InvalidOperationException("riskEvaQuestEntity not found");
-                    ex.Data["QuestId"] = questionResultEntity.QuestionnaireEntity.QuestId;
-                    ex.Data["UserId"] = answer.QuestionnaireAnswerEntity.UserId;
-                    throw ex;
-                }
-            }
-            else if (questionResultEntity.QuestionnaireEntity.NeedScore == "Y")
+            //    if (riskEvaQuestEntity == null)
+            //    {
+            //        var ex = new InvalidOperationException("riskEvaQuestEntity not found");
+            //        ex.Data["QuestId"] = questionResultEntity.QuestionnaireEntity.QuestId;
+            //        ex.Data["UserId"] = answer.QuestionnaireAnswerEntity.UserId;
+            //        throw ex;
+            //    }
+            //}
+            //else 
+            
+            if (questionResultEntity.QuestionnaireEntity.NeedScore == "Y")
             {
                 RiskRankDO riskRankDO = new RiskRankDAO().GetRiskRank(questionResultEntity.ActualScore,
                     _riskEvaIdFundInvestment);
@@ -219,7 +230,8 @@ namespace ThinkPower.LabB3.Domain.Service
 
             riskEvaResultDTO = new RiskEvaResultDTO()
             {
-                RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
+                // TODO 1008 OK 移除屬性
+                //RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
                 QuestionnaireResultEntity = questionResultEntity,
 
                 RiskRankEntities = GetRiskRankEntities(_riskEvaIdFundInvestment),
@@ -259,10 +271,11 @@ namespace ThinkPower.LabB3.Domain.Service
 
             QuestionnaireResultEntity questResultEntity = riskEvaResultDTO.QuestionnaireResultEntity;
 
+            // TODO 1008 Temp 修正OK+整合
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().
-                GetLatestRiskEvaluation(questResultEntity.QuestAnswerId);
+                GetLatestRiskEvaluation(questResultEntity.TesteeId);
 
-            bool canUsedRiskEvaluation = CheckRiskEvaCondition(riskEvaluationDO);
+            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
 
             if (!canUsedRiskEvaluation)
             {
@@ -272,22 +285,22 @@ namespace ThinkPower.LabB3.Domain.Service
             }
 
 
+            // TODO 1008 OK 區間外= insert, 區間內= insert or update
+            DateTime currenTime = DateTime.Now;
 
             if (riskEvaluationDO == null)
             {
-                DateTime currenTime = DateTime.Now;
-
                 riskEvaluationDO = new RiskEvaluationDO()
                 {
                     Uid = Guid.NewGuid(),
                     RiskEvaId = _riskEvaIdFundInvestment,
                     QuestAnswerId = questResultEntity.QuestAnswerId,
                     CliId = questResultEntity.TesteeId,
-                    RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
+                    RiskResult = string.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
                     RiskScore = questResultEntity.ActualScore,
                     RiskAttribute = questResultEntity.RiskRankKind,
                     EvaluationDate = currenTime,
-                    BusinessDate = (currenTime.Hour < 16) ? currenTime.Date : currenTime.Date.AddDays(1),
+                    BusinessDate = ConvertBusinessDate(currenTime),
                     IsUsed = "N",
                     CreateUserId = questResultEntity.TesteeId,
                     CreateTime = currenTime,
@@ -299,23 +312,44 @@ namespace ThinkPower.LabB3.Domain.Service
             }
             else
             {
+                // TODO 1008 OK 抽成method[ConvertBusinessDate] (currenTime.Hour < 16) ? currenTime.Date : currenTime.Date.AddDays(1)
                 bool inCuttimeRange = CheckInCuttimeRange(riskEvaluationDO);
 
-                if (inCuttimeRange && (riskEvaluationDO.IsUsed == "N"))
+                if (inCuttimeRange)
                 {
-                    DateTime currenTime = DateTime.Now;
-
                     riskEvaluationDO.QuestAnswerId = questResultEntity.QuestAnswerId;
                     riskEvaluationDO.RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]"));
                     riskEvaluationDO.RiskScore = questResultEntity.ActualScore;
                     riskEvaluationDO.RiskAttribute = questResultEntity.RiskRankKind;
                     riskEvaluationDO.EvaluationDate = currenTime;
-                    riskEvaluationDO.BusinessDate = (currenTime.Hour < 16) ? currenTime.Date : currenTime.Date.AddDays(1);
+                    riskEvaluationDO.BusinessDate = ConvertBusinessDate(currenTime);
                     riskEvaluationDO.IsUsed = "N";
                     riskEvaluationDO.ModifyUserId = questResultEntity.TesteeId;
                     riskEvaluationDO.ModifyTime = currenTime;
 
                     new RiskEvaluationDAO().Update(riskEvaluationDO);
+                }
+                else
+                {
+                    riskEvaluationDO = new RiskEvaluationDO()
+                    {
+                        Uid = Guid.NewGuid(),
+                        RiskEvaId = _riskEvaIdFundInvestment,
+                        QuestAnswerId = questResultEntity.QuestAnswerId,
+                        CliId = questResultEntity.TesteeId,
+                        RiskResult = String.Join(";", questResultEntity.RiskResult.Select(x => $"[{x.Key}:{x.Value}]")),
+                        RiskScore = questResultEntity.ActualScore,
+                        RiskAttribute = questResultEntity.RiskRankKind,
+                        EvaluationDate = currenTime,
+                        BusinessDate = ConvertBusinessDate(currenTime),
+                        IsUsed = "N",
+                        CreateUserId = questResultEntity.TesteeId,
+                        CreateTime = currenTime,
+                        ModifyUserId = null,
+                        ModifyTime = null,
+                    };
+
+                    new RiskEvaluationDAO().Insert(riskEvaluationDO);
                 }
             }
         }
@@ -363,7 +397,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// </summary>
         /// <param name="riskEvaluationDO">風險評估紀錄</param>
         /// <returns></returns>
-        public bool CheckRiskEvaCondition(RiskEvaluationDO riskEvaluationDO)
+        public bool CheckCanEvaluteRisk(RiskEvaluationDO riskEvaluationDO)
         {
             bool canUsedRiskEvaluation = true;
 
@@ -389,7 +423,7 @@ namespace ThinkPower.LabB3.Domain.Service
         {
             bool inCuttimeRange = false;
 
-            IEnumerable<DateTime> cuttimeRange = GetRiskEvaCuttime();
+            IEnumerable<DateTime> cuttimeRange = GetCurrentCuttimeRange();
 
             if (cuttimeRange == null)
             {
@@ -409,7 +443,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 取得投資風險評估切點時間範圍
         /// </summary>
         /// <returns>投資風險評估切點時間範圍</returns>
-        public IEnumerable<DateTime> GetRiskEvaCuttime()
+        public IEnumerable<DateTime> GetCurrentCuttimeRange()
         {
             List<DateTime> cuttimeRange = null;
 
@@ -502,6 +536,15 @@ namespace ThinkPower.LabB3.Domain.Service
             });
         }
 
+        /// <summary>
+        /// 轉換資料時間
+        /// </summary>
+        /// <param name="currenTime">目前時間</param>
+        /// <returns>資料時間</returns>
+        private static DateTime ConvertBusinessDate(DateTime currenTime)
+        {
+            return (currenTime.Hour < 16) ? currenTime.Date : currenTime.Date.AddDays(1);
+        }
         #endregion
     }
 }

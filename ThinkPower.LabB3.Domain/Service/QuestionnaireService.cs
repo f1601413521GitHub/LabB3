@@ -104,21 +104,26 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new ArgumentNullException("uid");
             }
 
-            DateTime currentTiem = DateTime.Now;
 
             QuestionnaireDO questionDO = new QuestionnaireDAO().GetQuestionnaire(uid);
 
-            if ((questionDO == null) ||
-                (questionDO.Ondate >= currentTiem) ||
-                ((questionDO.Offdate != null) && (questionDO.Offdate <= currentTiem)))
+
+            // TODO 1008 OK 抽出去 RiskEva Calculate 
+            //DateTime currentTiem = DateTime.Now;
+
+            if ((questionDO == null)
+                //||
+                //(questionDO.Ondate >= currentTiem) ||
+                //((questionDO.Offdate != null) && (questionDO.Offdate <= currentTiem))
+                )
             {
                 var ex = new InvalidOperationException($"questionnaireDO not found");
                 ex.Data["uid"] = uid;
                 throw ex;
             }
 
-            IEnumerable<QuestDefineEntity> questDefineEntities = GetQuestDefineEntities(
-                questionDO.Uid);
+            //IEnumerable<QuestDefineEntity> questDefineEntities = GetQuestDefineEntities(
+            //    questionDO.Uid);
 
             questionEntity = new QuestionnaireEntity()
             {
@@ -141,7 +146,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 ModifyUserId = questionDO.ModifyUserId,
                 ModifyTime = questionDO.ModifyTime,
 
-                QuestDefineEntities = questDefineEntities,
+                QuestDefineEntities = null,
             };
 
             return questionEntity;
@@ -162,6 +167,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new ArgumentNullException("沒有提供問卷填答資料");
             }
 
+            // TODO 1008 OK 補判斷問卷是否有效(onDate/offDate), 若有效取出完整的問卷題目+答題定義資料
             QuestionnaireEntity questionEntity = GetQuestionnaire(answer.QuestUid);
 
             if (questionEntity == null)
@@ -170,6 +176,18 @@ namespace ThinkPower.LabB3.Domain.Service
                 ex.Data["QuestionUis"] = answer.QuestUid;
                 throw ex;
             }
+
+            DateTime currentTime = DateTime.Now;
+
+            if ((questionEntity.Ondate >= currentTime) ||
+                ((questionEntity.Offdate != null) && (questionEntity.Offdate <= currentTime)))
+            {
+                var ex = new InvalidOperationException($"問卷資料不存在或沒有有效的問卷資料");
+                ex.Data["QuestionUis"] = answer.QuestUid;
+                throw ex;
+            }
+
+            questionEntity.QuestDefineEntities = GetQuestDefineEntities(questionEntity.Uid);
 
 
             Dictionary<string, string> validateResult = ValidateRule(answer, questionEntity);
@@ -205,7 +223,7 @@ namespace ThinkPower.LabB3.Domain.Service
                     throw new InvalidOperationException("riskResult not found");
                 }
 
-                questionAnswerDO = RecordQuestionnaireAnswerDetail(questionEntity, calculateResult,
+                questionAnswerDO = SaveQuestionAnswer(questionEntity, calculateResult,
                     answer.UserId);
 
                 if (questionAnswerDO == null)
@@ -815,7 +833,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <param name="calculateResult">問卷得分與填答資料</param>
         /// <param name="userId">用戶ID</param>
         /// <returns>問卷答題資料</returns>
-        private QuestionnaireAnswerDO RecordQuestionnaireAnswerDetail(QuestionnaireEntity questEntity,
+        private QuestionnaireAnswerDO SaveQuestionAnswer(QuestionnaireEntity questEntity,
             CalculateScoreEntity calculateResult, string userId)
         {
             QuestionnaireAnswerDO questionnaireAnswerDO = null;

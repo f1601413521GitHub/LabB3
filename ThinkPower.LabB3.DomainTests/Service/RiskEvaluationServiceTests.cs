@@ -14,8 +14,36 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
     [TestClass()]
     public class RiskEvaluationServiceTests
     {
-        private static RiskEvaluationService _riskService = new RiskEvaluationService();
-        private IEnumerable<DateTime> _cuttime = _riskService.GetRiskEvaCuttime();
+        private RiskEvaluationService _riskService { get; set; }
+        private IEnumerable<DateTime> _currentCuttimeRange { get; set; }
+
+        //TOOD 1008 OK 移除static 改成唯獨 加入隱藏屬性
+        internal RiskEvaluationService RiskService
+        {
+            get
+            {
+                if (_riskService == null)
+                {
+                    _riskService = new RiskEvaluationService();
+                }
+
+                return _riskService;
+            }
+        }
+
+        //TODO 1008 注入資料確保每次測試基準點相同
+        internal IEnumerable<DateTime> CurrentCuttimeRange
+        {
+            get
+            {
+                if (_currentCuttimeRange == null)
+                {
+                    _currentCuttimeRange = RiskService.GetCurrentCuttimeRange();
+                }
+
+                return _currentCuttimeRange;
+            }
+        }
 
         [TestMethod()]
         public void GetRiskEvaCuttimeTest_Success()
@@ -24,7 +52,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             bool expected = true;
 
             //Actual
-            bool actual = (_cuttime != null && _cuttime.Count() > 0);
+            bool actual = (CurrentCuttimeRange != null && CurrentCuttimeRange.Count() > 0);
 
             //Aseert
             Assert.AreEqual(expected, actual);
@@ -38,7 +66,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             bool expected = true;
 
             //Actual
-            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -50,13 +78,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min(),
+                EvaluationDate = CurrentCuttimeRange.Min(),
                 IsUsed = "Y",
             };
             bool expected = false;
 
             //Actual
-            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -69,13 +97,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min(),
+                EvaluationDate = CurrentCuttimeRange.Min(),
                 IsUsed = "N",
             };
             bool expected = true;
 
             //Actual
-            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -87,13 +115,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min().AddSeconds(-1),
+                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
                 IsUsed = "Y",
             };
             bool expected = true;
 
             //Actual
-            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -106,13 +134,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min().AddSeconds(-1),
+                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
                 IsUsed = "N",
             };
             bool expected = true;
 
             //Actual
-            bool actual = _riskService.CheckRiskEvaCondition(riskEvaluationDO);
+            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -126,13 +154,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrage
             var riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min(),
+                EvaluationDate = CurrentCuttimeRange.Min(),
             };
 
             var expected = true;
 
             //Actual
-            var actual = _riskService.CheckInCuttimeRange(riskEvaluationDO);
+            var actual = RiskService.CheckInCuttimeRange(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -144,13 +172,13 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrage
             var riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = _cuttime.Min().AddSeconds(-1),
+                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
             };
 
             var expected = false;
 
             //Actual
-            var actual = _riskService.CheckInCuttimeRange(riskEvaluationDO);
+            var actual = RiskService.CheckInCuttimeRange(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -168,7 +196,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
 
             try
             {
-                _riskService.Get(uid);
+                RiskService.Get(uid);
             }
             catch (NotImplementedException e)
             {
@@ -191,7 +219,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
 
             try
             {
-                _riskService.RiskRank(riskRankKind);
+                RiskService.RiskRank(riskRankKind);
             }
             catch (NotImplementedException e)
             {

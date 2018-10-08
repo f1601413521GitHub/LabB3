@@ -22,6 +22,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             int expected = 19;
 
+            // TODO 1008 測試假資料寫成Get方法去取用(0, 1~max, >max), 單/複選, 取max/min/sum/avg, exception
             //Actual
             CalculateScoreEntity result = new QuestionnaireService().CalculateScore(_answer,
                 _questionnaire);

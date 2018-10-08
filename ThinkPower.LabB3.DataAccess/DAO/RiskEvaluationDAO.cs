@@ -45,15 +45,15 @@ namespace ThinkPower.LabB3.DataAccess.DAO
         /// <summary>
         /// 取得最新投資風險評估結果
         /// </summary>
-        /// <param name="questAnswerId">問卷答題編號</param>
+        /// <param name="userId">用戶ID</param>
         /// <returns>投資風險評估結果</returns>
-        public RiskEvaluationDO GetLatestRiskEvaluation(string questAnswerId)
+        public RiskEvaluationDO GetLatestRiskEvaluation(string userId)
         {
             RiskEvaluationDO riskEvaDO = null;
 
-            if (String.IsNullOrEmpty(questAnswerId))
+            if (String.IsNullOrEmpty(userId))
             {
-                throw new ArgumentNullException("questAnswerId");
+                throw new ArgumentNullException("userId");
             }
 
             string query = @"
@@ -62,16 +62,16 @@ SELECT TOP 1
     [RiskScore],[RiskAttribute],[EvaluationDate],[BusinessDate],
     [IsUsed],[CreateUserId],[CreateTime],[ModifyUserId],[ModifyTime]
 FROM [RiskEvaluation]
-WHERE [QuestAnswerId] = @QuestAnswerId
+WHERE [CliId] = @CliId
 ORDER BY EvaluationDate DESC;";
 
             using (SqlConnection connection = DbConnection)
             {
                 SqlCommand command = new SqlCommand(query, connection);
 
-                command.Parameters.Add(new SqlParameter("@QuestAnswerId", SqlDbType.VarChar)
+                command.Parameters.Add(new SqlParameter("@CliId", SqlDbType.VarChar)
                 {
-                    Value = questAnswerId,
+                    Value = userId,
                 });
 
                 connection.Open();
