@@ -513,10 +513,11 @@ namespace ThinkPower.LabB3.Domain.Service
         /// </summary>
         /// <param name="currenTime">目前時間</param>
         /// <returns>資料時間</returns>
-        private static DateTime ConvertBusinessDate(DateTime currenTime)
+        private DateTime ConvertBusinessDate(DateTime currenTime)
         {
             return (currenTime.Hour < 16) ? currenTime.Date : currenTime.Date.AddDays(1);
         }
+
         #endregion
     }
 }
