@@ -53,15 +53,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
             //Arrange
             QuestionnaireEntity question = QuestionEntity;
 
-            foreach (var questDefine in question.QuestDefineEntities)
-            {
-                questDefine.CountScoreType = String.Empty;
-
-                foreach (var answerDefine in questDefine.AnswerDefineEntities)
-                {
-                    answerDefine.Score = null;
-                }
-            }
+            question.NeedScore = "N";
 
             int expected = 0;
 
@@ -388,6 +380,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
                     {
                         ScoreKind = "1",
                         QuestScore = 35,
+                        NeedScore = "Y",
                         QuestDefineEntities = new List<QuestDefineEntity>()
                         {
                             new QuestDefineEntity() {Uid=Guid.Parse("F9DD6938-2DBD-48AF-9D44-428DCB2AC5D6"), QuestionId="Q001",    CountScoreType = "2",    NeedAnswer = "N",    AnswerType = "S",     MinMultipleAnswers=null,     MaxMultipleAnswers=null,    SingleAnswerCondition="",                                                                           AllowNaCondition="",                                                                                                                                AnswerDefineEntities = new List<AnswerDefineEntity>(){

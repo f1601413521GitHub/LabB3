@@ -775,40 +775,57 @@ namespace ThinkPower.LabB3.Domain.Service
                 }
 
 
-                answerScoreList = answerFullDetailList.
-                    Where(x => (x.QuestionId == questDefine.QuestionId) && (x.Score != null)).
-                    Select(x => x.Score.Value);
-
-
-                switch (questDefine.CountScoreType)
+                if (questionEntity.NeedScore == "Y")
                 {
-                    case "1":
-                    default:
-                        questionScoreList.Add(answerScoreList.Sum());
-                        break;
-                    case "2":
-                        questionScoreList.Add(answerScoreList.Max());
-                        break;
-                    case "3":
-                        questionScoreList.Add(answerScoreList.Min());
-                        break;
-                    case "4":
-                        questionScoreList.Add(Convert.ToInt32(Math.
-                            Round(answerScoreList.Average(), 0, MidpointRounding.AwayFromZero)));
-                        break;
+                    answerScoreList = answerFullDetailList.
+                        Where(x => (x.QuestionId == questDefine.QuestionId) && (x.Score != null)).
+                        Select(x => x.Score.Value);
+
+                    if ((answerScoreList == null) ||
+                        (answerScoreList.Count() == 0))
+                    {
+                        var ex = new InvalidOperationException("answerScoreList not found");
+                        ex.Data["questDefine.QuestionId"] = questDefine.QuestionId;
+                        throw ex;
+                    }
+
+                    switch (questDefine.CountScoreType)
+                    {
+                        case "1":
+                            questionScoreList.Add(answerScoreList.Sum());
+                            break;
+                        case "2":
+                            questionScoreList.Add(answerScoreList.Max());
+                            break;
+                        case "3":
+                            questionScoreList.Add(answerScoreList.Min());
+                            break;
+                        case "4":
+                            questionScoreList.Add(Convert.ToInt32(Math.
+                                Round(answerScoreList.Average(), 0, MidpointRounding.AwayFromZero)));
+                            break;
+                        default:
+
+                            var ex = new InvalidOperationException("countScoreType not found");
+                            ex.Data["questDefine.QuestionId"] = questDefine.QuestionId;
+                            ex.Data["questDefine.CountScoreType"] = questDefine.CountScoreType;
+                            throw ex;
+                    }
                 }
             }
 
-
-            if (questionEntity.ScoreKind == "1")
+            if (questionEntity.NeedScore == "Y")
             {
-                actualScore = questionScoreList.Sum();
-            }
+                if (questionEntity.ScoreKind == "1")
+                {
+                    actualScore = questionScoreList.Sum();
+                }
 
-            if ((questionEntity.QuestScore != null) &&
-                (actualScore > questionEntity.QuestScore.Value))
-            {
-                actualScore = questionEntity.QuestScore.Value;
+                if ((questionEntity.QuestScore != null) &&
+                    (actualScore > questionEntity.QuestScore.Value))
+                {
+                    actualScore = questionEntity.QuestScore.Value;
+                }
             }
 
             return new CalculateScoreEntity()
