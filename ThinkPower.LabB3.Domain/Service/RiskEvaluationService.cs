@@ -113,12 +113,12 @@ namespace ThinkPower.LabB3.Domain.Service
 
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().GetLatestRiskEvaluation(userId);
 
-            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
+            bool canEvaluteRisk = CheckCanEvaluteRisk(riskEvaluationDO);
 
-            if (!canUsedRiskEvaluation)
+            if (!canEvaluteRisk)
             {
                 var ex = new InvalidOperationException("Not can used risk evaluation");
-                ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
+                ex.Data["canEvaluteRisk"] = canEvaluteRisk;
                 throw ex;
             }
 
@@ -161,12 +161,12 @@ namespace ThinkPower.LabB3.Domain.Service
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().GetLatestRiskEvaluation(
                 answer.QuestionnaireAnswerEntity.UserId);
 
-            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
+            bool canEvaluteRisk = CheckCanEvaluteRisk(riskEvaluationDO);
 
-            if (!canUsedRiskEvaluation)
+            if (!canEvaluteRisk)
             {
                 var ex = new InvalidOperationException("Not can used risk evaluation");
-                ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
+                ex.Data["canEvaluteRisk"] = canEvaluteRisk;
                 throw ex;
             }
 
@@ -244,12 +244,12 @@ namespace ThinkPower.LabB3.Domain.Service
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDAO().GetLatestRiskEvaluation(
                 questResultEntity.TesteeId);
 
-            bool canUsedRiskEvaluation = CheckCanEvaluteRisk(riskEvaluationDO);
+            bool canEvaluteRisk = CheckCanEvaluteRisk(riskEvaluationDO);
 
-            if (!canUsedRiskEvaluation)
+            if (!canEvaluteRisk)
             {
                 var ex = new InvalidOperationException("Not can used risk evaluation");
-                ex.Data["canUsedRiskEvaluation"] = canUsedRiskEvaluation;
+                ex.Data["canEvaluteRisk"] = canEvaluteRisk;
                 throw ex;
             }
 
@@ -366,7 +366,7 @@ namespace ThinkPower.LabB3.Domain.Service
         /// <returns></returns>
         public bool CheckCanEvaluteRisk(RiskEvaluationDO riskEvaluationDO)
         {
-            bool canUsedRiskEvaluation = true;
+            bool canEvaluteRisk = true;
 
             if (riskEvaluationDO != null)
             {
@@ -374,11 +374,11 @@ namespace ThinkPower.LabB3.Domain.Service
 
                 if (inCuttimeRange && (riskEvaluationDO.IsUsed == "Y"))
                 {
-                    canUsedRiskEvaluation = false;
+                    canEvaluteRisk = false;
                 }
             }
 
-            return canUsedRiskEvaluation;
+            return canEvaluteRisk;
         }
 
         /// <summary>

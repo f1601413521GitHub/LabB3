@@ -323,15 +323,15 @@ namespace ThinkPower.LabB3.Web.Controllers
         private string ConvertValidateMsgByRiskEvaluation(InvalidOperationException e)
         {
             string validationSummary = null;
-            bool? canUsedRiskEvaluation = e.Data["canUsedRiskEvaluation"] as bool?;
+            bool? canEvaluteRisk = e.Data["canEvaluteRisk"] as bool?;
 
-            if ((canUsedRiskEvaluation == null) ||
-                canUsedRiskEvaluation.Value)
+            if ((canEvaluteRisk == null) ||
+                canEvaluteRisk.Value)
             {
                 logger.Error(e);
                 validationSummary = _systemErrorMsg;
             }
-            else if (!canUsedRiskEvaluation.Value)
+            else if (!canEvaluteRisk.Value)
             {
                 validationSummary = _existEffectiveAnRiskEvaluationMsg;
             }
