@@ -114,6 +114,17 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw ex;
             }
 
+            IEnumerable<QuestDefineEntity> questDefineEntities = GetQuestDefineEntities(questionDO.Uid);
+
+            if ((questDefineEntities == null) ||
+                (questDefineEntities.Count() == 0))
+            {
+
+                var ex = new InvalidOperationException($"questDefineEntities not found");
+                ex.Data["questionDO.Uid"] = questionDO.Uid;
+                throw ex;
+            }
+
             questionEntity = new QuestionnaireEntity()
             {
                 Uid = questionDO.Uid,
@@ -135,7 +146,7 @@ namespace ThinkPower.LabB3.Domain.Service
                 ModifyUserId = questionDO.ModifyUserId,
                 ModifyTime = questionDO.ModifyTime,
 
-                QuestDefineEntities = null,
+                QuestDefineEntities = questDefineEntities,
             };
 
             return questionEntity;
@@ -167,8 +178,6 @@ namespace ThinkPower.LabB3.Domain.Service
                 ex.Data["QuestionUis"] = answer.QuestUid;
                 throw ex;
             }
-
-            questionEntity.QuestDefineEntities = GetQuestDefineEntities(questionEntity.Uid);
 
 
             Dictionary<string, string> validateResult = ValidateRule(answer, questionEntity);
