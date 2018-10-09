@@ -31,9 +31,9 @@ namespace ThinkPower.LabB3.Domain.Service
         private Logger logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// 單元測試投資風險評估切點時間範圍
+        /// 投資風險評估切點時間範圍
         /// </summary>
-        private IEnumerable<DateTime> _cuttimeRange = null;
+        private CuttimeRangeInfoEntity _cuttimeRange = null;
 
         /// <summary>
         /// 問卷服務 隱藏欄位
@@ -80,10 +80,10 @@ namespace ThinkPower.LabB3.Domain.Service
         }
 
         /// <summary>
-        /// 單元測試資料注入
+        /// 此建構函式會設定投資風險評估切點時間範圍的起訖時間。
         /// </summary>
         /// <param name="cuttimeRange">投資風險評估切點時間範圍</param>
-        public RiskEvaluationService(List<DateTime> cuttimeRange)
+        public RiskEvaluationService(CuttimeRangeInfoEntity cuttimeRange)
         {
             _cuttimeRange = cuttimeRange;
         }
@@ -390,15 +390,15 @@ namespace ThinkPower.LabB3.Domain.Service
         {
             bool inCuttimeRange = false;
 
-            IEnumerable<DateTime> cuttimeRange = GetCurrentCuttimeRange();
+            CuttimeRangeInfoEntity cuttimeRange = GetCurrentCuttimeRange();
 
             if (cuttimeRange == null)
             {
                 throw new InvalidOperationException("cuttimeRange not found");
             }
 
-            if ((riskEvaluationDO.EvaluationDate < cuttimeRange.Max()) &&
-                (riskEvaluationDO.EvaluationDate >= cuttimeRange.Min()))
+            if ((riskEvaluationDO.EvaluationDate < cuttimeRange.EndTime) &&
+                (riskEvaluationDO.EvaluationDate >= cuttimeRange.StartTime))
             {
                 inCuttimeRange = true;
             }
@@ -410,9 +410,9 @@ namespace ThinkPower.LabB3.Domain.Service
         /// 取得投資風險評估切點時間範圍
         /// </summary>
         /// <returns>投資風險評估切點時間範圍</returns>
-        public IEnumerable<DateTime> GetCurrentCuttimeRange()
+        public CuttimeRangeInfoEntity GetCurrentCuttimeRange()
         {
-            List<DateTime> cuttimeRange = null;
+            CuttimeRangeInfoEntity cuttimeRange = null;
 
             if (_cuttimeRange != null)
             {
@@ -446,10 +446,10 @@ namespace ThinkPower.LabB3.Domain.Service
                     cuttimes.Add(cuttimesMax.AddDays(-1));
                     cuttimes.Add(cuttimesMin.AddDays(1));
 
-                    cuttimeRange = new List<DateTime>()
+                    cuttimeRange = new CuttimeRangeInfoEntity
                     {
-                        cuttimes.Where(x => x < timeNow).Max(),
-                        cuttimes.Where(x => x > timeNow).Min()
+                        StartTime = cuttimes.Where(x => x < timeNow).Max(),
+                        EndTime = cuttimes.Where(x => x > timeNow).Min()
                     };
                 }
             }

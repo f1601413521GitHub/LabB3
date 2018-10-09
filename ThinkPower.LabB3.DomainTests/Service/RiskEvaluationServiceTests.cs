@@ -8,67 +8,26 @@ using System.Threading.Tasks;
 using ThinkPower.LabB3.DataAccess.DAO;
 using Newtonsoft.Json;
 using ThinkPower.LabB3.DataAccess.DO;
+using ThinkPower.LabB3.Domain.Entity;
 
 namespace ThinkPower.LabB3.Domain.Service.Tests
 {
     [TestClass()]
     public class RiskEvaluationServiceTests
     {
-        private RiskEvaluationService _riskService = null;
-        private IEnumerable<DateTime> _currentCuttimeRange = null;
-
-        private RiskEvaluationService RiskService
-        {
-            get
-            {
-                if (_riskService == null)
-                {
-                    _riskService = new RiskEvaluationService(new List<DateTime>() {
-                        new DateTime(2018,10,08,10,30,00),
-                        new DateTime(2018,10,08,18,30,00),
-                    });
-                }
-
-                return _riskService;
-            }
-        }
-
-        //TODO 1008 OK 注入資料確保每次測試基準點相同
-        private IEnumerable<DateTime> CurrentCuttimeRange
-        {
-            get
-            {
-                if (_currentCuttimeRange == null)
-                {
-                    _currentCuttimeRange = RiskService.GetCurrentCuttimeRange();
-                }
-
-                return _currentCuttimeRange;
-            }
-        }
-
-        [TestMethod()]
-        public void GetRiskEvaCuttimeTest_Success()
-        {
-            //Arrange
-            bool expected = true;
-
-            //Actual
-            bool actual = (CurrentCuttimeRange.Count() == 2);
-
-            //Aseert
-            Assert.AreEqual(expected, actual);
-        }
-
         [TestMethod()]
         public void CheckRiskEvaCondition_When_RiskEvaluationDO_Is_Null_Then_Success()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
             RiskEvaluationDO riskEvaluationDO = null;
             bool expected = true;
 
             //Actual
-            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
+            bool actual = riskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -78,15 +37,21 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         public void CheckRiskEvaCondition_When_EvaluationDate_InCuttimeRange_And_IsUsed_Is_Y_Then_Fail()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min(),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime,
                 IsUsed = "Y",
             };
+
             bool expected = false;
 
             //Actual
-            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
+            bool actual = riskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -97,15 +62,21 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         public void CheckRiskEvaCondition_When_EvaluationDate_InCuttimeRange_And_IsUsed_Is_N_Then_Success()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min(),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime,
                 IsUsed = "N",
             };
+
             bool expected = true;
 
             //Actual
-            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
+            bool actual = riskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -115,54 +86,68 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         public void CheckRiskEvaCondition_When_EvaluationDate_NotInCuttimeRange_And_IsUsed_Is_Y_Then_Success()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime.AddSeconds(-1),
                 IsUsed = "Y",
             };
+
             bool expected = true;
 
             //Actual
-            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
+            bool actual = riskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
         }
-
 
         [TestMethod()]
         public void CheckRiskEvaCondition_When_EvaluationDate_NotInCuttimeRange_And_IsUsed_Is_N_Then_Success()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             RiskEvaluationDO riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime.AddSeconds(-1),
                 IsUsed = "N",
             };
+
             bool expected = true;
 
             //Actual
-            bool actual = RiskService.CheckCanEvaluteRisk(riskEvaluationDO);
+            bool actual = riskService.CheckCanEvaluteRisk(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
         }
 
-
-
         [TestMethod()]
         public void CheckInCuttimeRangeTest_When_EvaluationDate_InCuttimeRange_Then_Success()
         {
             //Arrage
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             var riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min(),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime,
             };
 
             var expected = true;
 
             //Actual
-            var actual = RiskService.CheckInCuttimeRange(riskEvaluationDO);
+            var actual = riskService.CheckInCuttimeRange(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
@@ -172,25 +157,38 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         public void CheckInCuttimeRangeTest_When_EvaluationDate_NotInCuttimeRange_Then_Fail()
         {
             //Arrage
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             var riskEvaluationDO = new RiskEvaluationDO()
             {
-                EvaluationDate = CurrentCuttimeRange.Min().AddSeconds(-1),
+                EvaluationDate = riskService.GetCurrentCuttimeRange().StartTime.AddSeconds(-1),
             };
 
             var expected = false;
 
             //Actual
-            var actual = RiskService.CheckInCuttimeRange(riskEvaluationDO);
+            var actual = riskService.CheckInCuttimeRange(riskEvaluationDO);
 
             //Assert
             Assert.AreEqual(expected, actual);
         }
 
+
+
         [TestMethod()]
         public void GetTest_Fail()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             string uid = null;
+
             bool? expected = false;
 
             //Actual
@@ -198,7 +196,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
 
             try
             {
-                RiskService.Get(uid);
+                riskService.Get(uid);
             }
             catch (NotImplementedException e)
             {
@@ -213,6 +211,11 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
         public void RiskRankTest_Fail()
         {
             //Arrange
+            var riskService = new RiskEvaluationService(new CuttimeRangeInfoEntity() {
+                StartTime = new DateTime(2018,10,08,10,30,00),
+                EndTime = new DateTime(2018,10,08,18,30,00),
+            });
+
             string riskRankKind = null;
             bool? expected = false;
 
@@ -221,7 +224,7 @@ namespace ThinkPower.LabB3.Domain.Service.Tests
 
             try
             {
-                RiskService.RiskRank(riskRankKind);
+                riskService.RiskRank(riskRankKind);
             }
             catch (NotImplementedException e)
             {

@@ -56,6 +56,7 @@
     <Compile Include="DTO\RiskEvaResultDTO.cs" />
     <Compile Include="Entity\BaseEntity.cs" />
     <Compile Include="Entity\CalculateScoreEntity.cs" />
+    <Compile Include="Entity\CuttimeRangeInfoEntity.cs" />
     <Compile Include="Entity\Question\AnswerDefineEntity.cs" />
     <Compile Include="Entity\Question\AnswerDetailEntity.cs" />
     <Compile Include="Entity\Question\QuestDefineEntity.cs" />
