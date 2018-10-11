@@ -136,8 +136,7 @@
             } else if (pageName === 'EvaQuestV2') {
 
                 hideTip();
-                //binding();
-
+                removeTip();
 
                 currentQuestionIndex = 0;
                 currentPageQuestionList = $('[id*=question]');
@@ -154,6 +153,10 @@
                 bindingButtonEvent();
 
             } else if (pageName === 'EvaluationRankV2') {
+
+                if ($('#tip-message-modal').find('.modal-body').html()) {
+                    showModalMsg();
+                }
 
                 $('#re-evaluation').click(function () {
 
@@ -217,7 +220,7 @@
                 questionHandler('done');
             });
         }
-
+        
         function questionHandler(action) {
 
             let validateResult = validateRuleV2(currentPageAnswerDetailList[currentQuestionIndex],
