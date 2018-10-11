@@ -8,7 +8,7 @@ function hideTip() {
 
     $('[id*=footer]').each(function () {
         $(this).hide();
-        if ($(this).find('span').html().trim() !== '') {
+        if ($(this).find('span').html().trim()) {
             $(this).show();
         };
     });
@@ -92,7 +92,7 @@ function validateRule(questionList) {
             message = "請輸入其他說明文字!";
         }
 
-        if (message !== '') {
+        if (message) {
             validateFailCount++;
             showTip(question.footer, message);
         }
@@ -111,7 +111,7 @@ function validateNeedAnswer(question, questionList) {
     } else if (question.datas.needAnswer === "Y") {
 
         let allowNaCondition = false;
-        if (question.datas.allowNaCondition !== '') {
+        if (question.datas.allowNaCondition) {
 
             let conditionValidateResultList = [];
             $(question.datas.allowNaCondition.Conditions).each(function () {
@@ -153,7 +153,7 @@ function validateMinMultipleAnswers(question) {
 
     let validate = false;
     if (question.datas.answerType === 'M' &&
-        question.datas.minMultipleAnswers !== '') {
+        question.datas.minMultipleAnswers) {
 
         let answerCodeList = getAnswerCodeList(question);
         if (answerCodeList.length >= question.datas.minMultipleAnswers) {
@@ -170,7 +170,7 @@ function validateMaxMultipleAnswers(question) {
 
     let validate = false;
     if (question.datas.answerType === 'M' &&
-        question.datas.maxMultipleAnswers !== '') {
+        question.datas.maxMultipleAnswers) {
 
         let answerCodeList = getAnswerCodeList(question);
         if (answerCodeList.length <= question.datas.maxMultipleAnswers) {
@@ -186,7 +186,7 @@ function validateMaxMultipleAnswers(question) {
 function validateSingleAnswerCondition(question, questionList) {
 
     let validate = false;
-    if (question.datas.singleAnswerCondition !== '') {
+    if (question.datas.singleAnswerCondition) {
 
         let conditionValidateResultList = [];
         $(question.datas.singleAnswerCondition.Conditions).each(function () {
@@ -234,7 +234,7 @@ function validateOtherAnswer(question) {
             answer.answerCode.is(':checked') === true) {
 
             hasOtherAnswerCondition++;
-            if (answer.otherAnswer.val().trim() !== '') {
+            if (answer.otherAnswer.val().trim()) {
                 validate = true;
             }
         }
@@ -265,12 +265,12 @@ function getAnswerCodeList(quetion) {
 
         } else if (quetion.datas.answerType === 'F') {
 
-            if (answer.answerCode.val().trim() !== '') {
+            if (answer.answerCode.val().trim()) {
                 answerCode = answer.answerCode.val().trim();
             }
         }
 
-        if (answerCode !== '') {
+        if (answerCode) {
             answerCodeList.push(answerCode.toString());
         }
     });
@@ -297,12 +297,12 @@ function getAnswerScoreList(quetion) {
 
         } else if (quetion.datas.answerType === 'F') {
 
-            if (answer.answerCode.val().trim() !== '') {
+            if (answer.answerCode.val().trim()) {
                 answerScore = answer.datas.score;
             }
         }
 
-        if (answerScore !== '') {
+        if (answerScore) {
             answerScoreList.push(parseInt(answerScore));
         }
     });
