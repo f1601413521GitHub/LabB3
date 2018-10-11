@@ -15,23 +15,19 @@
 
 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-@if (questResultEntity != null && !String.IsNullOrEmpty(questResultEntity.QuestionnaireMessage))
-{
-    <!-- Modal -->
-    <div class="modal fade" id="tip-message-modal" tabindex="-1" role="dialog" aria-labelledby="MessageModelLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-body">
-                    @questResultEntity.QuestionnaireMessage
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
-                </div>
+<!-- Modal -->
+<div class="modal fade" id="tip-message-modal" tabindex="-1" role="dialog" aria-labelledby="MessageModelLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-body">
+                @questResultEntity.QuestionnaireMessage
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
             </div>
         </div>
     </div>
-}
-
+</div>
 
 
 
@@ -154,8 +150,4 @@
             @Html.Hidden("QuestId", Model.QuestionnaireResultEntity.QuestionnaireEntity.QuestId)
         }
     </div>
-}
-
-@section scripts{
-    <script src="~/Scripts/EvaluationRank.js"></script>
 }
