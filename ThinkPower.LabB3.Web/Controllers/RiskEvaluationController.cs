@@ -337,7 +337,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
                     (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
-                    return View("EvaQuest", new EvaQuestViewModel()
+                    return PartialView("_EvaQuestV2", new EvaQuestViewModel()
                     {
                         RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
                             answer["questEntity.QuestId"], Session["id"] as string),
