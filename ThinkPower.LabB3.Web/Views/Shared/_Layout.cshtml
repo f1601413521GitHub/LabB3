@@ -25,7 +25,7 @@
                 <div class="row">
                     <div class="col layout-body-left-item">
                         <img src="~/Images/arrow-pointing-to-right.svg" />
-                        <a href="#" id="question-fndre001" data-quest-id="FNDRE001">風險評估問卷(1)</a>
+                        <a href="#" id="options-fndre001" data-quest-id="FNDRE001">風險評估問卷(1)</a>
                         @*@Html.ActionLink("風險評估問卷(1)", "EvaQuest", "RiskEvaluation",
                             new { QuestId = "FNDRE001" }, new { @class = "" })*@
                     </div>
@@ -33,7 +33,7 @@
                 <div class="row">
                     <div class="col layout-body-left-item">
                         <img src="~/Images/arrow-pointing-to-right.svg" />
-                        <a href="#" id="question-fndre002" data-quest-id="FNDRE002">風險評估問卷(2)</a>
+                        <a href="#" id="options-fndre002" data-quest-id="FNDRE002">風險評估問卷(2)</a>
                         @*@Html.ActionLink("風險評估問卷(2)", "EvaQuest", "RiskEvaluation",
                             new { QuestId = "FNDRE002" }, new { @class = "" })*@
                     </div>
@@ -59,12 +59,12 @@
     <script>
         $(document).ready(function () {
 
-            $('#question-fndre001').on('click', function () {
+            $('#options-fndre001').on('click', function () {
 
                 bindingPageEvent('_Layout', $(this));
             });
 
-            $('#question-fndre002').on('click', function () {
+            $('#options-fndre002').on('click', function () {
 
                 bindingPageEvent('_Layout', $(this));
             });
