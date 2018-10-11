@@ -380,7 +380,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         [HttpGet]
         public ActionResult AcceptRiskRankV2(SaveRankActionModel actionModel)
         {
-            EvaluationRankViewModel evaRankViewModel = null;
+            string QuestionnaireMessage = null;
             string validationSummary = null;
 
             try
@@ -396,13 +396,7 @@ namespace ThinkPower.LabB3.Web.Controllers
 
                 RiskService.SaveRiskRank(actionModel.QuestAnswerId);
 
-                evaRankViewModel = new EvaluationRankViewModel
-                {
-                    QuestionnaireResultEntity = new QuestionnaireResultEntity()
-                    {
-                        QuestionnaireMessage = "風險評估結果儲存成功",
-                    }
-                };
+                QuestionnaireMessage = "風險評估結果儲存成功";
 
             }
             catch (InvalidOperationException e)
@@ -420,7 +414,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", validationSummary);
             }
 
-            return Json(evaRankViewModel, "application/javascript", Encoding.UTF8, JsonRequestBehavior.AllowGet);
+            return Json(QuestionnaireMessage, "application/javascript", Encoding.UTF8, JsonRequestBehavior.AllowGet);
         }
         #endregion
 
