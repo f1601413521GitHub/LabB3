@@ -61,42 +61,138 @@
 
             $('#question-fndre001').on('click', function () {
 
-                $.ajax({
-                    type: 'get',
-                    url: '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                    data: { QuestId: $(this).data('questId') },
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-
-                        $("#result-partial-view").empty().append(result);
-                        hideTip();
-                        binding();
-                    },
-                    error: function () {
-                        console.log("系統發生錯誤。");
-                    }
-                });
+                bindingPageEvent('_Layout', $(this));
             });
 
             $('#question-fndre002').on('click', function () {
 
-                $.ajax({
-                    type: 'get',
-                    url: '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                    data: { QuestId: $(this).data('questId') },
-                    cache: false,
-                    async: false,
-                    success: function (result) {
-                        $("#result-partial-view").empty().append(result);
-                    },
-                    error: function () {
-                        console.log("系統發生錯誤。");
-                    }
-                });
+                bindingPageEvent('_Layout', $(this));
             });
 
         });
+
+
+        function loadPartialView(type, url, data) {
+
+            let resultInfo = { success: false, errorMsg: null, info: null };
+
+            $.ajax({
+                type: type,
+                url: url,
+                data: data,
+                cache: false,
+                async: false,
+                success: function (result) {
+
+                    resultInfo.success = true;
+                    resultInfo.info = result;
+                },
+                error: function () {
+                    resultInfo.errorMsg = "系統發生錯誤。";
+                }
+            });
+
+            return resultInfo;
+        }
+
+        function bindingPageEvent(pageName,elem) {
+
+            let resultInfo = null;
+
+            if (pageName === '_Layout') {
+
+                resultInfo = loadPartialView(
+                    'get',
+                    '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    { QuestId: elem.data('questId') }
+                );
+
+                if (!resultInfo.success) {
+
+                    console.log(resultInfo.errorMsg);
+
+                } else {
+
+                    $("#result-partial-view").empty().append(resultInfo.info);
+                    bindingPageEvent('EvaQuestV2');
+                }
+
+            } else if (pageName === 'EvaQuestV2') {
+
+                hideTip();
+                //binding();
+
+                $('#done').on('click', function () {
+
+                    if (validate()) {
+
+                        resultInfo = loadPartialView(
+                            'post',
+                            '@Url.Action("EvaluationRankV2", "RiskEvaluation")',
+                            $('#evaQuestForm').serialize()
+                        );
+
+                        if (!resultInfo.success) {
+
+                            console.log(resultInfo.errorMsg);
+
+                        } else {
+
+                            $("#result-partial-view").empty().append(resultInfo.info);
+                            bindingPageEvent('EvaluationRankV2');
+                        }
+
+                    }
+                });
+
+            } else if (pageName === 'EvaluationRankV2') {
+
+                if ($('#tip-message-modal').length !== 0) {
+                    $('#tip-message-modal').modal('show');
+                }
+
+                $('#re-evaluation').click(function () {
+
+                    resultInfo = loadPartialView(
+                        'get',
+                        '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                        $('#re-evaluation-form').serialize(),
+                    );
+
+                    if (!resultInfo.success) {
+
+                        console.log(resultInfo.errorMsg);
+
+                    } else {
+
+                        $("#result-partial-view").empty().append(resultInfo.info);
+                        bindingPageEvent('EvaQuestV2');
+                    }
+                });
+
+                $('#submit').click(function () {
+
+                    resultInfo = loadPartialView(
+                        'get',
+                        '@Url.Action("AcceptRiskRankV2", "RiskEvaluation")',
+                        $('#submit-evaluation-form').serialize(),
+                    );
+
+                    if (!resultInfo.success) {
+
+                        console.log(resultInfo.errorMsg);
+
+                    } else {
+                        $("#result-partial-view").empty().append(resultInfo.info);
+                        //TODO 回傳json的後續處理
+                    }
+                });
+
+            } else {
+
+                alert(pageName + "找不到此頁面。");
+            }
+        }
     </script>
     @RenderSection("scripts", required: false)
 </body>
