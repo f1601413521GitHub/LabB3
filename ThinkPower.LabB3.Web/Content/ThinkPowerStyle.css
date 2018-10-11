@@ -18,6 +18,10 @@ input[type=button], input[type=submit] {
     text-align: center;
 }
 
+.fullHeight {
+    height: 100%;
+}
+
 
 
 

@@ -25,9 +25,9 @@
 
 @Html.ValidationSummary(true, "", new { @class = "text-danger" })
 
-@using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { id = "evaQuestForm" }))
+@using (Html.BeginForm("EvaluationRank", "RiskEvaluation", FormMethod.Post, new { id = "evaQuestForm",@class= "fullHeight" }))
 {
-    <div class="row">
+    <div class="row fullHeight">
         @if (questEntity != null)
         {
             @Html.HiddenFor(x => questEntity.Uid)
