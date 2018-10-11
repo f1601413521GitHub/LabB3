@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 using ThinkPower.LabB3.Domain.Entity.Question;
@@ -368,6 +369,58 @@ namespace ThinkPower.LabB3.Web.Controllers
             }
 
             return PartialView("_EvaluationRankV2", evaluationRankViewModel);
+        }
+
+
+        /// <summary>
+        /// 確認接受投資風險評估結果
+        /// </summary>
+        /// <param name="actionModel">投資風險評估資料</param>
+        /// <returns></returns>
+        [HttpGet]
+        public ActionResult AcceptRiskRankV2(SaveRankActionModel actionModel)
+        {
+            EvaluationRankViewModel evaRankViewModel = null;
+            string validationSummary = null;
+
+            try
+            {
+                if (!Request.IsAjaxRequest())
+                {
+                    throw new InvalidOperationException("Not ajax request");
+                }
+                else if (actionModel == null)
+                {
+                    throw new ArgumentNullException("actionModel");
+                }
+
+                RiskService.SaveRiskRank(actionModel.QuestAnswerId);
+
+                evaRankViewModel = new EvaluationRankViewModel
+                {
+                    QuestionnaireResultEntity = new QuestionnaireResultEntity()
+                    {
+                        QuestionnaireMessage = "風險評估結果儲存成功",
+                    }
+                };
+
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                validationSummary = _systemErrorMsg;
+            }
+
+            if (!String.IsNullOrEmpty(validationSummary))
+            {
+                ModelState.AddModelError("", validationSummary);
+            }
+
+            return Json(evaRankViewModel, "application/javascript", Encoding.UTF8, JsonRequestBehavior.AllowGet);
         }
         #endregion
 
