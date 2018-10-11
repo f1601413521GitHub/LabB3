@@ -101,6 +101,37 @@ function validateRule(questionList) {
     return (validateFailCount === 0);
 }
 
+function validateRuleV2(question, questionList) {
+
+    removeTip();
+
+    let validateFailCount = 0;
+    let message = '';
+
+    if (!validateNeedAnswer(question, questionList)) {
+        message = "此題必須填答!";
+    }
+    else if (!validateMinMultipleAnswers(question)) {
+        message = "此題至少須勾選" + question.datas.minMultipleAnswers + "個項目!";
+    }
+    else if (!validateMaxMultipleAnswers(question)) {
+        message = "此題至多僅能勾選" + question.datas.maxMultipleAnswers + "個項目!";
+    }
+    else if (!validateSingleAnswerCondition(question, questionList)) {
+        message = "此題僅能勾選1個項目!";
+    }
+    else if (!validateOtherAnswer(question)) {
+        message = "請輸入其他說明文字!";
+    }
+
+    if (message) {
+        validateFailCount++;
+        showTip(question.footer, message);
+    }
+
+    return (validateFailCount === 0);
+}
+
 function validateNeedAnswer(question, questionList) {
 
     let validate = false;

@@ -61,6 +61,7 @@
 
         var currentQuestionIndex = 0;
         var currentPageQuestionList = null;
+        var currentPageAnswerDetailList = null;
 
         $(document).ready(function () {
 
@@ -130,6 +131,7 @@
 
                 currentQuestionIndex = 0;
                 currentPageQuestionList = $('[id*=question]');
+                currentPageAnswerDetailList = getAnswerDetailList();
 
                 currentPageQuestionList.hide();
                 $('#button-prev').hide();
@@ -140,33 +142,6 @@
                 $('#button-next').show();
 
                 bindingButtonEvent();
-
-
-
-
-                // TODO
-                $('#done').on('click', function () {
-
-                    if (validate()) {
-
-                        resultInfo = loadPartialView(
-                            'post',
-                            '@Url.Action("EvaluationRankV2", "RiskEvaluation")',
-                            $('#evaQuestForm').serialize()
-                        );
-
-                        if (!resultInfo.success) {
-
-                            console.log(resultInfo.errorMsg);
-
-                        } else {
-
-                            $("#result-partial-view").empty().append(resultInfo.info);
-                            bindingPageEvent('EvaluationRankV2');
-                        }
-
-                    }
-                });
 
             } else if (pageName === 'EvaluationRankV2') {
 
@@ -237,26 +212,45 @@
 
         function questionHandler(action) {
 
-            // TODO validateQuestion
-            //let questionList = getAnswerDetailList();
-            //return validateRule(questionList);
+            let validateResult = validateRuleV2(currentPageAnswerDetailList[currentQuestionIndex],
+                    currentPageAnswerDetailList);
 
-            // TODO prev/next/done
-            if (action === 'prev') {
+            if (validateResult) {
 
-                currentQuestionIndex = (currentQuestionIndex > 0) ? (currentQuestionIndex - 1) : 0;
+                if (action === 'prev') {
 
-                showQuestionAndButton();
+                    currentQuestionIndex = (currentQuestionIndex > 0) ? (currentQuestionIndex - 1) : 0;
 
-            } else if (action === 'next') {
+                    showQuestionAndButton();
 
-                currentQuestionIndex = (currentQuestionIndex < (currentPageQuestionList.length - 1)) ?
-                    (currentQuestionIndex + 1) : currentQuestionIndex;
+                } else if (action === 'next') {
 
-                showQuestionAndButton();
+                    currentQuestionIndex = (currentQuestionIndex < (currentPageQuestionList.length - 1)) ?
+                        (currentQuestionIndex + 1) : currentQuestionIndex;
 
-            } else if (action === 'done') {
-                //TODO summit
+                    showQuestionAndButton();
+
+                } else if (action === 'done') {
+
+                    if (validateRule(currentPageAnswerDetailList)) {
+
+                        resultInfo = loadPartialView(
+                            'post',
+                            '@Url.Action("EvaluationRankV2", "RiskEvaluation")',
+                            $('#evaQuestForm').serialize()
+                        );
+
+                        if (!resultInfo.success) {
+
+                            console.log(resultInfo.errorMsg);
+
+                        } else {
+
+                            $("#result-partial-view").empty().append(resultInfo.info);
+                            bindingPageEvent('EvaluationRankV2');
+                        }
+                    }
+                }
             }
         }
 
