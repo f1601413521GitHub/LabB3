@@ -80,6 +80,16 @@
 
         function loadPartialView(type, url, data) {
 
+            return callAjax(type, url, data);
+        }
+
+        function getJsonResult(type, url, data) {
+
+            return callAjax(type, url, data);
+        }
+
+        function callAjax(type, url, data) {
+
             let resultInfo = { success: false, errorMsg: null, info: null };
 
             $.ajax({
@@ -145,10 +155,6 @@
 
             } else if (pageName === 'EvaluationRankV2') {
 
-                if ($('#tip-message-modal').length !== 0) {
-                    $('#tip-message-modal').modal('show');
-                }
-
                 $('#re-evaluation').click(function () {
 
                     resultInfo = loadPartialView(
@@ -170,7 +176,7 @@
 
                 $('#submit').click(function () {
 
-                    resultInfo = loadPartialView(
+                    resultInfo = getJsonResult(
                         'get',
                         '@Url.Action("AcceptRiskRankV2", "RiskEvaluation")',
                         $('#submit-evaluation-form').serialize(),
@@ -181,8 +187,10 @@
                         console.log(resultInfo.errorMsg);
 
                     } else {
-                        $("#result-partial-view").empty().append(resultInfo.info);
-                        //TODO 回傳json的後續處理
+
+                        $(".eva-rank-container").empty();
+                        setModalMsg(resultInfo.info.replace(/"/g, ''));
+                        showModalMsg();
                     }
                 });
 
