@@ -61,14 +61,39 @@
 
             $('#question-fndre001').on('click', function () {
 
-                LoadPartialView('get', '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                    { QuestId: $(this).data('questId') }, $("#result-partial-view"));
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    data: { QuestId: $(this).data('questId') },
+                    cache: false,
+                    async: false,
+                    success: function (result) {
+
+                        $("#result-partial-view").empty().append(result);
+                        hideTip();
+                        binding();
+                    },
+                    error: function () {
+                        console.log("系統發生錯誤。");
+                    }
+                });
             });
 
             $('#question-fndre002').on('click', function () {
-                
-                LoadPartialView('get', '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                    { QuestId: $(this).data('questId') }, $("#result-partial-view"));
+
+                $.ajax({
+                    type: 'get',
+                    url: '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    data: { QuestId: $(this).data('questId') },
+                    cache: false,
+                    async: false,
+                    success: function (result) {
+                        $("#result-partial-view").empty().append(result);
+                    },
+                    error: function () {
+                        console.log("系統發生錯誤。");
+                    }
+                });
             });
 
         });
