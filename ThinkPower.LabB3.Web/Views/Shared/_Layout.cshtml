@@ -136,7 +136,6 @@
             } else if (pageName === 'EvaQuestV2') {
 
                 hideTip();
-                removeTip();
 
                 currentQuestionIndex = 0;
                 currentPageQuestionList = $('[id*=question]');
@@ -147,14 +146,33 @@
                 $('#button-next').hide();
                 $('#button-done').hide();
 
-                currentPageQuestionList.eq(currentQuestionIndex).show();
-                $('#button-next').show();
+                if (checkQuestValidateFailInfoExist()) {
+
+                    let validateFailInfoList = currentPageQuestionList.filter(function () {
+                        let span = $(this).find('.question-subject-footer-tip>span');
+                        return (span.length > 0 && span.html().trim());
+                    });
+
+                    if (validateFailInfoList.length > 0) {
+
+                        currentPageQuestionList.filter(function (index, element) {
+
+                            if (element.id === validateFailInfoList[0].id) {
+                                currentQuestionIndex = index;
+                            }
+                        });
+                    }
+                }
+
+                showQuestionAndButton();
 
                 bindingButtonEvent();
 
             } else if (pageName === 'EvaluationRankV2') {
 
-                if ($('#tip-message-modal').find('.modal-body').html()) {
+                let modal = $('#tip-message-modal').find('.modal-body');
+
+                if (modal.length > 0 && modal.html().trim()) {
                     showModalMsg();
                 }
 
@@ -258,11 +276,27 @@
                         } else {
 
                             $("#result-partial-view").empty().append(resultInfo.info);
-                            bindingPageEvent('EvaluationRankV2');
+
+
+
+                            if (checkQuestValidateFailInfoExist()) {
+
+                                bindingPageEvent('EvaQuestV2');
+
+                            } else {
+
+                                bindingPageEvent('EvaluationRankV2');
+                            }
                         }
                     }
                 }
             }
+        }
+
+        function  checkQuestValidateFailInfoExist() {
+
+            return ($('#questEntity').length > 0 &&
+                    $('#questEntity').data('questValidateFailInfo'));
         }
 
         function showQuestionAndButton() {
