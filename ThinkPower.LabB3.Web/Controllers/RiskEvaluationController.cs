@@ -234,6 +234,65 @@ namespace ThinkPower.LabB3.Web.Controllers
             return View("EvaluationRank", evaRankViewModel);
         }
 
+
+
+
+
+        /// <summary>
+        /// 進行投資風險評估問卷填答
+        /// </summary>
+        /// <param name="actionModel">來源資料</param>
+        /// <returns>投資風險評估問卷頁面</returns>
+        [HttpGet]
+        public ActionResult EvaQuestV2(EvaluationRankActionModel actionModel)
+        {
+            EvaQuestViewModel evaQuestViewModel = null;
+            string validationSummary = null;
+
+            try
+            {
+                if (!Request.IsAjaxRequest())
+                {
+                    throw new InvalidOperationException("Not ajax request");
+                }
+                else if (actionModel == null)
+                {
+                    throw new ArgumentNullException("actionModel");
+                }
+
+                RiskEvaQuestionnaireEntity riskEvaQuestEntity = RiskService.GetRiskQuestionnaire(
+                    actionModel.QuestId, Session["id"] as string);
+
+                if (riskEvaQuestEntity == null)
+                {
+                    var ex = new InvalidOperationException("riskEvaQuestEntity not found");
+                    ex.Data["QuestId"] = actionModel.QuestId;
+                    throw ex;
+                }
+
+                evaQuestViewModel = new EvaQuestViewModel()
+                {
+                    RiskEvaQuestionnaireEntity = riskEvaQuestEntity,
+                };
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                validationSummary = _systemErrorMsg;
+            }
+
+            if (!String.IsNullOrEmpty(validationSummary))
+            {
+                ModelState.AddModelError("", validationSummary);
+            }
+
+            return PartialView("_EvaQuestV2", evaQuestViewModel);
+        }
+
         #endregion
 
         #region Private method
