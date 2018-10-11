@@ -293,6 +293,82 @@ namespace ThinkPower.LabB3.Web.Controllers
             return PartialView("_EvaQuestV2", evaQuestViewModel);
         }
 
+        /// <summary>
+        /// 執行評估投資風險等級
+        /// </summary>
+        /// <param name="answer">投資風險評估問卷填答資料</param>
+        /// <returns>評估投資風險等級頁面</returns>
+        [HttpPost]
+        public ActionResult EvaluationRankV2(FormCollection answer)
+        {
+            EvaluationRankViewModel evaluationRankViewModel = null;
+            string validationSummary = null;
+
+            try
+            {
+                if (!Request.IsAjaxRequest())
+                {
+                    throw new InvalidOperationException("Not ajax request");
+                }
+                else if (!answer.HasKeys())
+                {
+                    throw new ArgumentNullException("answer");
+                }
+
+                RiskEvaAnswerEntity riskEvaAnswerEntity = new RiskEvaAnswerEntity()
+                {
+                    QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
+                    {
+                        QuestUid = answer["questEntity.Uid"],
+                        UserId = Session["id"] as string,
+                        AnswerDetailEntities = ConvertAnswerDetailList(answer),
+                    },
+                };
+
+                Domain.DTO.RiskEvaResultDTO riskEvaResultDTO = RiskService.EvaluateRiskRank(
+                    riskEvaAnswerEntity);
+
+                if (riskEvaResultDTO == null)
+                {
+                    throw new InvalidOperationException("riskEvaResultDTO not found");
+                }
+
+                if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
+                    (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
+                {
+                    return View("EvaQuest", new EvaQuestViewModel()
+                    {
+                        RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
+                            answer["questEntity.QuestId"], Session["id"] as string),
+                        QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
+                    });
+                }
+                else
+                {
+                    evaluationRankViewModel = new EvaluationRankViewModel()
+                    {
+                        QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
+                        RiskRankEntities = riskEvaResultDTO.RiskRankEntities,
+                    };
+                }
+            }
+            catch (InvalidOperationException e)
+            {
+                validationSummary = ConvertValidateMsgByRiskEvaluation(e);
+            }
+            catch (Exception e)
+            {
+                logger.Error(e);
+                validationSummary = _systemErrorMsg;
+            }
+
+            if (!String.IsNullOrEmpty(validationSummary))
+            {
+                ModelState.AddModelError("", validationSummary);
+            }
+
+            return PartialView("_EvaluationRankV2", evaluationRankViewModel);
+        }
         #endregion
 
         #region Private method

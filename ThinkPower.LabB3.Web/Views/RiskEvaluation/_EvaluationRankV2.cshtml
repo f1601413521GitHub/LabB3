@@ -1,0 +1,161 @@
+﻿
+@model ThinkPower.LabB3.Web.ViewModels.EvaluationRankViewModel
+
+
+@{
+    ViewBag.Title = "EvaluationRankV2";
+
+    var questResultEntity = ((Model != null) && (Model.QuestionnaireResultEntity != null)) ?
+        Model.QuestionnaireResultEntity : null;
+
+    var riskRankEntities = ((Model != null) && (Model.RiskRankEntities != null)) ?
+        Model.RiskRankEntities : null;
+}
+
+
+@Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+@if (questResultEntity != null && !String.IsNullOrEmpty(questResultEntity.QuestionnaireMessage))
+{
+    <!-- Modal -->
+    <div class="modal fade" id="tip-message-modal" tabindex="-1" role="dialog" aria-labelledby="MessageModelLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    @questResultEntity.QuestionnaireMessage
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+
+@if ((Model != null) &&
+    (questResultEntity != null) &&
+    (String.IsNullOrEmpty(questResultEntity.QuestionnaireMessage)))
+{
+
+    var riskRankItems = new List<dynamic>();
+
+    foreach (var riskRank in riskRankEntities.OrderBy(x => x.MinScore))
+    {
+        var rankDetailList = riskRank.RiskRankDetailEntities.OrderBy(x => x.ProfitRiskRank);
+
+        var riskState = (riskRank.RiskRankKind == questResultEntity.RiskRankKind) ? "■" : "□";
+        var riskTile = "";
+        var riskAttribute = "";
+        var riskLevel = String.Join("、", rankDetailList.Select(x => x.ProfitRiskRank));
+
+        switch (riskRank.RiskRankKind)
+        {
+            case "L":
+            default:
+                riskTile = $"{riskRank.MaxScore}分以下";
+                riskAttribute = "低(保守)";
+                break;
+
+            case "M":
+                riskTile = $"{riskRank.MinScore}~{riskRank.MaxScore}分以下";
+                riskAttribute = "中(穩健)";
+                break;
+
+            case "H":
+                riskTile = $"{riskRank.MaxScore ?? riskRank.MinScore}分(含)以上";
+                riskAttribute = "高(成長)";
+                break;
+        }
+
+        riskRankItems.Add(new
+        {
+            state = riskState,
+            title = riskTile,
+            attribute = riskAttribute,
+            level = riskLevel,
+        });
+    }
+
+    <div class="eva-rank-container">
+
+        <div>
+            <h4 class="eva-rank-title">投資風險承受度評估表(僅供參考)</h4>
+        </div>
+
+        <h5>
+            總分：
+            <span style="text-decoration: underline;">
+                @questResultEntity.ActualScore
+            </span>
+            分
+        </h5>
+
+        <table class="table eva-rank-table">
+            <thead class="eva-rank-table-header">
+                <tr>
+                    <td></td>
+                    @foreach (var item in riskRankItems)
+                    {
+                        <td>
+                            <span class="eva-rank-table-header-marker">
+                                @item.state
+                            </span>
+                            <span>
+                                @item.title
+                            </span>
+                        </td>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>投資屬性</td>
+                    @foreach (var item in riskRankItems)
+                    {
+                        <td>@item.attribute</td>
+                    }
+                </tr>
+                <tr>
+                    <td>可選擇投資標的風險收益等級</td>
+                    @foreach (var item in riskRankItems)
+                    {
+                        <td>@item.level</td>
+                    }
+                </tr>
+                <tr>
+                    <td colspan="@($"{riskRankItems.Count()+1}")">
+                        ◎可選擇之投資標的與風險收益等級請參見商品說明書。<br />
+                        ◎若投資人拒絕提供前述資訊或合計總分與所選擇之投資標的風險收益等級不一致
+                        者，本公司將不予變更。
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="text-center">
+            <input type="button" id="submit" name="submit" value="確認" />
+            <input type="button" id="re-evaluation" name="re-evaluation" value="重新評估" />
+        </div>
+    </div>
+
+    <div class="text-hide">
+        @using (Html.BeginForm("AcceptRiskRank", "RiskEvaluation", FormMethod.Get, new { id = "submit-evaluation-form" }))
+        {
+            @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
+        }
+    </div>
+
+    <div class="text-hide">
+        @using (Html.BeginForm("EvaQuest", "RiskEvaluation", FormMethod.Get, new { id = "re-evaluation-form" }))
+        {
+            @Html.Hidden("QuestId", Model.QuestionnaireResultEntity.QuestionnaireEntity.QuestId)
+        }
+    </div>
+}
+
+@section scripts{
+    <script src="~/Scripts/EvaluationRank.js"></script>
+}
