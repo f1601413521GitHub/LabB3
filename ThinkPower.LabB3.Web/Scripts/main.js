@@ -22,6 +22,12 @@ function removeTip() {
     });
 }
 
+function removeTipV2(footer) {
+
+    footer.hide();
+    footer.find('span').html('');
+}
+
 function binding() {
 
     $('#done').on('click', function () {
@@ -102,9 +108,7 @@ function validateRule(questionList) {
 }
 
 function validateRuleV2(question, questionList) {
-
-    removeTip();
-
+    
     let validateFailCount = 0;
     let message = '';
 
@@ -127,6 +131,8 @@ function validateRuleV2(question, questionList) {
     if (message) {
         validateFailCount++;
         showTip(question.footer, message);
+    } else {
+        removeTipV2(question.footer);
     }
 
     return (validateFailCount === 0);
