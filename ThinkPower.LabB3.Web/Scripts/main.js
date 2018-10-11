@@ -247,7 +247,70 @@ function validateOtherAnswer(question) {
     return validate;
 }
 
+function getAnswerCodeList(quetion) {
 
+    let answerCodeList = [];
+
+    $(quetion.answerList).each(function () {
+
+        let answer = this;
+        let answerCode = '';
+
+        if ((quetion.datas.answerType === 'S') ||
+            (quetion.datas.answerType === 'M')) {
+
+            if (answer.answerCode.is(':checked') === true) {
+                answerCode = answer.datas.answerCode;
+            }
+
+        } else if (quetion.datas.answerType === 'F') {
+
+            if (answer.answerCode.val().trim()) {
+                answerCode = answer.answerCode.val().trim();
+            }
+        }
+
+        if (answerCode) {
+            answerCodeList.push(answerCode.toString());
+        }
+    });
+
+    return answerCodeList;
+}
+
+
+
+
+function getAnswerScoreList(quetion) {
+
+    let answerScoreList = [];
+
+    $(quetion.answerList).each(function () {
+
+        let answer = this;
+        let answerScore = '';
+
+        if ((quetion.datas.answerType === 'S') ||
+            (quetion.datas.answerType === 'M')) {
+
+            if (answer.answerCode.is(':checked') === true) {
+                answerScore = answer.datas.score;
+            }
+
+        } else if (quetion.datas.answerType === 'F') {
+
+            if (answer.answerCode.val().trim()) {
+                answerScore = answer.datas.score;
+            }
+        }
+
+        if (answerScore) {
+            answerScoreList.push(parseInt(answerScore));
+        }
+    });
+
+    return answerScoreList;
+}
 
 
 
@@ -298,4 +361,22 @@ function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
     }
 
     return validate;
+}
+
+
+
+
+function bindingEvaluationRankEvent() {
+
+    if ($('#tip-message-modal').length !== 0) {
+        $('#tip-message-modal').modal('show');
+    }
+
+    $('#re-evaluation').click(function () {
+        $('#re-evaluation-form').submit();
+    });
+
+    $('#submit').click(function () {
+        $('#submit-evaluation-form').submit();
+    });
 }
