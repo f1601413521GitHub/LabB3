@@ -399,9 +399,7 @@ function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
 
 function bindingEvaluationRankEvent() {
 
-    if ($('#tip-message-modal').length !== 0) {
-        $('#tip-message-modal').modal('show');
-    }
+    showModalMsg();
 
     $('#re-evaluation').click(function () {
         $('#re-evaluation-form').submit();
@@ -410,4 +408,16 @@ function bindingEvaluationRankEvent() {
     $('#submit').click(function () {
         $('#submit-evaluation-form').submit();
     });
+}
+
+function setModalMsg(msg) {
+
+    $(".modal-body").html(msg);
+}
+
+function showModalMsg() {
+
+    if ($('#tip-message-modal').length !== 0) {
+        $('#tip-message-modal').modal('show');
+    }
 }
