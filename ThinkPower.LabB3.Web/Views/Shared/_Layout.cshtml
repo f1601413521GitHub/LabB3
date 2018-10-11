@@ -56,7 +56,12 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+
     <script>
+
+        var currentQuestionIndex = 0;
+        var currentPageQuestionList = null;
+
         $(document).ready(function () {
 
             $('#options-fndre001').on('click', function () {
@@ -122,6 +127,24 @@
                 hideTip();
                 //binding();
 
+
+                currentQuestionIndex = 0;
+                currentPageQuestionList = $('[id*=question]');
+
+                currentPageQuestionList.hide();
+                $('#button-prev').hide();
+                $('#button-next').hide();
+                $('#button-done').hide();
+
+                currentPageQuestionList.eq(currentQuestionIndex).show();
+                $('#button-next').show();
+
+                bindingButtonEvent();
+
+
+
+
+                // TODO
                 $('#done').on('click', function () {
 
                     if (validate()) {
@@ -193,7 +216,77 @@
                 alert(pageName + "找不到此頁面。");
             }
         }
+
+        function bindingButtonEvent() {
+
+            $('#button-prev').on('click', function () {
+
+                questionHandler('prev');
+            });
+
+            $('#button-next').on('click', function () {
+
+                questionHandler('next');
+            });
+
+            $('#button-done').on('click', function () {
+
+                questionHandler('done');
+            });
+        }
+
+        function questionHandler(action) {
+
+            // TODO validateQuestion
+            //let questionList = getAnswerDetailList();
+            //return validateRule(questionList);
+
+            // TODO prev/next/done
+            if (action === 'prev') {
+
+                currentQuestionIndex = (currentQuestionIndex > 0) ? (currentQuestionIndex - 1) : 0;
+
+                showQuestionAndButton();
+
+            } else if (action === 'next') {
+
+                currentQuestionIndex = (currentQuestionIndex < (currentPageQuestionList.length - 1)) ?
+                    (currentQuestionIndex + 1) : currentQuestionIndex;
+
+                showQuestionAndButton();
+
+            } else if (action === 'done') {
+                //TODO summit
+            }
+        }
+
+        function showQuestionAndButton() {
+
+            currentPageQuestionList.hide();
+            currentPageQuestionList.eq(currentQuestionIndex).show();
+
+            if (currentQuestionIndex === 0) {
+
+                $('#button-prev').hide();
+                $('#button-next').show();
+                $('#button-done').hide();
+
+            } else if (currentQuestionIndex === (currentPageQuestionList.length - 1)) {
+
+                $('#button-prev').show();
+                $('#button-next').hide();
+                $('#button-done').show();
+
+            } else {
+
+                $('#button-prev').show();
+                $('#button-next').show();
+                $('#button-done').hide();
+            }
+        }
+
     </script>
+
     @RenderSection("scripts", required: false)
 </body>
 </html>
