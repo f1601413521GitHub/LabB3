@@ -25,21 +25,25 @@
                 <div class="row">
                     <div class="col layout-body-left-item">
                         <img src="~/Images/arrow-pointing-to-right.svg" />
-                        @Html.ActionLink("風險評估問卷(1)", "EvaQuest", "RiskEvaluation",
-                            new { QuestId = "FNDRE001" }, new { @class = "" })
+                        <a href="#" id="question-fndre001" data-quest-id="FNDRE001">風險評估問卷(1)</a>
+                        @*@Html.ActionLink("風險評估問卷(1)", "EvaQuest", "RiskEvaluation",
+                            new { QuestId = "FNDRE001" }, new { @class = "" })*@
                     </div>
                 </div>
                 <div class="row">
                     <div class="col layout-body-left-item">
                         <img src="~/Images/arrow-pointing-to-right.svg" />
-                        @Html.ActionLink("風險評估問卷(2)", "EvaQuest", "RiskEvaluation",
-                            new { QuestId = "FNDRE002" }, new { @class = "" })
+                        <a href="#" id="question-fndre002" data-quest-id="FNDRE002">風險評估問卷(2)</a>
+                        @*@Html.ActionLink("風險評估問卷(2)", "EvaQuest", "RiskEvaluation",
+                            new { QuestId = "FNDRE002" }, new { @class = "" })*@
                     </div>
                 </div>
             </div>
 
             <div class="col layout-body-right">
-                @RenderBody()
+                <div id="result-partial-view">
+                    @RenderBody()
+                </div>
             </div>
         </div>
 
@@ -52,6 +56,23 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    <script>
+        $(document).ready(function () {
+
+            $('#question-fndre001').on('click', function () {
+
+                LoadPartialView('get', '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    { QuestId: $(this).data('questId') }, $("#result-partial-view"));
+            });
+
+            $('#question-fndre002').on('click', function () {
+                
+                LoadPartialView('get', '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    { QuestId: $(this).data('questId') }, $("#result-partial-view"));
+            });
+
+        });
+    </script>
     @RenderSection("scripts", required: false)
 </body>
 </html>
