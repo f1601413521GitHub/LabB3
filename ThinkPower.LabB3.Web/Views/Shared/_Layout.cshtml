@@ -182,7 +182,7 @@
                     resultInfo = loadPartialView(
                         'get',
                         '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                        $('#re-evaluation-form').serialize(),
+                        { QuestId: $('#QuestId').val()},
                     );
 
                     if (!resultInfo.success) {
@@ -201,7 +201,7 @@
                     resultInfo = getJsonResult(
                         'get',
                         '@Url.Action("AcceptRiskRankV2", "RiskEvaluation")',
-                        $('#submit-evaluation-form').serialize(),
+                        { QuestAnswerId: $('#QuestAnswerId').val() },
                     );
 
                     if (!resultInfo.success) {

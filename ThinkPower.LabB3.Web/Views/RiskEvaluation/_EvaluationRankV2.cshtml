@@ -154,19 +154,7 @@ else
             <input type="button" id="submit" name="submit" value="確認" />
             <input type="button" id="re-evaluation" name="re-evaluation" value="重新評估" />
         </div>
-    </div>
-
-    <div class="text-hide">
-        @using (Html.BeginForm("AcceptRiskRank", "RiskEvaluation", FormMethod.Get, new { id = "submit-evaluation-form" }))
-        {
-            @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
-        }
-    </div>
-
-    <div class="text-hide">
-        @using (Html.BeginForm("EvaQuest", "RiskEvaluation", FormMethod.Get, new { id = "re-evaluation-form" }))
-        {
-            @Html.Hidden("QuestId", Model.QuestionnaireResultEntity.QuestionnaireEntity.QuestId)
-        }
+        @Html.Hidden("QuestAnswerId", Model.QuestionnaireResultEntity.QuestAnswerId)
+        @Html.Hidden("QuestId", Model.QuestionnaireResultEntity.QuestionnaireEntity.QuestId)
     </div>
 }
