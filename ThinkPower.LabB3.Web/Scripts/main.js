@@ -42,12 +42,12 @@ function validate() {
 
     removeTip();
 
-    let questionList = getAnswerDetailList();
+    let questionList = getAnswerDetailInfoList();
 
     return validateRule(questionList);
 }
 
-function getAnswerDetailList() {
+function getAnswerDetailInfoList() {
 
     let questionList = $('[id*=question]').map(function () {
 
