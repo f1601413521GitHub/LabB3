@@ -60,9 +60,9 @@
 
     <script>
 
-        var currentQuestionIndex = 0;
-        var currentPageQuestionList = null;
-        var currentPageAnswerDetailList = null;
+        var questionIndex = 0;
+        var questionList = null;
+        var answerDetailList = null;
 
         $(document).ready(function () {
 
@@ -146,11 +146,11 @@
 
                 hideTip();
 
-                currentQuestionIndex = (index) ? index : 0;
-                currentPageQuestionList = $('[id*=question]');
-                currentPageAnswerDetailList = getAnswerDetailInfoList();
+                questionIndex = (index) ? index : 0;
+                questionList = $('[id*=question]');
+                answerDetailList = getAnswerDetailInfoList();
 
-                showQuestionAndButton();
+                toggleQuestion();
 
                 if (!index && index !== 0) {
                     bindingButtonEvent();
@@ -229,28 +229,28 @@
 
         function questionHandler(action) {
 
-            let question = currentPageAnswerDetailList[currentQuestionIndex];
-            let validateResult = validateRuleV2(question, currentPageAnswerDetailList);
+            let question = answerDetailList[questionIndex];
+            let validateResult = validateRuleV2(question, answerDetailList);
             toggleTip(question, validateResult);
 
             if (!validateResult) {
 
                 if (action === 'prev') {
 
-                    currentQuestionIndex = (currentQuestionIndex > 0) ? (currentQuestionIndex - 1) : 0;
+                    questionIndex = (questionIndex > 0) ? (questionIndex - 1) : 0;
 
-                    showQuestionAndButton();
+                    toggleQuestion();
 
                 } else if (action === 'next') {
 
-                    currentQuestionIndex = (currentQuestionIndex < (currentPageQuestionList.length - 1)) ?
-                        (currentQuestionIndex + 1) : currentQuestionIndex;
+                    questionIndex = (questionIndex < (questionList.length - 1)) ?
+                        (questionIndex + 1) : questionIndex;
 
-                    showQuestionAndButton();
+                    toggleQuestion();
 
                 } else if (action === 'done') {
 
-                    if (validateRule(currentPageAnswerDetailList)) {
+                    if (validateRule(answerDetailList)) {
 
                         resultInfo = loadPartialView(
                             'post',
@@ -268,7 +268,7 @@
 
                             $.each(resultInfo.info, function (id, msg) {
 
-                                let question = currentPageAnswerDetailList.filter(function (i, e) {
+                                let question = answerDetailList.filter(function (i, e) {
 
                                     let state = (e.datas.questionId === id);
 
@@ -296,18 +296,18 @@
             }
         }
 
-        function showQuestionAndButton() {
+        function toggleQuestion() {
 
-            currentPageQuestionList.hide();
-            currentPageQuestionList.eq(currentQuestionIndex).show();
+            questionList.hide();
+            questionList.eq(questionIndex).show();
 
-            if (currentQuestionIndex === 0) {
+            if (questionIndex === 0) {
 
                 $('#button-prev').hide();
                 $('#button-next').show();
                 $('#button-done').hide();
 
-            } else if (currentQuestionIndex === (currentPageQuestionList.length - 1)) {
+            } else if (questionIndex === (questionList.length - 1)) {
 
                 $('#button-prev').show();
                 $('#button-next').hide();
