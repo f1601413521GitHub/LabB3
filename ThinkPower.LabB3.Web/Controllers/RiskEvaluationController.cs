@@ -65,6 +65,19 @@ namespace ThinkPower.LabB3.Web.Controllers
         #region Public method
 
         /// <summary>
+        /// 投資風險評估預設首頁
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult Index()
+        {
+            return View();
+        }
+
+
+
+
+
+        /// <summary>
         /// 進行投資風險評估問卷填答
         /// </summary>
         /// <param name="actionModel">來源資料</param>

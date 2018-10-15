@@ -16,7 +16,7 @@ namespace ThinkPower.LabB3.Web
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{id}",
-                defaults: new { controller = "RiskEvaluation", action = "EvaQuest", id = UrlParameter.Optional }
+                defaults: new { controller = "RiskEvaluation", action = "Index", id = UrlParameter.Optional }
             );
         }
     }
