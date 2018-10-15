@@ -1,32 +1,30 @@
 ﻿
+var questionIndex = 0;
+var questionList = null;
+var answerDetailList = null;
+
+const urlInfo = {
+    evaQuestV2: '/RiskEvaluation/EvaQuestV2',
+    acceptRiskRankV2: '/RiskEvaluation/AcceptRiskRankV2',
+    evaluationRankV2: '/RiskEvaluation/EvaluationRankV2',
+};
 
 
 
+$(document).ready(function () {
 
+    $('#options-fndre001').on('click', function () {
 
-function hideTip() {
-
-    $('[id*=footer]').each(function () {
-        $(this).hide();
-        if ($(this).find('span').html().trim()) {
-            $(this).show();
-        };
+        bindingLayout($(this).data('questId'));
     });
-}
 
-function removeTip() {
+    $('#options-fndre002').on('click', function () {
 
-    $('[id*=footer]').each(function () {
-        $(this).find('span').html('');
-        $(this).hide();
+        bindingLayout($(this).data('questId'));
     });
-}
 
-function removeTipV2(footer) {
+});
 
-    footer.hide();
-    footer.find('span').html('');
-}
 
 function binding() {
 
@@ -38,6 +36,21 @@ function binding() {
     });
 }
 
+function bindingEvaluationRankEvent() {
+
+    showModalMsg();
+
+    $('#re-evaluation').click(function () {
+        $('#re-evaluation-form').submit();
+    });
+
+    $('#submit').click(function () {
+        $('#submit-evaluation-form').submit();
+    });
+}
+
+
+
 function validate() {
 
     removeTip();
@@ -45,33 +58,6 @@ function validate() {
     let questionList = getAnswerDetailInfoList();
 
     return validateRule(questionList);
-}
-
-function getAnswerDetailInfoList() {
-
-    let questionList = $('[id*=question]').map(function () {
-
-        let question = this;
-        let questId = $(question).data('questionId');
-        return {
-
-            element: question,
-            datas: $(question).data(),
-            answerList: $(question).find('[id*=answer-entity]').map(function () {
-
-                let answer = this;
-                return {
-                    element: answer,
-                    datas: $(answer).data(),
-                    answerCode: $(answer).find('[id*=answer-' + questId + '-code]'),
-                    otherAnswer: $(answer).find('[id*=answer-' + questId + '-other]'),
-                };
-            }),
-            footer: $(question).find('[id*=footer]'),
-        };
-    });
-
-    return questionList;
 }
 
 function validateRule(questionList) {
@@ -105,39 +91,6 @@ function validateRule(questionList) {
     });
 
     return (validateFailCount === 0);
-}
-
-function validateRuleV2(question, questionList) {
-    
-    let message = null;
-
-    if (!validateNeedAnswer(question, questionList)) {
-        message = "此題必須填答!";
-    }
-    else if (!validateMinMultipleAnswers(question)) {
-        message = "此題至少須勾選" + question.datas.minMultipleAnswers + "個項目!";
-    }
-    else if (!validateMaxMultipleAnswers(question)) {
-        message = "此題至多僅能勾選" + question.datas.maxMultipleAnswers + "個項目!";
-    }
-    else if (!validateSingleAnswerCondition(question, questionList)) {
-        message = "此題僅能勾選1個項目!";
-    }
-    else if (!validateOtherAnswer(question)) {
-        message = "請輸入其他說明文字!";
-    }
-
-    return message;
-}
-
-function toggleTip(question, message) {
-
-    if (message) {
-        showTip(question.footer, message);
-    }
-    else {
-        removeTipV2(question.footer);
-    }
 }
 
 function validateNeedAnswer(question, questionList) {
@@ -286,6 +239,35 @@ function validateOtherAnswer(question) {
     return validate;
 }
 
+
+
+function getAnswerDetailInfoList() {
+
+    let questionList = $('[id*=question]').map(function () {
+
+        let question = this;
+        let questId = $(question).data('questionId');
+        return {
+
+            element: question,
+            datas: $(question).data(),
+            answerList: $(question).find('[id*=answer-entity]').map(function () {
+
+                let answer = this;
+                return {
+                    element: answer,
+                    datas: $(answer).data(),
+                    answerCode: $(answer).find('[id*=answer-' + questId + '-code]'),
+                    otherAnswer: $(answer).find('[id*=answer-' + questId + '-other]'),
+                };
+            }),
+            footer: $(question).find('[id*=footer]'),
+        };
+    });
+
+    return questionList;
+}
+
 function getAnswerCodeList(quetion) {
 
     let answerCodeList = [];
@@ -319,46 +301,31 @@ function getAnswerCodeList(quetion) {
 
 
 
+function hideTip() {
 
-function getAnswerScoreList(quetion) {
-
-    let answerScoreList = [];
-
-    $(quetion.answerList).each(function () {
-
-        let answer = this;
-        let answerScore = '';
-
-        if ((quetion.datas.answerType === 'S') ||
-            (quetion.datas.answerType === 'M')) {
-
-            if (answer.answerCode.is(':checked') === true) {
-                answerScore = answer.datas.score;
-            }
-
-        } else if (quetion.datas.answerType === 'F') {
-
-            if (answer.answerCode.val().trim()) {
-                answerScore = answer.datas.score;
-            }
-        }
-
-        if (answerScore) {
-            answerScoreList.push(parseInt(answerScore));
-        }
+    $('[id*=footer]').each(function () {
+        $(this).hide();
+        if ($(this).find('span').html().trim()) {
+            $(this).show();
+        };
     });
-
-    return answerScoreList;
 }
 
+function removeTip() {
 
-
+    $('[id*=footer]').each(function () {
+        $(this).find('span').html('');
+        $(this).hide();
+    });
+}
 
 function showTip(footer, msg) {
 
     footer.show();
     footer.find('span').html(msg);
 }
+
+
 
 function compareSameArray(conditionAnswerCodeList, answerCodeList) {
 
@@ -404,20 +371,6 @@ function compareSingleAnswerCondition(conditionAnswerCodeList, answerCodeList) {
 
 
 
-
-function bindingEvaluationRankEvent() {
-
-    showModalMsg();
-
-    $('#re-evaluation').click(function () {
-        $('#re-evaluation-form').submit();
-    });
-
-    $('#submit').click(function () {
-        $('#submit-evaluation-form').submit();
-    });
-}
-
 function setModalMsg(msg) {
 
     $(".modal-body").html(msg);
@@ -432,19 +385,82 @@ function showModalMsg() {
 
 
 
+function removeTipV2(footer) {
 
-
-
-
-function convertAnswerDetail(questionId, answerCode, otherAnswer) {
-
-    return {
-        QuestionId: questionId,
-        AnswerCode: answerCode,
-        OtherAnswer: otherAnswer
-    };
+    footer.hide();
+    footer.find('span').html('');
 }
 
+function validateRuleV2(question, questionList) {
+
+    let message = null;
+
+    if (!validateNeedAnswer(question, questionList)) {
+        message = "此題必須填答!";
+    }
+    else if (!validateMinMultipleAnswers(question)) {
+        message = "此題至少須勾選" + question.datas.minMultipleAnswers + "個項目!";
+    }
+    else if (!validateMaxMultipleAnswers(question)) {
+        message = "此題至多僅能勾選" + question.datas.maxMultipleAnswers + "個項目!";
+    }
+    else if (!validateSingleAnswerCondition(question, questionList)) {
+        message = "此題僅能勾選1個項目!";
+    }
+    else if (!validateOtherAnswer(question)) {
+        message = "請輸入其他說明文字!";
+    }
+
+    return message;
+}
+
+function toggleTip(question, message) {
+
+    if (message) {
+        showTip(question.footer, message);
+    }
+    else {
+        removeTipV2(question.footer);
+    }
+}
+
+function toggleQuestion() {
+
+    questionList.hide();
+    questionList.eq(questionIndex).show();
+
+    if (questionIndex === 0) {
+
+        $('#button-prev').hide();
+        $('#button-next').show();
+        $('#button-done').hide();
+
+    } else if (questionIndex === (questionList.length - 1)) {
+
+        $('#button-prev').show();
+        $('#button-next').hide();
+        $('#button-done').show();
+
+    } else {
+
+        $('#button-prev').show();
+        $('#button-next').show();
+        $('#button-done').hide();
+    }
+}
+
+
+
+function getQuestionAnswer() {
+
+    return {
+        QuestionnaireAnswerEntity: {
+            QuestUid: $('#questEntity_Uid').val(),
+            QuestId: $('#questEntity_QuestId').val(),
+            AnswerDetailEntities: getAnswerDetailList()
+        }
+    };
+}
 
 function getAnswerDetailList() {
 
@@ -495,13 +511,219 @@ function getAnswerDetailList() {
     return answerDetailList;
 }
 
-function getQuestionAnswer() {
+function convertAnswerDetail(questionId, answerCode, otherAnswer) {
 
     return {
-        QuestionnaireAnswerEntity: {
-            QuestUid: $('#questEntity_Uid').val(),
-            QuestId: $('#questEntity_QuestId').val(),
-            AnswerDetailEntities: getAnswerDetailList()
-        }
+        QuestionId: questionId,
+        AnswerCode: answerCode,
+        OtherAnswer: otherAnswer
     };
+}
+
+
+
+function bindingLayout(questId) {
+
+    let resultInfo = loadPartialView('get', urlInfo.evaQuestV2, { QuestId: questId });
+
+    if (!resultInfo.success) {
+
+        $("#result-partial-view").empty().append(resultInfo.errorMsg);
+
+    } else {
+
+        $("#result-partial-view").empty().append(resultInfo.info);
+        bindingEvaQuestV2();
+    }
+}
+
+function bindingEvaQuestV2(errorQuestionIndex) {
+
+    hideTip();
+
+    questionIndex = (errorQuestionIndex) ? errorQuestionIndex : 0;
+    questionList = $('[id*=question]');
+    answerDetailList = getAnswerDetailInfoList();
+
+    toggleQuestion();
+
+    if (!errorQuestionIndex && errorQuestionIndex !== 0) {
+        bindingButtonEvent();
+    }
+}
+
+function bindingEvaluationRankV2() {
+
+    let resultInfo = null;
+
+    let modal = $('#tip-message-modal').find('.modal-body');
+
+    if (modal.length > 0 && modal.html().trim()) {
+        showModalMsg();
+    }
+
+    $('#re-evaluation').click(function () {
+
+        resultInfo = loadPartialView('get', urlInfo.evaQuestV2,
+            { QuestId: $('#QuestId').val() },
+        );
+
+        if (!resultInfo.success) {
+
+            $("#result-partial-view").empty().append(resultInfo.errorMsg);
+
+        } else {
+
+            $("#result-partial-view").empty().append(resultInfo.info);
+            bindingEvaQuestV2();
+        }
+    });
+
+    $('#submit').click(function () {
+
+        resultInfo = acceptRiskRank('get', urlInfo.acceptRiskRankV2,
+            { QuestAnswerId: $('#QuestAnswerId').val() },
+        );
+
+        if (!resultInfo.success) {
+
+            $("#result-partial-view").empty().append(resultInfo.errorMsg);
+
+        } else {
+
+            $(".eva-rank-container").empty();
+            setModalMsg(resultInfo.info.replace(/"/g, ''));
+            showModalMsg();
+        }
+    });
+}
+
+
+
+function loadPartialView(type, url, data) {
+
+    return callAjax(type, url, data);
+}
+
+function acceptRiskRank(type, url, data) {
+
+    return callAjax(type, url, data);
+}
+
+function callAjax(type, url, data) {
+
+    let resultInfo = { success: false, errorMsg: null, info: null, isJson: false };
+
+    $.ajax({
+        type: type,
+        url: url,
+        data: data,
+        cache: false,
+        async: false,
+        success: function (result) {
+
+            resultInfo.success = true;
+            if (result.isJson) {
+
+                resultInfo.isJson = true;
+                resultInfo.info = result.validateInfo;
+
+            } else {
+
+                resultInfo.info = result;
+            }
+        },
+        error: function () {
+            resultInfo.errorMsg = '<div class="validation-summary-errors text-danger"><ul><li>系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。</li></ul ></div >';
+        }
+    });
+
+    return resultInfo;
+}
+
+
+
+function bindingButtonEvent() {
+
+    $('#button-prev').on('click', function () {
+
+        questionHandler('prev');
+    });
+
+    $('#button-next').on('click', function () {
+
+        questionHandler('next');
+    });
+
+    $('#button-done').on('click', function () {
+
+        questionHandler('done');
+    });
+}
+
+function questionHandler(action) {
+
+    let question = answerDetailList[questionIndex];
+    let validateResult = validateRuleV2(question, answerDetailList);
+    toggleTip(question, validateResult);
+
+    if (!validateResult) {
+
+        if (action === 'prev') {
+
+            questionIndex = (questionIndex > 0) ? (questionIndex - 1) : 0;
+
+            toggleQuestion();
+
+        } else if (action === 'next') {
+
+            questionIndex = (questionIndex < (questionList.length - 1)) ?
+                (questionIndex + 1) : questionIndex;
+
+            toggleQuestion();
+
+        } else if (action === 'done') {
+
+            if (validateRule(answerDetailList)) {
+
+                let resultInfo = loadPartialView('post', urlInfo.evaluationRankV2,
+                    getQuestionAnswer(),
+                );
+
+                if (!resultInfo.success) {
+
+                    $("#result-partial-view").empty().append(resultInfo.errorMsg);
+
+                } else if (resultInfo.isJson) {
+
+                    let errorQuestionIndex = null;
+
+                    $.each(resultInfo.info, function (id, msg) {
+
+                        let question = answerDetailList.filter(function (i, e) {
+
+                            let state = (e.datas.questionId === id);
+
+                            if (state && errorQuestionIndex === null) {
+                                errorQuestionIndex = i;
+                            }
+
+                            return state;
+                        })[0];
+
+                        toggleTip(question, msg);
+
+                    });
+
+                    bindingEvaQuestV2(errorQuestionIndex);
+
+                } else {
+
+                    $("#result-partial-view").empty().append(resultInfo.info);
+
+                    bindingEvaluationRankV2();
+                }
+            }
+        }
+    }
 }
