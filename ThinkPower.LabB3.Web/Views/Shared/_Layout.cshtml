@@ -91,7 +91,7 @@
 
         function callAjax(type, url, data) {
 
-            let resultInfo = { success: false, errorMsg: null, info: null };
+            let resultInfo = { success: false, errorMsg: null, info: null, isJson: false };
 
             $.ajax({
                 type: type,
@@ -102,7 +102,15 @@
                 success: function (result) {
 
                     resultInfo.success = true;
-                    resultInfo.info = result;
+                    if (result.isJson) {
+
+                        resultInfo.isJson = true;
+                        resultInfo.info = result.validateInfo;
+
+                    } else {
+
+                        resultInfo.info = result;
+                    }
                 },
                 error: function () {
                     resultInfo.errorMsg = '<div class="validation-summary-errors text-danger"><ul><li>系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。</li></ul ></div >';
@@ -112,7 +120,7 @@
             return resultInfo;
         }
 
-        function bindingPageEvent(pageName,elem) {
+        function bindingPageEvent(pageName, elem, index) {
 
             let resultInfo = null;
 
@@ -138,36 +146,15 @@
 
                 hideTip();
 
-                currentQuestionIndex = 0;
+                currentQuestionIndex = (index) ? index : 0;
                 currentPageQuestionList = $('[id*=question]');
                 currentPageAnswerDetailList = getAnswerDetailInfoList();
 
-                currentPageQuestionList.hide();
-                $('#button-prev').hide();
-                $('#button-next').hide();
-                $('#button-done').hide();
-
-                if (checkQuestValidateFailInfoExist()) {
-
-                    let validateFailInfoList = currentPageQuestionList.filter(function () {
-                        let span = $(this).find('.question-subject-footer-tip>span');
-                        return (span.length > 0 && span.html().trim());
-                    });
-
-                    if (validateFailInfoList.length > 0) {
-
-                        currentPageQuestionList.filter(function (index, element) {
-
-                            if (element.id === validateFailInfoList[0].id) {
-                                currentQuestionIndex = index;
-                            }
-                        });
-                    }
-                }
-
                 showQuestionAndButton();
 
-                bindingButtonEvent();
+                if (!index && index !== 0) {
+                    bindingButtonEvent();
+                }
 
             } else if (pageName === 'EvaluationRankV2') {
 
@@ -182,7 +169,7 @@
                     resultInfo = loadPartialView(
                         'get',
                         '@Url.Action("EvaQuestV2", "RiskEvaluation")',
-                        { QuestId: $('#QuestId').val()},
+                        { QuestId: $('#QuestId').val() },
                     );
 
                     if (!resultInfo.success) {
@@ -275,30 +262,38 @@
 
                             $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
+                        } else if (resultInfo.isJson) {
+
+                            let errorQuestionIndex = null;
+
+                            $.each(resultInfo.info, function (id, msg) {
+
+                                let question = currentPageAnswerDetailList.filter(function (i, e) {
+
+                                    let state = (e.datas.questionId === id);
+
+                                    if (state && errorQuestionIndex === null) {
+                                        errorQuestionIndex = i;
+                                    }
+
+                                    return state;
+                                })[0];
+
+                                toggleTip(question, msg);
+
+                            });
+
+                            bindingPageEvent('EvaQuestV2', null, errorQuestionIndex);
+
                         } else {
 
                             $("#result-partial-view").empty().append(resultInfo.info);
 
-
-
-                            if (checkQuestValidateFailInfoExist()) {
-
-                                bindingPageEvent('EvaQuestV2');
-
-                            } else {
-
-                                bindingPageEvent('EvaluationRankV2');
-                            }
+                            bindingPageEvent('EvaluationRankV2');
                         }
                     }
                 }
             }
-        }
-
-        function  checkQuestValidateFailInfoExist() {
-
-            return ($('#questEntity').length > 0 &&
-                    $('#questEntity').data('questValidateFailInfo'));
         }
 
         function showQuestionAndButton() {

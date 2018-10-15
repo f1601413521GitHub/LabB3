@@ -350,12 +350,9 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
                     (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
-                    return PartialView("_EvaQuestV2", new EvaQuestViewModel()
-                    {
-                        RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
-                            answer.QuestionnaireAnswerEntity.QuestId, Session["id"] as string),
-                        QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
-                    });
+                    return Json(new { isJson = true, validateInfo = 
+                        riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo },
+                        "application/json", Encoding.UTF8);
                 }
                 else
                 {
@@ -427,7 +424,8 @@ namespace ThinkPower.LabB3.Web.Controllers
                 ModelState.AddModelError("", validationSummary);
             }
 
-            return Json(QuestionnaireMessage, "application/javascript", Encoding.UTF8, JsonRequestBehavior.AllowGet);
+            return Json(QuestionnaireMessage, "application/json", Encoding.UTF8,
+                JsonRequestBehavior.AllowGet);
         }
         #endregion
 
