@@ -56,6 +56,7 @@
 
     @Scripts.Render("~/bundles/jquery")
     @Scripts.Render("~/bundles/bootstrap")
+    @Scripts.Render("~/bundles/think-power-resource")
 
     <script>
 
@@ -238,7 +239,7 @@
                 questionHandler('done');
             });
         }
-        
+
         function questionHandler(action) {
 
             let validateResult = validateRuleV2(currentPageAnswerDetailList[currentQuestionIndex],
