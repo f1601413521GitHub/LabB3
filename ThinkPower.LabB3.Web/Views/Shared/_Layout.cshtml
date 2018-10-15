@@ -105,7 +105,7 @@
                     resultInfo.info = result;
                 },
                 error: function () {
-                    resultInfo.errorMsg = "系統發生錯誤。";
+                    resultInfo.errorMsg = '<div class="validation-summary-errors text-danger"><ul><li>系統發生錯誤，請於上班時段來電客服中心0800-015-000，造成不便敬請見諒。</li></ul ></div >';
                 }
             });
 
@@ -126,7 +126,7 @@
 
                 if (!resultInfo.success) {
 
-                    console.log(resultInfo.errorMsg);
+                    $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
                 } else {
 
@@ -187,7 +187,7 @@
 
                     if (!resultInfo.success) {
 
-                        console.log(resultInfo.errorMsg);
+                        $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
                     } else {
 
@@ -206,7 +206,7 @@
 
                     if (!resultInfo.success) {
 
-                        console.log(resultInfo.errorMsg);
+                        $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
                     } else {
 
@@ -272,7 +272,7 @@
 
                         if (!resultInfo.success) {
 
-                            console.log(resultInfo.errorMsg);
+                            $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
                         } else {
 
