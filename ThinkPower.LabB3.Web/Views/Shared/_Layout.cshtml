@@ -63,6 +63,12 @@
         var questionIndex = 0;
         var questionList = null;
         var answerDetailList = null;
+        const urlInfo = {
+            evaQuestV2: '/RiskEvaluation/EvaQuestV2',
+            acceptRiskRankV2: '/RiskEvaluation/AcceptRiskRankV2',
+            evaluationRankV2: '/RiskEvaluation/EvaluationRankV2',
+        };
+
 
         $(document).ready(function () {
 
@@ -84,7 +90,7 @@
             return callAjax(type, url, data);
         }
 
-        function getJsonResult(type, url, data) {
+        function acceptRiskRank(type, url, data) {
 
             return callAjax(type, url, data);
         }
@@ -126,9 +132,7 @@
 
             if (pageName === '_Layout') {
 
-                resultInfo = loadPartialView(
-                    'get',
-                    '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                resultInfo = loadPartialView('get', urlInfo.evaQuestV2,
                     { QuestId: elem.data('questId') }
                 );
 
@@ -166,9 +170,7 @@
 
                 $('#re-evaluation').click(function () {
 
-                    resultInfo = loadPartialView(
-                        'get',
-                        '@Url.Action("EvaQuestV2", "RiskEvaluation")',
+                    resultInfo = loadPartialView('get', urlInfo.evaQuestV2,
                         { QuestId: $('#QuestId').val() },
                     );
 
@@ -185,9 +187,7 @@
 
                 $('#submit').click(function () {
 
-                    resultInfo = getJsonResult(
-                        'get',
-                        '@Url.Action("AcceptRiskRankV2", "RiskEvaluation")',
+                    resultInfo = acceptRiskRank('get', urlInfo.acceptRiskRankV2,
                         { QuestAnswerId: $('#QuestAnswerId').val() },
                     );
 
@@ -252,9 +252,7 @@
 
                     if (validateRule(answerDetailList)) {
 
-                        resultInfo = loadPartialView(
-                            'post',
-                            '@Url.Action("EvaluationRankV2", "RiskEvaluation")',
+                        resultInfo = loadPartialView('post', urlInfo.evaluationRankV2,
                             getQuestionAnswer(),
                         );
 
