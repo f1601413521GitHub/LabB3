@@ -74,12 +74,12 @@
 
             $('#options-fndre001').on('click', function () {
 
-                bindingPageEvent('_Layout', $(this));
+                bindingLayout($(this).data('questId'));
             });
 
             $('#options-fndre002').on('click', function () {
 
-                bindingPageEvent('_Layout', $(this));
+                bindingLayout($(this).data('questId'));
             });
 
         });
@@ -126,14 +126,50 @@
             return resultInfo;
         }
 
-        function bindingPageEvent(pageName, elem, index) {
+        function bindingLayout(questId) {
+
+            let resultInfo = loadPartialView('get', urlInfo.evaQuestV2, { QuestId: questId });
+
+            if (!resultInfo.success) {
+
+                $("#result-partial-view").empty().append(resultInfo.errorMsg);
+
+            } else {
+
+                $("#result-partial-view").empty().append(resultInfo.info);
+                bindingEvaQuestV2();
+            }
+        }
+
+        function bindingEvaQuestV2(errorQuestionIndex) {
+
+            hideTip();
+
+            questionIndex = (errorQuestionIndex) ? errorQuestionIndex : 0;
+            questionList = $('[id*=question]');
+            answerDetailList = getAnswerDetailInfoList();
+
+            toggleQuestion();
+
+            if (!errorQuestionIndex && errorQuestionIndex !== 0) {
+                bindingButtonEvent();
+            }
+        }
+
+        function bindingEvaluationRankV2() {
 
             let resultInfo = null;
 
-            if (pageName === '_Layout') {
+            let modal = $('#tip-message-modal').find('.modal-body');
+
+            if (modal.length > 0 && modal.html().trim()) {
+                showModalMsg();
+            }
+
+            $('#re-evaluation').click(function () {
 
                 resultInfo = loadPartialView('get', urlInfo.evaQuestV2,
-                    { QuestId: elem.data('questId') }
+                    { QuestId: $('#QuestId').val() },
                 );
 
                 if (!resultInfo.success) {
@@ -143,70 +179,27 @@
                 } else {
 
                     $("#result-partial-view").empty().append(resultInfo.info);
-                    bindingPageEvent('EvaQuestV2');
+                    bindingEvaQuestV2();
                 }
+            });
 
-            } else if (pageName === 'EvaQuestV2') {
+            $('#submit').click(function () {
 
-                hideTip();
+                resultInfo = acceptRiskRank('get', urlInfo.acceptRiskRankV2,
+                    { QuestAnswerId: $('#QuestAnswerId').val() },
+                );
 
-                questionIndex = (index) ? index : 0;
-                questionList = $('[id*=question]');
-                answerDetailList = getAnswerDetailInfoList();
+                if (!resultInfo.success) {
 
-                toggleQuestion();
+                    $("#result-partial-view").empty().append(resultInfo.errorMsg);
 
-                if (!index && index !== 0) {
-                    bindingButtonEvent();
-                }
+                } else {
 
-            } else if (pageName === 'EvaluationRankV2') {
-
-                let modal = $('#tip-message-modal').find('.modal-body');
-
-                if (modal.length > 0 && modal.html().trim()) {
+                    $(".eva-rank-container").empty();
+                    setModalMsg(resultInfo.info.replace(/"/g, ''));
                     showModalMsg();
                 }
-
-                $('#re-evaluation').click(function () {
-
-                    resultInfo = loadPartialView('get', urlInfo.evaQuestV2,
-                        { QuestId: $('#QuestId').val() },
-                    );
-
-                    if (!resultInfo.success) {
-
-                        $("#result-partial-view").empty().append(resultInfo.errorMsg);
-
-                    } else {
-
-                        $("#result-partial-view").empty().append(resultInfo.info);
-                        bindingPageEvent('EvaQuestV2');
-                    }
-                });
-
-                $('#submit').click(function () {
-
-                    resultInfo = acceptRiskRank('get', urlInfo.acceptRiskRankV2,
-                        { QuestAnswerId: $('#QuestAnswerId').val() },
-                    );
-
-                    if (!resultInfo.success) {
-
-                        $("#result-partial-view").empty().append(resultInfo.errorMsg);
-
-                    } else {
-
-                        $(".eva-rank-container").empty();
-                        setModalMsg(resultInfo.info.replace(/"/g, ''));
-                        showModalMsg();
-                    }
-                });
-
-            } else {
-
-                alert(pageName + "找不到此頁面。");
-            }
+            });
         }
 
         function bindingButtonEvent() {
@@ -252,7 +245,7 @@
 
                     if (validateRule(answerDetailList)) {
 
-                        resultInfo = loadPartialView('post', urlInfo.evaluationRankV2,
+                        let resultInfo = loadPartialView('post', urlInfo.evaluationRankV2,
                             getQuestionAnswer(),
                         );
 
@@ -281,13 +274,13 @@
 
                             });
 
-                            bindingPageEvent('EvaQuestV2', null, errorQuestionIndex);
+                            bindingEvaQuestV2(errorQuestionIndex);
 
                         } else {
 
                             $("#result-partial-view").empty().append(resultInfo.info);
 
-                            bindingPageEvent('EvaluationRankV2');
+                            bindingEvaluationRankV2();
                         }
                     }
                 }
