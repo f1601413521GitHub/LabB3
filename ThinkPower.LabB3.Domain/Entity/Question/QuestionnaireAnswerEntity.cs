@@ -16,6 +16,11 @@ namespace ThinkPower.LabB3.Domain.Entity.Question
         /// </summary>
         public string QuestUid { get; set; }
 
+        /// <summary> 
+        /// 問卷編號
+        /// </summary>
+        public string QuestId { get; set; }
+
         /// <summary>
         /// 用戶ID
         /// </summary>

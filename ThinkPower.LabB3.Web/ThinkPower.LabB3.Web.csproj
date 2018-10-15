@@ -155,6 +155,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionModels\EvaluateAnswerActionModel.cs" />
     <Compile Include="ActionModels\EvaluationRankActionModel.cs" />
     <Compile Include="ActionModels\SaveRankActionModel.cs" />
     <Compile Include="App_Start\BundleConfig.cs" />

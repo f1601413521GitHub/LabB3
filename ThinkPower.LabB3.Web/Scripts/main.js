@@ -429,3 +429,79 @@ function showModalMsg() {
         $('#tip-message-modal').modal('show');
     }
 }
+
+
+
+
+
+
+
+function convertAnswerDetail(questionId, answerCode, otherAnswer) {
+
+    return {
+        QuestionId: questionId,
+        AnswerCode: answerCode,
+        OtherAnswer: otherAnswer
+    };
+}
+
+
+function getAnswerDetailList() {
+
+    let answerType = null;
+    let questionId = null;
+
+    let answerCode = null;
+    let answerCodeList = null;
+    let other = null;
+
+    let answerDetail = null;
+    let answerDetailList = [];
+
+    $.each($('[id*=question]'), function (index, element) {
+
+        answerType = $(element).data('answerType');
+        questionId = $(element).data('questionId');
+
+        if (answerType === 'F') {
+
+            answerCode = $('[id*=answer-' + questionId + '-code]').val();
+            answerDetail = convertAnswerDetail(questionId, answerCode, null);
+            answerDetailList.push(answerDetail);
+
+        } else if (answerType === 'S' || answerType === 'M') {
+
+            answerCodeList = $('[id*=answer-' + questionId + '-code]:checked');
+
+            $.each(answerCodeList, function (i, e) {
+
+                answerCode = $(e).val();
+
+                other = $('[id*=answer-' + questionId + '-other-' + answerCode + ']').val();
+
+                if (other) {
+
+                    answerDetail = convertAnswerDetail(questionId, answerCode, other);
+                    answerDetailList.push(answerDetail);
+
+                } else {
+                    answerDetail = convertAnswerDetail(questionId, answerCode, null);
+                    answerDetailList.push(answerDetail);
+                }
+            });
+        }
+    });
+
+    return answerDetailList;
+}
+
+function getQuestionAnswer() {
+
+    return {
+        QuestionnaireAnswerEntity: {
+            QuestUid: $('#questEntity_Uid').val(),
+            QuestId: $('#questEntity_QuestId').val(),
+            AnswerDetailEntities: getAnswerDetailList()
+        }
+    };
+}

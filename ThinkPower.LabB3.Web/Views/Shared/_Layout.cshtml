@@ -268,7 +268,7 @@
                         resultInfo = loadPartialView(
                             'post',
                             '@Url.Action("EvaluationRankV2", "RiskEvaluation")',
-                            $('#evaQuestForm').serialize()
+                            getQuestionAnswer(),
                         );
 
                         if (!resultInfo.success) {

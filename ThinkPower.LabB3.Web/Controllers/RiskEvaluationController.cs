@@ -313,7 +313,7 @@ namespace ThinkPower.LabB3.Web.Controllers
         /// <param name="answer">投資風險評估問卷填答資料</param>
         /// <returns>評估投資風險等級頁面</returns>
         [HttpPost]
-        public ActionResult EvaluationRankV2(FormCollection answer)
+        public ActionResult EvaluationRankV2(EvaluateAnswerActionModel answer)
         {
             EvaluationRankViewModel evaluationRankViewModel = null;
             string validationSummary = null;
@@ -324,7 +324,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     throw new InvalidOperationException("Not ajax request");
                 }
-                else if (!answer.HasKeys())
+                else if (answer == null)
                 {
                     throw new ArgumentNullException("answer");
                 }
@@ -333,9 +333,9 @@ namespace ThinkPower.LabB3.Web.Controllers
                 {
                     QuestionnaireAnswerEntity = new QuestionnaireAnswerEntity()
                     {
-                        QuestUid = answer["questEntity.Uid"],
+                        QuestUid = answer.QuestionnaireAnswerEntity.QuestUid,
                         UserId = Session["id"] as string,
-                        AnswerDetailEntities = ConvertAnswerDetailList(answer),
+                        AnswerDetailEntities = answer.QuestionnaireAnswerEntity.AnswerDetailEntities,
                     },
                 };
 
@@ -353,7 +353,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                     return PartialView("_EvaQuestV2", new EvaQuestViewModel()
                     {
                         RiskEvaQuestionnaireEntity = RiskService.GetRiskQuestionnaire(
-                            answer["questEntity.QuestId"], Session["id"] as string),
+                            answer.QuestionnaireAnswerEntity.QuestId, Session["id"] as string),
                         QuestionnaireResultEntity = riskEvaResultDTO.QuestionnaireResultEntity,
                     });
                 }
