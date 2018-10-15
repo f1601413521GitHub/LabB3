@@ -180,7 +180,9 @@ namespace ThinkPower.LabB3.Domain.Service
                 throw new InvalidOperationException("questResultEntity not found");
             }
 
-            if (questionResultEntity.QuestionnaireEntity.NeedScore == "Y")
+            if ((questionResultEntity.ValidateFailInfo != null) &&
+                (questionResultEntity.ValidateFailInfo.Count == 0) &&
+                (questionResultEntity.QuestionnaireEntity.NeedScore == "Y"))
             {
                 RiskRankDO riskRankDO = new RiskRankDAO().GetRiskRank(questionResultEntity.ActualScore,
                     _riskEvaIdFundInvestment);
