@@ -109,8 +109,7 @@ function validateRule(questionList) {
 
 function validateRuleV2(question, questionList) {
     
-    let validateFailCount = 0;
-    let message = '';
+    let message = null;
 
     if (!validateNeedAnswer(question, questionList)) {
         message = "此題必須填答!";
@@ -128,14 +127,17 @@ function validateRuleV2(question, questionList) {
         message = "請輸入其他說明文字!";
     }
 
+    return message;
+}
+
+function toggleTip(question, message) {
+
     if (message) {
-        validateFailCount++;
         showTip(question.footer, message);
-    } else {
+    }
+    else {
         removeTipV2(question.footer);
     }
-
-    return (validateFailCount === 0);
 }
 
 function validateNeedAnswer(question, questionList) {

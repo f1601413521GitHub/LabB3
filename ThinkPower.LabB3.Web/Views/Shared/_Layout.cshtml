@@ -242,10 +242,11 @@
 
         function questionHandler(action) {
 
-            let validateResult = validateRuleV2(currentPageAnswerDetailList[currentQuestionIndex],
-                    currentPageAnswerDetailList);
+            let question = currentPageAnswerDetailList[currentQuestionIndex];
+            let validateResult = validateRuleV2(question, currentPageAnswerDetailList);
+            toggleTip(question, validateResult);
 
-            if (validateResult) {
+            if (!validateResult) {
 
                 if (action === 'prev') {
 
