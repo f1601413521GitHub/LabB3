@@ -15,12 +15,12 @@ $(document).ready(function () {
 
     $('#options-fndre001').on('click', function () {
 
-        bindingLayout($(this).data('questId'));
+        loadEvaQuestV2($(this).data('questId'));
     });
 
     $('#options-fndre002').on('click', function () {
 
-        bindingLayout($(this).data('questId'));
+        loadEvaQuestV2($(this).data('questId'));
     });
 
 });
@@ -522,7 +522,7 @@ function convertAnswerDetail(questionId, answerCode, otherAnswer) {
 
 
 
-function bindingLayout(questId) {
+function loadEvaQuestV2(questId) {
 
     let resultInfo = loadPartialView('get', urlInfo.evaQuestV2, { QuestId: questId });
 
@@ -533,22 +533,22 @@ function bindingLayout(questId) {
     } else {
 
         $("#result-partial-view").empty().append(resultInfo.info);
-        bindingEvaQuestV2();
+        showEvaQuestV2();
     }
 }
 
-function bindingEvaQuestV2(errorQuestionIndex) {
+function showEvaQuestV2(errorQuestionIndex) {
 
     hideTip();
 
-    questionIndex = (errorQuestionIndex) ? errorQuestionIndex : 0;
+    questionIndex = $.isNumeric(errorQuestionIndex) ? errorQuestionIndex : 0;
     questionList = $('[id*=question]');
     answerDetailList = getAnswerDetailInfoList();
 
     toggleQuestion();
 
-    if (!errorQuestionIndex && errorQuestionIndex !== 0) {
-        bindingButtonEvent();
+    if (errorQuestionIndex === undefined) {
+        bindingEvaQuestV2Event();
     }
 }
 
@@ -575,7 +575,7 @@ function bindingEvaluationRankV2() {
         } else {
 
             $("#result-partial-view").empty().append(resultInfo.info);
-            bindingEvaQuestV2();
+            showEvaQuestV2();
         }
     });
 
@@ -623,14 +623,13 @@ function callAjax(type, url, data) {
         success: function (result) {
 
             resultInfo.success = true;
-            if (result.isJson) {
-
-                resultInfo.isJson = true;
-                resultInfo.info = result.validateInfo;
-
-            } else {
+            if (result.validateInfo === undefined) {
 
                 resultInfo.info = result;
+
+            } else {
+                resultInfo.isJson = true;
+                resultInfo.info = result.validateInfo;
             }
         },
         error: function () {
@@ -643,7 +642,7 @@ function callAjax(type, url, data) {
 
 
 
-function bindingButtonEvent() {
+function bindingEvaQuestV2Event() {
 
     $('#button-prev').on('click', function () {
 
@@ -715,7 +714,7 @@ function questionHandler(action) {
 
                     });
 
-                    bindingEvaQuestV2(errorQuestionIndex);
+                    showEvaQuestV2(errorQuestionIndex);
 
                 } else {
 
