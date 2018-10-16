@@ -350,7 +350,7 @@ namespace ThinkPower.LabB3.Web.Controllers
                 if ((riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo != null) &&
                     (riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo.Count > 0))
                 {
-                    return Json(new { validateInfo = riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo },
+                    return Json(riskEvaResultDTO.QuestionnaireResultEntity.ValidateFailInfo,
                         "application/json", Encoding.UTF8);
                 }
                 else

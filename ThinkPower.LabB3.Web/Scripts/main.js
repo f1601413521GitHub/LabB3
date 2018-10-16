@@ -623,13 +623,11 @@ function callAjax(type, url, data) {
         success: function (result) {
 
             resultInfo.success = true;
-            if (result.validateInfo === undefined) {
+            resultInfo.info = result;
 
-                resultInfo.info = result;
+            if (checkIsJson(result)) {
 
-            } else {
                 resultInfo.isJson = true;
-                resultInfo.info = result.validateInfo;
             }
         },
         error: function () {
@@ -638,6 +636,21 @@ function callAjax(type, url, data) {
     });
 
     return resultInfo;
+}
+
+function checkIsJson(result) {
+
+    if (typeof result !== 'string') {
+        result = JSON.stringify(result);
+    }
+
+    try {
+        JSON.parse(result);
+        return true;
+
+    } catch (e) {
+        return false;
+    }
 }
 
 
