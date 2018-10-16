@@ -4,9 +4,9 @@ var questionList = null;
 var answerDetailList = null;
 
 const urlInfo = {
-    evaQuestV2: '/RiskEvaluation/EvaQuestV2',
-    acceptRiskRankV2: '/RiskEvaluation/AcceptRiskRankV2',
-    evaluationRankV2: '/RiskEvaluation/EvaluationRankV2',
+    evaQuestV2: 'RiskEvaluation/EvaQuestV2',
+    acceptRiskRankV2: 'RiskEvaluation/AcceptRiskRankV2',
+    evaluationRankV2: 'RiskEvaluation/EvaluationRankV2',
 };
 
 
